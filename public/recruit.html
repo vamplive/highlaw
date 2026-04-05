@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Recruit | 법무법인 하이로</title>
-    <!-- Google Fonts -->
+    <title>Careers | 법무법인 하이로</title>
+    <!-- Google Fonts: Playfair Display, Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -13,7 +13,6 @@
             --text-secondary: #4a4a4a;
             --gold-primary: #c5a059;
             --gold-gradient: linear-gradient(135deg, #c5a059 0%, #f4eee0 50%, #c5a059 100%);
-            --gold-light: #f4eee0;
             --border-color: #e5e5e5;
             --white: #ffffff;
             --success-bg: #f0f9f0;
@@ -34,95 +33,57 @@
             word-break: keep-all;
         }
 
-        /* --- Header & Navigation --- */
+        /* --- Header --- */
         header {
-            position: fixed;
-            top: 0; width: 100%;
-            padding: 15px 60px;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(15px);
+            position: fixed; top: 0; width: 100%; padding: 15px 60px; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--border-color);
         }
-
-        .logo-group { display: flex; align-items: center; gap: 12px; text-decoration: none; z-index: 1100; }
+        .logo-group { display: flex; align-items: center; gap: 12px; text-decoration: none; }
         .logo-text h1 { 
-            font-family: 'Playfair Display', serif;
-            font-size: 24px; font-weight: 700; letter-spacing: 4px; line-height: 1; text-transform: uppercase;
+            font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; letter-spacing: 4px; line-height: 1; text-transform: uppercase;
             background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         .logo-text p { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 5px; color: var(--text-secondary); font-weight: 500; opacity: 0.8; }
-
-        .menu-toggle { display: none; cursor: pointer; z-index: 1100; padding: 5px; }
-        .menu-toggle div { width: 25px; height: 2px; background-color: var(--text-primary); margin: 5px 0; transition: 0.3s; }
 
         nav ul { display: flex; list-style: none; gap: 25px; }
         nav a { color: var(--text-primary); text-decoration: none; font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; transition: 0.3s; }
         nav a:hover { color: var(--gold-primary); }
 
-        /* --- Sub Hero (Partners.html 스타일 적용) --- */
+        .menu-toggle { display: none; cursor: pointer; z-index: 1100; padding: 5px; }
+        .menu-toggle div { width: 25px; height: 2px; background-color: var(--text-primary); margin: 5px 0; transition: 0.3s; }
+
+        /* --- Sub Hero --- */
         .sub-hero { 
-            padding-top: 180px; 
-            padding-bottom: 80px; 
+            padding-top: 180px; padding-bottom: 80px; 
             background: linear-gradient(to bottom, #fdfdfd, #f4eee0); 
-            text-align: center; 
-            border-bottom: 1px solid var(--border-color); 
+            text-align: center; border-bottom: 1px solid var(--border-color); 
         }
-        .sub-hero h2 { 
-            font-family: 'Playfair Display', serif; 
-            font-size: clamp(32px, 5vw, 56px); 
-            font-weight: 400; 
-            color: var(--text-primary); 
-            margin-bottom: 15px;
-        }
-        .sub-hero p { 
-            font-family: 'Playfair Display', serif; 
-            font-style: italic; 
-            font-size: clamp(14px, 2.5vw, 19px); 
-            color: var(--gold-primary); 
-            max-width: 700px; 
-            margin: 0 auto; 
-            font-weight: 400; 
-            letter-spacing: 0.5px; 
-        }
-        .label { 
-            display: block; 
-            text-align: center; 
-            font-size: 11px; 
-            letter-spacing: 4px; 
-            color: var(--gold-primary); 
-            text-transform: uppercase; 
-            margin-bottom: 15px; 
-            font-weight: 700; 
-        }
+        .sub-hero h2 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 5vw, 56px); font-weight: 400; color: var(--text-primary); margin-bottom: 15px; }
+        .sub-hero p { font-family: 'Playfair Display', serif; font-style: italic; font-size: 18px; color: var(--gold-primary); }
+        .label { display: block; text-align: center; font-size: 11px; letter-spacing: 4px; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 15px; font-weight: 700; }
 
+        /* --- Recruit Grid --- */
         section { padding: 100px 20px; max-width: 1400px; margin: 0 auto; }
-        .section-title { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 38px); font-weight: 400; text-align: center; margin-bottom: 60px; }
-
-        /* --- Recruit Grid & Cards --- */
         .recruit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+        
         .recruit-card { 
-            background: var(--white); 
-            padding: 50px 40px; 
-            border: 1px solid var(--border-color); 
-            transition: all 0.4s ease; 
-            display: flex; 
-            flex-direction: column; 
-            position: relative;
+            background: var(--white); padding: 50px 40px; border: 1px solid var(--border-color); 
+            transition: all 0.4s ease; display: flex; flex-direction: column; position: relative;
         }
         .recruit-card:hover { border-color: var(--gold-primary); transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
         
-        .status-badge { display: inline-block; width: fit-content; padding: 6px 14px; border-radius: 2px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
+        /* Status Badges */
+        .status-badge { 
+            display: inline-block; width: fit-content; padding: 6px 14px; border-radius: 2px; 
+            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; 
+        }
         .status-open { background-color: var(--success-bg); color: var(--success-text); border: 1px solid #bbf7d0; }
-        .status-open::after { content: "모집 중"; }
         .status-closed { background-color: var(--closed-bg); color: var(--closed-text); border: 1px solid #fecaca; }
-        .status-closed::after { content: "모집 마감"; }
 
-        .recruit-title { font-family: 'Playfair Display', serif; font-size: 23px; margin-bottom: 15px; font-weight: 500; }
-        .recruit-desc { font-size: 14.5px; color: var(--text-secondary); margin-bottom: 35px; flex-grow: 1; opacity: 0.8; line-height: 1.7; }
+        .recruit-title { font-family: 'Playfair Display', serif; font-size: 24px; margin-bottom: 15px; font-weight: 500; }
+        .recruit-desc { font-size: 14.5px; color: var(--text-secondary); margin-bottom: 35px; flex-grow: 1; opacity: 0.8; }
         
         .recruit-apply { 
             display: inline-block; padding: 14px 35px; border: 1px solid var(--gold-primary); 
@@ -131,18 +92,15 @@
         }
         .recruit-apply:hover { background: var(--gold-primary); color: #fff; }
         
+        /* Card Closed State */
         .recruit-card.is-closed { opacity: 0.6; background-color: #fcfcfc; }
-        .recruit-card.is-closed .recruit-apply { pointer-events: none; border-color: #ccc; color: #999; }
+        .recruit-card.is-closed .recruit-apply { border-color: #ccc; color: #999; cursor: not-allowed; }
 
-        /* --- CTA & Footer --- */
+        /* --- Footer --- */
         .cta-box { background-color: #1a1a1a; color: var(--white); text-align: center; padding: 100px 20px; }
-        .cta-box h2 { font-family: 'Playfair Display', serif; font-size: clamp(26px, 5vw, 36px); margin-bottom: 15px; }
-        .cta-box p { font-weight: 300; color: #aaa; margin-bottom: 35px; font-size: 15px; }
-        .contact-link { display: inline-block; padding: 16px 45px; border: 1px solid var(--gold-primary); color: var(--gold-primary); text-decoration: none; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
+        .contact-link { display: inline-block; padding: 16px 45px; border: 1px solid var(--gold-primary); color: var(--gold-primary); text-decoration: none; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; margin-top: 20px; }
         .contact-link:hover { background: var(--gold-primary); color: #1a1a1a; }
-
         footer { padding: 60px 20px; background-color: var(--white); border-top: 1px solid var(--border-color); text-align: center; font-size: 11px; color: #888; letter-spacing: 0.5px; }
-        .footer-info { line-height: 2; margin-top: 10px; }
 
         /* --- Responsive --- */
         @media (max-width: 1024px) { 
@@ -155,12 +113,7 @@
             nav { position: fixed; top: 0; right: -100%; width: 80%; height: 100vh; background: white; padding: 100px 40px; transition: 0.4s ease; box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
             nav.active { right: 0; }
             nav ul { flex-direction: column; gap: 25px; }
-            nav a { font-size: 15px; }
-            section { padding: 80px 20px; }
-            .sub-hero { padding-top: 140px; padding-bottom: 60px; }
-            .menu-toggle.active div:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-            .menu-toggle.active div:nth-child(2) { opacity: 0; }
-            .menu-toggle.active div:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+            .sub-hero { padding-top: 140px; }
         }
     </style>
 </head>
@@ -173,28 +126,22 @@
                 <p>법무법인 하이로</p>
             </div>
         </a>
-        
         <div class="menu-toggle" id="mobile-toggle">
-            <div></div>
-            <div></div>
-            <div></div>
+            <div></div><div></div><div></div>
         </div>
-
-<nav id="nav-menu">
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="the-firm.html">The Firm</a></li>
-        <li><a href="partners.html">Partners</a></li>
-        <li><a href="practices.html">Practices</a></li>
-        <li><a href="news.html">News</a></li>
-        <li><a href="recruit.html">Recruit</a></li>
-        <li><a href="inquiry.html">Inquiry</a></li>
-    </ul>
-</nav>
-
+        <nav id="nav-menu">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="the-firm.html">The Firm</a></li>
+                <li><a href="partners.html">Partners</a></li>
+                <li><a href="practices.html">Practices</a></li>
+                <li><a href="news.html">News</a></li>
+                <li><a href="recruit.html" style="color:var(--gold-primary)">Recruit</a></li>
+                <li><a href="inquiry.html">Inquiry</a></li>
+            </ul>
+        </nav>
     </header>
 
-    <!-- Sub Hero 영역: Partners.html과 동일한 구조와 스타일 -->
     <div class="sub-hero">
         <span class="label">Talent Acquisition</span>
         <h2>Join Our Excellence</h2>
@@ -202,135 +149,105 @@
     </div>
 
     <section>
-        <span class="label">Careers</span>
-        <h2 class="section-title">Open Positions</h2>
-        
         <div class="recruit-grid">
-              <div class="recruit-card is-closed">
-                <div id="status-new" class="status-badge status-closed"></div>
-                <h3 class="recruit-title">신규변호사 채용</h3>
-                <p class="recruit-desc">법학전문대학원 졸업 예정자 및 변호사 시험 합격자를 대상으로 하이로의 미래를 이끌어갈 주니어 변호사를 모집합니다.</p>
+            <!-- 1. 신규변호사 -->
+            <div class="recruit-card" data-role="new-lawyer">
+                <div class="status-badge" id="status-new">Checking...</div>
+                <h3 class="recruit-title">신규 변호사 채용</h3>
+                <p class="recruit-desc">법학전문대학원 졸업 예정자 및 변호사 시험 합격자를 대상으로 하이로의 미래를 함께할 인재를 모집합니다.</p>
                 <a href="mailto:recruit@highnlaw.com" class="recruit-apply">Apply Now</a>
             </div>
 
-            <div class="recruit-card is-closed">
-                <div id="status-exp" class="status-badge status-closed"></div>
-                <h3 class="recruit-title">경력변호사 채용</h3>
-                <p class="recruit-desc">민사, 형사, 기업법무 등 특정 분야에서 탁월한 전문성과 1년 이상의 실무 경력을 보유한 변호사를 모집합니다.</p>
+            <!-- 2. 경력변호사 -->
+            <div class="recruit-card" data-role="exp-lawyer">
+                <div class="status-badge" id="status-exp">Checking...</div>
+                <h3 class="recruit-title">경력 변호사 채용</h3>
+                <p class="recruit-desc">민사, 형사, 기업 법무 등 특정 분야에서 1년 이상의 실무 경력을 보유한 전문 변호사를 모집합니다.</p>
                 <a href="mailto:recruit@highnlaw.com" class="recruit-apply">Apply Now</a>
             </div>
 
-            <div class="recruit-card is-closed">
-                <div id="status-mil" class="status-badge status-closed"></div>
-                <h3 class="recruit-title">법무관 채용</h3>
-                <p class="recruit-desc">전역 예정 법무관을 대상으로 공공기관 및 군사법 분야의 전문성을 발휘할 우수한 인재를 모집합니다.</p>
-                <a href="#" class="recruit-apply">Closed</a>
+            <!-- 3. 법무관 -->
+            <div class="recruit-card" data-role="mil-lawyer">
+                <div class="status-badge" id="status-mil">Checking...</div>
+                <h3 class="recruit-title">전역예정 법무관 채용</h3>
+                <p class="recruit-desc">군사법 및 공공기관 관련 전문성을 발휘할 전역 예정 법무관 인재를 특별 채용합니다.</p>
+                <a href="mailto:recruit@highnlaw.com" class="recruit-apply">Apply Now</a>
             </div>
 
-            <div class="recruit-card">
-                <div id="status-staff" class="status-badge status-open"></div>
-                <h3 class="recruit-title">전문 직원 채용</h3>
-                <p class="recruit-desc">법무행정, 비서, 일반 사무 등 하이로의 법률 서비스를 정교하게 지원할 역량 있는 파트너를 모집합니다.</p>
+            <!-- 4. 전문 직원 -->
+            <div class="recruit-card" data-role="staff">
+                <div class="status-badge" id="status-staff">Checking...</div>
+                <h3 class="recruit-title">법무행정 및 전문직원 채용</h3>
+                <p class="recruit-desc">변호사 업무를 정교하게 지원하고 하이로의 하이엔드 서비스를 완성할 파트너 직원을 모집합니다.</p>
                 <a href="mailto:recruit@highnlaw.com" class="recruit-apply">Apply Now</a>
             </div>
         </div>
     </section>
 
-    <div id="contact" class="cta-box">
+    <div class="cta-box">
         <span class="label">Inquiry</span>
         <h2>Commitment to Excellence</h2>
-        <p>법무법인 하이로는 클라이언트의 가치를 최우선으로 하며, 타협하지 않는 전문성을 약속합니다.</p>
-        <a href="Inquiry.html" class="contact-link">Professional Consultation</a>
+        <a href="inquiry.html" class="contact-link">Professional Consultation</a>
     </div>
 
     <footer>
-        <div style="margin-bottom: 20px;">
-            <p style="font-family: 'Playfair Display', serif; font-size: 15px; color: var(--gold-primary); letter-spacing: 2px; font-weight: 700;">HIGH & LAW</p>
-        </div>
+        <p style="font-family: 'Playfair Display', serif; font-size: 15px; color: var(--gold-primary); letter-spacing: 2px; font-weight: 700; margin-bottom: 15px;">HIGH & LAW</p>
         <div class="footer-info">
-            법무법인 하이로 | 대표변호사 : 조덕재, 김범, 강민구 | 사업자등록번호 : xxx-xx-xxxxx<br>
-            서울특별시 강남구 테헤란로 141, 역삼KR타워 15층 | TEL : 02-xxx-xxxx
+            법무법인 하이로 | 대표변호사 : 조덕재, 김범, 강민구 | 서울특별시 강남구 테헤란로 141, 역삼KR타워 15층
         </div>
- 
-        <p style="margin-top: 15px; opacity: 0.6; font-weight: 400; max-width: 600px; margin-inline: auto;">&copy; 2026 HIGH & LAW FIRM. ALL RIGHTS RESERVED.</p>
-        <p style="margin-top: 15px; opacity: 0.6; font-weight: 400; max-width: 600px; margin-inline: auto;">ATTORNEY ADVERTISING. PRIOR RESULTS DO NOT GUARANTEE A SIMILAR OUTCOME.</p>
+        <p style="margin-top: 15px; opacity: 0.6;">&copy; 2026 HIGH & LAW FIRM. ALL RIGHTS RESERVED.</p>
     </footer>
 
     <script>
+        // --- 관리자 센터에서 설정한 상태를 가져와 화면을 업데이트하는 함수 ---
+        async function loadStatus() {
+            try {
+                const res = await fetch('/api/public/recruit');
+                const data = await res.json();
+
+                data.forEach(item => {
+                    // role_id에 맞는 배지 엘리먼트 찾기
+                    let badgeId = '';
+                    if (item.role_id === 'new-lawyer') badgeId = 'status-new';
+                    else if (item.role_id === 'exp-lawyer') badgeId = 'status-exp';
+                    else if (item.role_id === 'mil-lawyer') badgeId = 'status-mil';
+                    else if (item.role_id === 'staff') badgeId = 'status-staff';
+
+                    const badge = document.getElementById(badgeId);
+                    if (badge) {
+                        const card = badge.closest('.recruit-card');
+                        const applyBtn = card.querySelector('.recruit-apply');
+                        const isOpen = (item.status === 'status-open');
+
+                        if (isOpen) {
+                            badge.className = 'status-badge status-open';
+                            badge.textContent = '모집 중';
+                            card.classList.remove('is-closed');
+                            applyBtn.textContent = 'Apply Now';
+                            applyBtn.style.pointerEvents = 'auto';
+                        } else {
+                            badge.className = 'status-badge status-closed';
+                            badge.textContent = '모집 마감';
+                            card.classList.add('is-closed');
+                            applyBtn.textContent = 'Closed';
+                            applyBtn.style.pointerEvents = 'none';
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error("상태 로드 실패", e);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadStatus);
+
+        // 모바일 메뉴 토글
         const toggle = document.getElementById('mobile-toggle');
         const nav = document.getElementById('nav-menu');
-        const links = document.querySelectorAll('nav a');
-
         toggle.addEventListener('click', () => {
             toggle.classList.toggle('active');
             nav.classList.toggle('active');
         });
-
-        links.forEach(link => {
-            link.addEventListener('click', () => {
-                toggle.classList.remove('active');
-                nav.classList.remove('active');
-            });
-        });
     </script>
-
-<script>
-//추가한 함수
-    // --- 서버에서 채용 상태를 가져와서 화면을 업데이트하는 함수 ---
-    async function updateRecruitPage() {
-        try {
-            const res = await fetch('/api/public/recruit');
-            const data = await res.json();
-
-            // 서버 데이터와 HTML 요소 ID 매핑
-            const roleMap = {
-                'new-lawyer': 'status-new',
-                'exp-lawyer': 'status-exp',
-                'mil-lawyer': 'status-mil',
-                'staff': 'status-staff'
-            };
-
-            data.forEach(item => {
-                const badgeId = roleMap[item.role_id];
-                const badgeElement = document.getElementById(badgeId);
-                
-                if (badgeElement) {
-                    const cardElement = badgeElement.closest('.recruit-card');
-                    const applyBtn = cardElement.querySelector('.recruit-apply');
-                    const isOpen = item.status === 'status-open';
-
-                    if (isOpen) {
-                        // 모집 중 상태일 때
-                        badgeElement.className = 'status-badge status-open';
-                        cardElement.classList.remove('is-closed');
-                        applyBtn.textContent = 'Apply Now';
-                        applyBtn.style.pointerEvents = 'auto'; // 버튼 클릭 가능
-                    } else {
-                        // 모집 마감 상태일 때
-                        badgeElement.className = 'status-badge status-closed';
-                        cardElement.classList.add('is-closed');
-                        applyBtn.textContent = 'Closed';
-                        applyBtn.style.pointerEvents = 'none'; // 버튼 클릭 불가
-                    }
-                }
-            });
-        } catch (e) {
-            console.error("채용 정보 로드 실패:", e);
-        }
-    }
-
-    // 페이지 로드 시 실행
-    window.addEventListener('DOMContentLoaded', updateRecruitPage);
-
-    // 모바일 메뉴 토글 (기존 코드)
-    const toggle = document.getElementById('mobile-toggle');
-    const nav = document.getElementById('nav-menu');
-    toggle.addEventListener('click', () => {
-        toggle.classList.toggle('active');
-        nav.classList.toggle('active');
-    });
-</script>
-
-
 </body>
 </html>

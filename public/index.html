@@ -1,21 +1,14 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-
-<meta name="naver-site-verification" content="24a0f2d7174b7232813cd8c721696f119d678863" />
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <!-- 사이트 설명 및 Open Graph 설정 (네이버 검색 최적화) -->
     <title>법무법인 하이로 | High & Law</title>
     <meta name="description" content="법무법인 하이로(High & Law) - 클라이언트의 필요에 충실한 맞춤형 하이엔드 리걸 서비스를 제공합니다.">
-    <meta property="og:title" content="법무법인 하이로 | High & Law">
-    <meta property="og:description" content="High Dignity, Law's Solution. 클라이언트의 기대를 넘어서는 정교하고 품격 있는 법률 솔루션을 제공합니다.">
-    <meta property="og:type" content="website">
     
     <!-- Google Fonts: Playfair Display, Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --bg-base: #fcfcfc;
@@ -23,7 +16,6 @@
             --text-secondary: #4a4a4a;
             --gold-primary: #c5a059;
             --gold-gradient: linear-gradient(135deg, #c5a059 0%, #f4eee0 50%, #c5a059 100%);
-            --gold-light: #f4eee0;
             --border-color: #e5e5e5;
             --white: #ffffff;
         }
@@ -34,327 +26,247 @@
         body {
             background-color: var(--bg-base);
             color: var(--text-primary);
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.8;
             -webkit-font-smoothing: antialiased;
             word-break: keep-all;
         }
 
-        /* --- Header & Navigation --- */
+        /* --- Header --- */
         header {
-            position: fixed;
-            top: 0; width: 100%;
-            padding: 15px 60px;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(15px);
+            position: fixed; top: 0; width: 100%; padding: 15px 60px; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
-
-        .logo-group { display: flex; align-items: center; gap: 12px; text-decoration: none; z-index: 1100; }
+        .logo-group { display: flex; align-items: center; gap: 12px; text-decoration: none; }
         .logo-text h1 { 
-            font-family: 'Playfair Display', serif;
-            font-size: 24px; font-weight: 700; letter-spacing: 4px; line-height: 1; text-transform: uppercase;
+            font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; letter-spacing: 4px; line-height: 1; text-transform: uppercase;
             background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.1));
         }
         .logo-text p { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 5px; color: var(--text-secondary); font-weight: 500; opacity: 0.8; }
-
-        .menu-toggle { display: none; cursor: pointer; z-index: 1100; padding: 5px; }
-        .menu-toggle div { width: 25px; height: 2px; background-color: var(--text-primary); margin: 5px 0; transition: 0.3s; }
 
         nav ul { display: flex; list-style: none; gap: 25px; }
         nav a { color: var(--text-primary); text-decoration: none; font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; transition: 0.3s; }
         nav a:hover { color: var(--gold-primary); }
 
-        /* --- Hero --- */
-        .hero { height: 85vh; display: flex; align-items: center; justify-content: center; padding: 0 20px; background: linear-gradient(to bottom right, #fdfdfd, #f4eee0); text-align: center; border-bottom: 1px solid var(--border-color); }
-        .hero h2 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 7vw, 72px); font-weight: 400; line-height: 1.2; margin-bottom: 25px; color: var(--text-primary); }
-        .hero p { font-size: clamp(16px, 3vw, 22px); color: var(--text-secondary); max-width: 700px; margin: 0 auto; font-weight: 300; }
+        .menu-toggle { display: none; cursor: pointer; z-index: 1100; padding: 5px; }
+        .menu-toggle div { width: 25px; height: 2px; background-color: var(--text-primary); margin: 5px 0; transition: 0.3s; }
 
+        /* --- Hero --- */
+        .hero { height: 85vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(to bottom right, #fdfdfd, #f4eee0); text-align: center; border-bottom: 1px solid var(--border-color); }
+        .hero-content { animation: fadeInUp 1s ease; }
+        .hero h2 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 8vw, 72px); font-weight: 400; line-height: 1.1; color: var(--text-primary); margin-bottom: 25px; }
+        .hero p { font-size: clamp(16px, 3vw, 22px); color: var(--text-secondary); max-width: 700px; margin: 0 auto; font-weight: 300; }
+        .label { display: block; text-align: center; font-size: 11px; letter-spacing: 4px; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 15px; font-weight: 700; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Sections --- */
         section { padding: 120px 20px; max-width: 1400px; margin: 0 auto; }
-        .label { display: block; text-align: center; font-size: clamp(9px, 2vw, 11px); letter-spacing: 4px; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 15px; font-weight: 700; }
         .section-title { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 40px); font-weight: 400; text-align: center; margin-bottom: 60px; }
 
-        /* --- Grid Layouts --- */
-        .partner-grid, .news-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
-        .card { background: var(--white); padding: 40px 30px; border: 1px solid var(--border-color); transition: all 0.4s ease; display: flex; flex-direction: column; }
-        .card:hover { border-color: var(--gold-primary); transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
-        
-        /* Partners */
-        .partner-rank { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold-primary); margin-bottom: 25px; font-weight: 700; }
-        .career-list { list-style: none; flex-grow: 1; }
-        .career-list li { font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; padding-left: 18px; position: relative; line-height: 1.6; }
-        .career-list li::before { content: ""; position: absolute; left: 0; top: 10px; width: 8px; height: 1px; background: var(--gold-primary); }
+        /* Partners Brief */
+        .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .partner-card { background: var(--white); padding: 40px 30px; border: 1px solid var(--border-color); transition: 0.4s; }
+        .partner-card:hover { border-color: var(--gold-primary); transform: translateY(-5px); }
+        .partner-card h3 { font-family: 'Playfair Display', serif; font-size: 20px; margin-bottom: 15px; }
+        .career-list { list-style: none; font-size: 13px; color: var(--text-secondary); }
+        .career-list li { margin-bottom: 8px; position: relative; padding-left: 15px; }
+        .career-list li::before { content: ""; position: absolute; left: 0; top: 10px; width: 6px; height: 1px; background: var(--gold-primary); }
 
-        /* Practices */
-        .practice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background-color: var(--border-color); border: 1px solid var(--border-color); }
-        .practice-item { background-color: var(--white); padding: 50px 20px; text-align: center; font-family: 'Playfair Display', serif; font-size: 18px; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
-        .practice-item:hover { background-color: var(--gold-light); color: var(--gold-primary); }
+        /* Dynamic News Section */
+        .news-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .card { background: var(--white); padding: 30px; border: 1px solid var(--border-color); transition: 0.4s; display: flex; flex-direction: column; }
+        .card:hover { border-color: var(--gold-primary); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .news-date { font-size: 12px; color: var(--gold-primary); font-weight: 600; margin-bottom: 10px; }
+        .news-title { font-size: 17px; font-weight: 600; margin-bottom: 12px; line-height: 1.4; flex-shrink: 0; }
+        .news-desc { font-size: 14px; color: var(--text-secondary); opacity: 0.8; flex-grow: 1; }
 
-        /* News */
-        .news-date { font-size: 12px; color: var(--gold-primary); margin-bottom: 10px; font-weight: 600; }
-        .news-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; line-height: 1.4; height: 50px; overflow: hidden; }
-        .news-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; opacity: 0.8; }
-        .read-more { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-primary); text-decoration: none; border-bottom: 1px solid var(--gold-primary); align-self: flex-start; }
-
-        /* News Box Link Style 수정: The Partners와 동일하게 보이도록 하단 링크 버튼 숨김 */
-        #sync-news-grid .read-more { display: none !important; }
-
-        /* Recruit */
+        /* Recruit Section */
         .recruit-container { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; background: #f9f9f9; padding: 80px 60px; border: 1px solid var(--border-color); }
         .recruit-text h3 { font-family: 'Playfair Display', serif; font-size: 32px; margin-bottom: 20px; }
-        .recruit-text p { margin-bottom: 30px; color: var(--text-secondary); }
         .recruit-info-list { list-style: none; }
-        .recruit-info-list li { margin-bottom: 20px; border-left: 3px solid var(--gold-primary); padding-left: 20px; }
-        .recruit-info-list strong { display: block; font-size: 14px; color: var(--gold-primary); margin-bottom: 5px; }
+        .recruit-info-list li { margin-bottom: 20px; border-left: 3px solid var(--gold-primary); padding-left: 20px; font-size: 15px; }
+        .recruit-info-list strong { display: block; font-size: 13px; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 5px; }
+        .status-text { font-size: 12px; font-weight: 700; margin-left: 10px; }
 
         /* CTA & Footer */
         .cta-box { background-color: #1a1a1a; color: var(--white); text-align: center; padding: 100px 20px; }
-        .cta-box h2 { font-family: 'Playfair Display', serif; font-size: clamp(26px, 5vw, 36px); margin-bottom: 15px; }
-        .cta-box p { font-weight: 300; color: #aaa; margin-bottom: 35px; font-size: 15px; }
-        .contact-link { display: inline-block; padding: 16px 45px; border: 1px solid var(--gold-primary); color: var(--gold-primary); text-decoration: none; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
+        .contact-link { display: inline-block; padding: 16px 45px; border: 1px solid var(--gold-primary); color: var(--gold-primary); text-decoration: none; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; margin-top: 30px; }
         .contact-link:hover { background: var(--gold-primary); color: #1a1a1a; }
-
         footer { padding: 60px 20px; background-color: var(--white); border-top: 1px solid var(--border-color); text-align: center; font-size: 11px; color: #888; letter-spacing: 0.5px; }
 
         /* Responsive */
         @media (max-width: 1024px) { 
             header { padding: 15px 30px; } 
-            .partner-grid, .news-grid { grid-template-columns: repeat(2, 1fr); } 
-            .practice-grid { grid-template-columns: repeat(2, 1fr); }
+            .partner-grid, .news-grid { grid-template-columns: repeat(2, 1fr); }
             .recruit-container { grid-template-columns: 1fr; padding: 40px; }
         }
         @media (max-width: 768px) {
             header { padding: 15px 20px; }
-            .logo-text h1 { font-size: 20px; letter-spacing: 3px; }
             .menu-toggle { display: block; }
             nav { position: fixed; top: 0; right: -100%; width: 80%; height: 100vh; background: white; padding: 100px 40px; transition: 0.4s ease; box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
             nav.active { right: 0; }
             nav ul { flex-direction: column; gap: 25px; }
-            nav a { font-size: 15px; }
-            section { padding: 80px 20px; }
             .partner-grid, .news-grid { grid-template-columns: 1fr; }
-            .menu-toggle.active div:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-            .menu-toggle.active div:nth-child(2) { opacity: 0; }
-            .menu-toggle.active div:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <a href="#" class="logo-group">
+        <a href="index.html" class="logo-group">
             <div class="logo-text">
                 <h1>High & Law</h1>
                 <p>법무법인 하이로</p>
             </div>
         </a>
-        
         <div class="menu-toggle" id="mobile-toggle">
-            <div></div>
-            <div></div>
-            <div></div>
+            <div></div><div></div><div></div>
         </div>
-
-<nav id="nav-menu">
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="the-firm.html">The Firm</a></li>
-        <li><a href="partners.html">Partners</a></li>
-        <li><a href="practices.html">Practices</a></li>
-        <li><a href="news.html">News</a></li>
-        <li><a href="recruit.html">Recruit</a></li>
-        <li><a href="inquiry.html">Inquiry</a></li>
-    </ul>
-</nav>
-
+        <nav id="nav-menu">
+            <ul>
+                <li><a href="index.html" style="color:var(--gold-primary)">Home</a></li>
+                <li><a href="the-firm.html">The Firm</a></li>
+                <li><a href="partners.html">Partners</a></li>
+                <li><a href="practices.html">Practices</a></li>
+                <li><a href="news.html">News</a></li>
+                <li><a href="recruit.html">Recruit</a></li>
+                <li><a href="inquiry.html">Inquiry</a></li>
+            </ul>
+        </nav>
     </header>
 
-    <section class="hero" id="about">
+    <section class="hero">
         <div class="hero-content">
             <span class="label">Loyalty & Dignity</span>
             <h2>High Dignity,<br>Law's Solution</h2>
-            <p>각 분야의 최고 전문가들이 모여 클라이언트의 기대를 넘어서는</p>
-            <p>정교하고 품격 있는 법률 솔루션을 제공합니다.</p>
+            <p>각 분야의 최고 전문가들이 모여 클라이언트의 기대를 넘어서는<br>정교하고 품격 있는 법률 솔루션을 제공합니다.</p>
         </div>
     </section>
 
+    <!-- Partners Brief -->
     <section id="professionals">
-        <span class="label">EXPERTISE</span>
+        <span class="label">Expertise</span>
         <h2 class="section-title">The Partners</h2>
         <div class="partner-grid">
-            <div class="card">
-                <span class="partner-rank">Representative Partner</span>
+            <div class="partner-card">
                 <h3>조덕재 대표변호사</h3>
                 <ul class="career-list">
-                    <li>육군 제15보병사단 군검사</li>
-                    <li>육군 제2군단 군검사</li>
-                    <li>국방시설본부 소송수행자</li>
-                    <li>법무법인 와이케이 노동 · 중대재해 · 형사</li>
+                    <li>영남대학교 법학전문대학원</li>
+                    <li>전) 육군 군검사</li>
+                    <li>전) 법무법인 와이케이</li>
                 </ul>
             </div>
-            <div class="card">
-                <span class="partner-rank">Representative Partner</span>
+            <div class="partner-card">
                 <h3>김범 대표변호사</h3>
                 <ul class="career-list">
-                    <li>육군 제23보병사단 군검사</li>
-                    <li>육군 제23보병사단 징계장교</li>
-                    <li>국방부 차관실 소송수행자</li>
-                    <li>법무법인(유) 로고스 소송 · 자문</li>
+                    <li>전남대학교 법학전문대학원</li>
+                    <li>전) 육군 군검사</li>
+                    <li>전) 법무법인 로고스</li>
                 </ul>
             </div>
-            <div class="card">
-                <span class="partner-rank">Representative Partner</span>
+            <div class="partner-card">
                 <h3>강민구 대표변호사</h3>
                 <ul class="career-list">
-                    <li>해군 · 해병대 법무관</li>
-                    <li>소말리아해역호송전대 법무참모 · 군검사</li>
-                    <li>방위사업청 소송수행자</li>
-                    <li>법무법인 와이케이 노동 · 중대재해 · 방산</li>
+                    <li>고려대학교 법학전문대학원</li>
+                    <li>전) 해군·해병대 법무관</li>
+                    <li>전) 방위사업청 소송수행자</li>
                 </ul>
             </div>
         </div>
     </section>
 
-    <section id="practices">
-        <span class="label">Practice Areas</span>
-        <h2 class="section-title">Professional Services</h2>
-        <div class="practice-grid">
-            <div class="practice-item">민사소송</div>
-            <div class="practice-item">형사소송</div>
-            <div class="practice-item">노동 · 중대재해</div>
-            <div class="practice-item">기업 법무</div>
-            <div class="practice-item">방위산업</div>
-            <div class="practice-item">군사법</div>
-            <div class="practice-item">노무인사 및 징계</div>
-            <div class="practice-item">엔터테인먼트</div>
-            <div class="practice-item">행정 및 공공기관</div>
-            <div class="practice-item">가사 및 상속</div>
-            <div class="practice-item">지식재산권(IP)</div>
-            <div class="practice-item">이민</div>
+    <!-- Dynamic News Section -->
+    <section id="news">
+        <span class="label">Insights</span>
+        <h2 class="section-title">Latest News</h2>
+        <div class="news-grid" id="sync-news-grid">
+            <p style="text-align:center; grid-column: 1/-1; opacity:0.5;">뉴스를 불러오는 중입니다...</p>
         </div>
     </section>
 
-<section id="news">
-    <span class="label">Insights</span>
-    <h2 class="section-title">Latest News</h2>
-    <div class="news-grid" id="sync-news-grid">
-        <p style="text-align: center; grid-column: 1/-1; opacity: 0.5;">뉴스를 불러오는 중입니다...</p>
-    </div>
-</section>
-
-<script>
-async function loadPublicNews() {
-    const targetGrid = document.getElementById('sync-news-grid');
-    try {
-        const res = await fetch('/api/public/news');
-        const data = await res.json();
-        if(data.length > 0) {
-            targetGrid.innerHTML = data.map(item => `
-                <div class="card">
-                    <span class="news-date">${item.created_at}</span>
-                    <h4 class="news-title">${item.title}</h4>
-                    <p class="news-desc">${item.content}</p>
-                </div>
-            `).join('');
-        }
-    } catch (e) { console.error(e); }
-}
-</script>
-
-<section id="recruit">
-    <span class="label">Careers</span>
-    <h2 class="section-title">Join High & Law</h2>
-    <div class="recruit-container">
-        <div class="recruit-text">
-            <h3>미래를 함께할<br>최고의 인재를 기다립니다.</h3>
-            <p>법무법인 하이로는 탁월한 전문성과 함께 클라이언트에 대한 헌신적인 태도를 갖춘 인재를 찾습니다.</p>
-            <a href="recruit.html" class="contact-link" style="padding: 14px 30px;">지원하기</a>
+    <!-- Dynamic Recruit Section -->
+    <section id="recruit">
+        <span class="label">Careers</span>
+        <h2 class="section-title">Join High & Law</h2>
+        <div class="recruit-container">
+            <div class="recruit-text">
+                <h3>미래를 함께할<br>최고의 인재를 기다립니다.</h3>
+                <p>탁월한 전문성과 헌신적인 태도를 갖춘 인재를 찾습니다.</p>
+                <a href="recruit.html" class="contact-link" style="padding: 14px 30px; font-size: 11px;">채용공고 보기</a>
+            </div>
+            <div class="recruit-info">
+                <ul class="recruit-info-list">
+                    <li data-recruit-id="new-lawyer"><strong>New Lawyers</strong> 신규 변호사 채용 <span class="status-text">Checking...</span></li>
+                    <li data-recruit-id="exp-lawyer"><strong>Experienced</strong> 경력 변호사 채용 <span class="status-text">Checking...</span></li>
+                    <li data-recruit-id="mil-lawyer"><strong>Military Legal</strong> 법무관 채용 <span class="status-text">Checking...</span></li>
+                    <li data-recruit-id="staff"><strong>Professional Staff</strong> 전문 직원 채용 <span class="status-text">Checking...</span></li>
+                </ul>
+            </div>
         </div>
-        <div class="recruit-info">
-            <ul class="recruit-info-list" id="main-recruit-list">
-                <li data-recruit-id="new-lawyer">
-                    <strong>New Lawyers</strong>
-                    신규 변호사 채용 <span class="status-text">확인 중...</span>
-                </li>
-                <li data-recruit-id="exp-lawyer">
-                    <strong>Experienced Professionals</strong>
-                    경력 변호사 채용 <span class="status-text">확인 중...</span>
-                </li>
-                <li data-recruit-id="mil-lawyer">
-                    <strong>Military Legal Officers</strong>
-                    법무관 채용 <span class="status-text">확인 중...</span>
-                </li>
-                <li data-recruit-id="staff">
-                    <strong>Professional Staff</strong>
-                    법무행정 및 사무원 채용 <span class="status-text">확인 중...</span>
-                </li>
-            </ul>
-        </div>
-    </div>
-</section>
+    </section>
 
-<script>
-async function loadPublicRecruit() {
-    try {
-        const res = await fetch('/api/public/recruit');
-        const data = await res.json();
-        data.forEach(item => {
-            const targetLi = document.querySelector(`[data-recruit-id="${item.role_id}"]`);
-            if (targetLi) {
-                const statusSpan = targetLi.querySelector('.status-text');
-                const isOpen = item.status === 'status-open';
-                statusSpan.textContent = isOpen ? '[모집 중]' : '[모집 마감]';
-                statusSpan.style.color = isOpen ? '#166534' : '#dc2626';
-            }
-        });
-    } catch (e) { console.error(e); }
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-    loadPublicNews();
-    loadPublicRecruit();
-});
-
-</script>
-
-    <div id="contact" class="cta-box">
-        <span class="label">Inquiry</span>
+    <div class="cta-box">
+        <span class="label">Consultation</span>
         <h2>Commitment to Excellence</h2>
-        <p>법무법인 하이로는 클라이언트의 가치를 최우선으로 하며, 타협하지 않는 전문성을 약속합니다.</p>
-        <a href="Inquiry.html" class="contact-link">Professional Consultation</a>
+        <a href="inquiry.html" class="contact-link">Professional Consultation</a>
     </div>
 
     <footer>
-        <div style="margin-bottom: 20px;">
-            <p style="font-family: 'Playfair Display', serif; font-size: 15px; color: var(--gold-primary); letter-spacing: 2px; font-weight: 700;">HIGH & LAW</p>
-        </div>
+        <p style="font-family: 'Playfair Display', serif; font-size: 15px; color: var(--gold-primary); letter-spacing: 2px; font-weight: 700; margin-bottom: 15px;">HIGH & LAW</p>
         <div class="footer-info">
-            법무법인 하이로 | 대표변호사 : 조덕재, 김범, 강민구 | 사업자등록번호 : xxx-xx-xxxxx<br>
-            서울특별시 강남구 테헤란로 141, 역삼KR타워 15층 | TEL : 02-xxx-xxxx
+            법무법인 하이로 | 서울특별시 강남구 테헤란로 141, 역삼KR타워 15층 | TEL : 02-xxx-xxxx
         </div>
-        <p style="margin-top: 15px; opacity: 0.6; font-weight: 400; max-width: 600px; margin-inline: auto;">&copy; 2026 HIGH & LAW FIRM. ALL RIGHTS RESERVED.</p>
-        <p style="margin-top: 15px; opacity: 0.6; font-weight: 400; max-width: 600px; margin-inline: auto;">ATTORNEY ADVERTISING. PRIOR RESULTS DO NOT GUARANTEE A SIMILAR OUTCOME.</p>
+        <p style="margin-top: 15px; opacity: 0.6;">&copy; 2026 HIGH & LAW FIRM. ALL RIGHTS RESERVED.</p>
     </footer>
 
     <script>
+        // --- 서버에서 데이터 동기화 함수 ---
+        async function syncMainData() {
+            // 1. 뉴스 데이터 (최신 3개)
+            try {
+                const nRes = await fetch('/api/public/news');
+                const nData = await nRes.json();
+                const newsGrid = document.getElementById('sync-news-grid');
+                if(nData.length > 0) {
+                    newsGrid.innerHTML = nData.slice(0, 3).map(item => `
+                        <div class="card">
+                            <span class="news-date">${item.created_at}</span>
+                            <h4 class="news-title">${item.title}</h4>
+                            <p class="news-desc">${item.content.substring(0, 80)}...</p>
+                        </div>
+                    `).join('');
+                } else {
+                    newsGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">등록된 소식이 없습니다.</p>';
+                }
+            } catch (e) { console.error("뉴스 동기화 실패"); }
+
+            // 2. 채용 상태 데이터
+            try {
+                const rRes = await fetch('/api/public/recruit');
+                const rData = await rRes.json();
+                rData.forEach(item => {
+                    const targetLi = document.querySelector(`[data-recruit-id="${item.role_id}"]`);
+                    if (targetLi) {
+                        const statusSpan = targetLi.querySelector('.status-text');
+                        const isOpen = item.status === 'status-open';
+                        statusSpan.textContent = isOpen ? '[모집 중]' : '[모집 마감]';
+                        statusSpan.style.color = isOpen ? '#166534' : '#dc2626';
+                    }
+                });
+            } catch (e) { console.error("채용 동기화 실패"); }
+        }
+
+        window.addEventListener('DOMContentLoaded', syncMainData);
+
+        // 모바일 메뉴 토글
         const toggle = document.getElementById('mobile-toggle');
         const nav = document.getElementById('nav-menu');
-        const links = document.querySelectorAll('nav a');
         toggle.addEventListener('click', () => {
             toggle.classList.toggle('active');
             nav.classList.toggle('active');
-        });
-        links.forEach(link => {
-            link.addEventListener('click', () => {
-                toggle.classList.remove('active');
-                nav.classList.remove('active');
-            });
         });
     </script>
 </body>
