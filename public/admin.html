@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>HighLaw | 관리자 센터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        .gold-text { color: #c5a059; }
+        .gold-bg { background-color: #c5a059; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div id="app" class="flex min-h-screen">
+        <!-- 사이드바 -->
+        <div class="w-64 bg-slate-900 text-white p-6 shadow-xl">
+            <div class="mb-10">
+                <h1 class="text-xl font-bold gold-text tracking-widest">HIGH & LAW</h1>
+                <p class="text-xs opacity-50">ADMINISTRATION</p>
+            </div>
+            <nav class="space-y-6">
+                <button @click="tab='inquiry'" :class="tab==='inquiry'?'gold-text font-bold':''" class="block w-full text-left transition">상담 신청 내역</button>
+                <button @click="tab='news'" :class="tab==='news'?'gold-text font-bold':''" class="block w-full text-left transition">뉴스/사례 관리</button>
+                <button @click="tab='recruit'" :class="tab==='recruit'?'gold-text font-bold':''" class="block w-full text-left transition">채용 공고 관리</button>
+            </nav>
+        </div>
+
+        <!-- 메인 콘텐츠 -->
+        <main class="flex-1 p-10">
+            <!-- 1. 상담 신청 확인 -->
+            <div v-if="tab === 'inquiry'">
+                <h2 class="text-2xl font-bold mb-6 border-b pb-4">실시간 상담 신청 현황</h2>
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                            <tr>
+                                <th class="p-4">날짜</th>
+                                <th class="p-4">신청자</th>
+                                <th class="p-4">사건일</th>
+                                <th class="p-4">내용 요약</th>
+                                <th class="p-4">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr v-for="item in inquiries" class="hover:bg-gray-50">
+                                <td class="p-4 text-sm">{{ item.created_at }}</td>
+                                <td class="p-4 font-bold">{{ item.name }}</td>
+                                <td class="p-4 text-sm">{{ item.date_of_incident }}</td>
+                                <td class="p-4 text-sm text-gray-600">{{ item.summary.substring(0, 30) }}...</td>
+                                <td class="p-4">
+                                    <span class="px-2 py-1 rounded text-xs gold-bg text-white">{{ item.status }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. 뉴스 등록 -->
+            <div v-if="tab === 'news'">
+                <h2 class="text-2xl font-bold mb-6 border-b pb-4">뉴스 및 성공사례 등록</h2>
+                <div class="bg-white p-8 rounded-lg shadow max-w-2xl">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold mb-1">카테고리</label>
+                            <select v-model="newsForm.category" class="w-full border p-2 rounded">
+                                <option value="H&L News">H&L News</option>
+                                <option value="Leading Cases">Leading Cases</option>
+                                <option value="Latest Updates">Latest Updates</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-1">제목</label>
+                            <input v-model="newsForm.title" type="text" class="w-full border p-2 rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-1">내용 요약</label>
+                            <textarea v-model="newsForm.content" class="w-full border p-2 rounded h-32"></textarea>
+                        </div>
+                        <button @click="saveNews" class="w-full gold-bg text-white py-3 font-bold hover:opacity-90">등록하기</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 채용 상태 관리 -->
+            <div v-if="tab === 'recruit'">
+                <h2 class="text-2xl font-bold mb-6 border-b pb-4">채용 상태 스위치</h2>
+                <div class="grid grid-cols-2 gap-6 max-w-3xl">
+                    <div v-for="role in ['new-lawyer', 'exp-lawyer', 'staff']" class="bg-white p-6 rounded shadow flex justify-between items-center">
+                        <span class="font-bold">{{ role.toUpperCase() }}</span>
+                        <select @change="updateRecruit(role, $event.target.value)" class="border p-2 rounded text-sm">
+                            <option value="status-open">모집 중</option>
+                            <option value="status-closed">모집 마감</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    tab: 'inquiry',
+                    inquiries: [],
+                    newsForm: { category: 'H&L News', title: '', content: '', date: new Date().toISOString().slice(0,10) }
+                }
+            },
+            methods: {
+                async fetchInquiries() {
+                    const res = await fetch('/api/admin/inquiries');
+                    this.inquiries = await res.json();
+                },
+                async saveNews() {
+                    await fetch('/api/news', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(this.newsForm)
+                    });
+                    alert('등록되었습니다.');
+                    this.newsForm.title = ''; this.newsForm.content = '';
+                },
+                async updateRecruit(id, status) {
+                    await fetch('/api/recruit/status', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ id, status })
+                    });
+                    alert('상태가 업데이트되었습니다. 홈페이지에 즉시 반영됩니다.');
+                }
+            },
+            mounted() {
+                this.fetchInquiries();
+                setInterval(this.fetchInquiries, 5000); // 5초마다 새 상담 확인
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>

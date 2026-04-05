@@ -1,0 +1,16 @@
+{
+  "name": "highlaw-web",
+  "version": "1.0.0",
+  "description": "법무법인 하이로 웹사이트",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "path": "^0.12.7",
+    "sqlite3": "^5.1.7"
+  }
+}
