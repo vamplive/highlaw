@@ -248,32 +248,27 @@
 </section>
 
 <script>
-    async function syncNewsFromPage() {
-        const targetGrid = document.getElementById('sync-news-grid');
-        try {
-            const response = await fetch('news.html');
-            if (!response.ok) throw new Error('파일을 불러올 수 없습니다.');
-            const htmlText = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlText, 'text/html');
-            const sourceSectionIds = ['hl-news', 'leading-cases', 'latest-updates'];
-            targetGrid.innerHTML = '';
-            sourceSectionIds.forEach(sectionId => {
-                const section = doc.getElementById(sectionId);
-                if (section) {
-                    const firstCard = section.querySelector('.card');
-                    if (firstCard) {
-                        const clonedCard = firstCard.cloneNode(true);
-                        targetGrid.appendChild(clonedCard);
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('News Sync Error:', error);
-            targetGrid.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">최신 소식을 불러오는 데 실패했습니다.</p>';
+async function loadNews() {
+    const targetGrid = document.getElementById('sync-news-grid');
+    try {
+        const res = await fetch('/api/public/news');
+        const newsData = await res.json();
+        
+        if(newsData.length === 0) {
+            targetGrid.innerHTML = '<p>등록된 뉴스가 없습니다.</p>';
+            return;
         }
-    }
-    window.addEventListener('DOMContentLoaded', syncNewsFromPage);
+
+        targetGrid.innerHTML = newsData.map(item => `
+            <div class="card">
+                <span class="news-date">${item.created_at}</span>
+                <h4 class="news-title">${item.title}</h4>
+                <p class="news-desc">${item.content}</p>
+            </div>
+        `).join('');
+    } catch (e) { console.error(e); }
+}
+window.addEventListener('DOMContentLoaded', loadNews);
 </script>
 
 <section id="recruit">
@@ -309,36 +304,23 @@
 </section>
 
 <script>
-    async function syncRecruitStatus() {
-        try {
-            const response = await fetch('recruit.html');
-            const text = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            const syncItems = [
-                { id: 'new-lawyer', sourceId: 'status-new' },
-                { id: 'exp-lawyer', sourceId: 'status-exp' },
-                { id: 'mil-lawyer', sourceId: 'status-mil' },
-                { id: 'staff', sourceId: 'status-staff' }
-            ];
-            syncItems.forEach(item => {
-                const sourceBadge = doc.getElementById(item.sourceId);
-                const targetLi = document.querySelector(`[data-recruit-id="${item.id}"]`);
+async function loadRecruitStatus() {
+    try {
+        const res = await fetch('/api/public/recruit');
+        const statuses = await res.json();
+        
+        statuses.forEach(item => {
+            const targetLi = document.querySelector(`[data-recruit-id="${item.role_id}"]`);
+            if (targetLi) {
                 const statusSpan = targetLi.querySelector('.status-text');
-                if (sourceBadge && statusSpan) {
-                    const isOpen = sourceBadge.classList.contains('status-open');
-                    statusSpan.textContent = isOpen ? '[모집 중]' : '[모집 마감]';
-                    statusSpan.style.color = isOpen ? '#166534' : '#dc2626';
-                    statusSpan.style.fontWeight = '600';
-                    statusSpan.style.fontSize = '12px';
-                    statusSpan.style.marginLeft = '10px';
-                }
-            });
-        } catch (error) {
-            console.error('채용 정보 동기화 실패:', error);
-        }
-    }
-    window.addEventListener('DOMContentLoaded', syncRecruitStatus);
+                const isOpen = item.status === 'status-open';
+                statusSpan.textContent = isOpen ? '[모집 중]' : '[모집 마감]';
+                statusSpan.style.color = isOpen ? '#166534' : '#dc2626';
+            }
+        });
+    } catch (e) { console.error(e); }
+}
+window.addEventListener('DOMContentLoaded', loadRecruitStatus);
 </script>
 
     <div id="contact" class="cta-box">
