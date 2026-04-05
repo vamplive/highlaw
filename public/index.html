@@ -161,17 +161,18 @@
             <div></div>
         </div>
 
-        <nav id="nav-menu">
-            <ul>
-                <li><a href="index.html" style="color:var(--gold-primary)">Home</a></li>
-                <li><a href="The Firm.html">The Firm</a></li>
-                <li><a href="Partners.html">Partners</a></li>
-                <li><a href="Practices.html">Practices</a></li>
-                <li><a href="News.html">News</a></li>
-                <li><a href="Recruit.html">Recruit</a></li>
-                <li><a href="Inquiry.html">Inquiry</a></li>
-            </ul>
-        </nav>
+<nav id="nav-menu">
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="the-firm.html">The Firm</a></li>
+        <li><a href="partners.html">Partners</a></li>
+        <li><a href="practices.html">Practices</a></li>
+        <li><a href="news.html">News</a></li>
+        <li><a href="recruit.html">Recruit</a></li>
+        <li><a href="inquiry.html">Inquiry</a></li>
+    </ul>
+</nav>
+
     </header>
 
     <section class="hero" id="about">
@@ -253,22 +254,19 @@ async function loadNews() {
     try {
         const res = await fetch('/api/public/news');
         const newsData = await res.json();
-        
-        if(newsData.length === 0) {
-            targetGrid.innerHTML = '<p>등록된 뉴스가 없습니다.</p>';
-            return;
+        if (newsData.length > 0) {
+            targetGrid.innerHTML = newsData.map(item => `
+                <div class="card">
+                    <span class="news-date">${item.created_at}</span>
+                    <h4 class="news-title">${item.title}</h4>
+                    <p class="news-desc">${item.content}</p>
+                </div>
+            `).join('');
+        } else {
+            targetGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">최신 소식이 없습니다.</p>';
         }
-
-        targetGrid.innerHTML = newsData.map(item => `
-            <div class="card">
-                <span class="news-date">${item.created_at}</span>
-                <h4 class="news-title">${item.title}</h4>
-                <p class="news-desc">${item.content}</p>
-            </div>
-        `).join('');
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("뉴스 로드 실패", e); }
 }
-window.addEventListener('DOMContentLoaded', loadNews);
 </script>
 
 <section id="recruit">
@@ -308,7 +306,6 @@ async function loadRecruitStatus() {
     try {
         const res = await fetch('/api/public/recruit');
         const statuses = await res.json();
-        
         statuses.forEach(item => {
             const targetLi = document.querySelector(`[data-recruit-id="${item.role_id}"]`);
             if (targetLi) {
@@ -318,9 +315,13 @@ async function loadRecruitStatus() {
                 statusSpan.style.color = isOpen ? '#166534' : '#dc2626';
             }
         });
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("채용 정보 로드 실패", e); }
 }
-window.addEventListener('DOMContentLoaded', loadRecruitStatus);
+
+window.addEventListener('DOMContentLoaded', () => {
+    loadNews();
+    loadRecruitStatus();
+});
 </script>
 
     <div id="contact" class="cta-box">

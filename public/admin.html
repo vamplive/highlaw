@@ -109,25 +109,29 @@
                 }
             },
             methods: {
-                async fetchInquiries() {
-                    const res = await fetch('/api/admin/inquiries');
-                    this.inquiries = await res.json();
-                },
-                async saveNews() {
-                    await fetch('/api/news', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(this.newsForm)
-                    });
-                    alert('등록되었습니다.');
-                    this.newsForm.title = ''; this.newsForm.content = '';
-                },
-                async updateRecruit(id, status) {
-                    await fetch('/api/recruit/status', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ id, status })
-                    });
+async fetchInquiries() {
+    const res = await fetch('/api/admin/inquiries');
+    if(res.ok) this.inquiries = await res.json();
+},
+async saveNews() {
+    const res = await fetch('/api/news', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(this.newsForm)
+    });
+    if(res.ok) {
+        alert('등록되었습니다.');
+        this.newsForm.title = ''; this.newsForm.content = '';
+    }
+},
+async updateRecruit(id, status) {
+    await fetch('/api/recruit/status', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id, status })
+    });
+}
+
                     alert('상태가 업데이트되었습니다. 홈페이지에 즉시 반영됩니다.');
                 }
             },
