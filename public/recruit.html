@@ -200,44 +200,41 @@
 
     <script>
         // --- 관리자 센터에서 설정한 상태를 가져와 화면을 업데이트하는 함수 ---
-        async function loadStatus() {
-            try {
-                const res = await fetch('/api/public/recruit');
-                const data = await res.json();
+async function loadStatus() {
+    try {
+        const res = await fetch('/api/public/recruit');
+        const data = await res.json();
 
-                data.forEach(item => {
-                    // role_id에 맞는 배지 엘리먼트 찾기
-                    let badgeId = '';
-                    if (item.role_id === 'new-lawyer') badgeId = 'status-new';
-                    else if (item.role_id === 'exp-lawyer') badgeId = 'status-exp';
-                    else if (item.role_id === 'mil-lawyer') badgeId = 'status-mil';
-                    else if (item.role_id === 'staff') badgeId = 'status-staff';
+        data.forEach(item => {
+            // role_id: new-lawyer, exp-lawyer, mil-lawyer, staff
+            const card = document.querySelector(`.recruit-card[data-role="${item.role_id}"]`);
+            if (card) {
+                const badge = card.querySelector('.status-badge');
+                const applyBtn = card.querySelector('.recruit-apply');
+                const isOpen = (item.status === 'status-open');
 
-                    const badge = document.getElementById(badgeId);
-                    if (badge) {
-                        const card = badge.closest('.recruit-card');
-                        const applyBtn = card.querySelector('.recruit-apply');
-                        const isOpen = (item.status === 'status-open');
-
-                        if (isOpen) {
-                            badge.className = 'status-badge status-open';
-                            badge.textContent = '모집 중';
-                            card.classList.remove('is-closed');
-                            applyBtn.textContent = 'Apply Now';
-                            applyBtn.style.pointerEvents = 'auto';
-                        } else {
-                            badge.className = 'status-badge status-closed';
-                            badge.textContent = '모집 마감';
-                            card.classList.add('is-closed');
-                            applyBtn.textContent = 'Closed';
-                            applyBtn.style.pointerEvents = 'none';
-                        }
-                    }
-                });
-            } catch (e) {
-                console.error("상태 로드 실패", e);
+                if (isOpen) {
+                    badge.className = 'status-badge status-open';
+                    badge.textContent = '모집 중';
+                    card.classList.remove('is-closed');
+                    applyBtn.textContent = 'Apply Now';
+                    applyBtn.style.pointerEvents = 'auto';
+                    applyBtn.style.opacity = '1';
+                } else {
+                    badge.className = 'status-badge status-closed';
+                    badge.textContent = '모집 마감';
+                    card.classList.add('is-closed');
+                    applyBtn.textContent = 'Closed';
+                    applyBtn.style.pointerEvents = 'none';
+                    applyBtn.style.opacity = '0.5';
+                }
             }
-        }
+        });
+    } catch (e) {
+        console.error("채용 상태 로드 실패", e);
+    }
+}
+
 
         window.addEventListener('DOMContentLoaded', loadStatus);
 

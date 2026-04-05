@@ -243,21 +243,23 @@
                 }
             } catch (e) { console.error("뉴스 동기화 실패"); }
 
-            // 2. 채용 상태 데이터
-            try {
-                const rRes = await fetch('/api/public/recruit');
-                const rData = await rRes.json();
-                rData.forEach(item => {
-                    const targetLi = document.querySelector(`[data-recruit-id="${item.role_id}"]`);
-                    if (targetLi) {
-                        const statusSpan = targetLi.querySelector('.status-text');
-                        const isOpen = item.status === 'status-open';
-                        statusSpan.textContent = isOpen ? '[모집 중]' : '[모집 마감]';
-                        statusSpan.style.color = isOpen ? '#166534' : '#dc2626';
-                    }
-                });
-            } catch (e) { console.error("채용 동기화 실패"); }
+// 2. 채용 상태 데이터 동기화
+try {
+    const rRes = await fetch('/api/public/recruit');
+    const rData = await rRes.json();
+    rData.forEach(item => {
+        const targetLi = document.querySelector(`[data-recruit-id="${item.role_id}"]`);
+        if (targetLi) {
+            const statusSpan = targetLi.querySelector('.status-text');
+            const isOpen = item.status === 'status-open';
+            statusSpan.textContent = isOpen ? '[모집 중]' : '[모집 마감]';
+            statusSpan.style.color = isOpen ? '#166534' : '#dc2626';
+            statusSpan.style.fontWeight = 'bold';
         }
+    });
+} catch (e) { console.error("채용 동기화 실패"); }
+
+
 
         window.addEventListener('DOMContentLoaded', syncMainData);
 
