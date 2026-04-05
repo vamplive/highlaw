@@ -58,4 +58,7 @@ app.get('/api/admin/inquiries', (req, res) => {
     });
 });
 
-app.listen(3000, () => console.log('서버가 http://localhost:3000 에서 실행 중입니다.'));
+const PORT = process.env.PORT || 3000; 
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
+});
