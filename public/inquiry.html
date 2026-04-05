@@ -276,63 +276,61 @@
         <p style="margin-top: 25px; opacity: 0.5;">&copy; 2026 HIGH & LAW FIRM. ALL RIGHTS RESERVED.</p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
-        // 모바일 메뉴
-        const toggle = document.getElementById('mobile-toggle');
-        const nav = document.getElementById('nav-menu');
-        toggle.addEventListener('click', () => {
-            toggle.classList.toggle('active');
-            nav.classList.toggle('active');
-        });
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    // 모바일 메뉴
+    const toggle = document.getElementById('mobile-toggle');
+    const nav = document.getElementById('nav-menu');
+    toggle.addEventListener('click', () => {
+        toggle.classList.toggle('active');
+        nav.classList.toggle('active');
+    });
 
-        // 캘린더 (디자인 최적화)
-        flatpickr(".datepicker", {
-            dateFormat: "Y-m-d",
-            minDate: "today"
-        });
+    // 캘린더 설정
+    flatpickr(".datepicker", { dateFormat: "Y-m-d", minDate: "today" });
 
-        // 오전/오후 버튼
-        document.querySelectorAll('.ampm-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const parent = this.parentElement;
-                parent.querySelectorAll('.ampm-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                parent.querySelector('input[type="hidden"]').value = this.dataset.value;
+    // 오전/오후 선택 버튼 로직
+    document.querySelectorAll('.ampm-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const parent = this.parentElement;
+            parent.querySelectorAll('.ampm-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            parent.querySelector('input[type="hidden"]').value = this.dataset.value;
+        });
+    });
+
+    // 파일 선택 시 파일명 표시
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const list = document.getElementById('file-list');
+        const files = Array.from(e.target.files).map(f => f.name).join(', ');
+        list.textContent = files ? "선택된 파일: " + files : "";
+    });
+
+    // --- 상담 신청 전송 로직 ---
+    document.getElementById('inquiryForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        // 사용자 이름 정보가 필요하다면 추가 (필요 시 HTML에 <input name="name"> 추가)
+        
+        try {
+            const response = await fetch('/api/inquiry', {
+                method: 'POST',
+                body: formData // 파일이 포함되어 있으므로 FormData 그대로 전송
             });
-        });
 
-        // 파일 리스트
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const list = document.getElementById('file-list');
-            const files = Array.from(e.target.files).map(f => f.name).join(', ');
-            list.textContent = files ? "Selected: " + files : "";
-        });
-
-        // 제출
-async fetchInquiries() {
-    const res = await fetch('/api/admin/inquiries');
-    if(res.ok) this.inquiries = await res.json();
-},
-async saveNews() {
-    const res = await fetch('/api/news', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(this.newsForm)
+            if (response.ok) {
+                document.getElementById('success-overlay').style.display = 'flex';
+            } else {
+                alert('전송 중 오류가 발생했습니다. 다시 시도해 주세요.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버와 통신할 수 없습니다.');
+        }
     });
-    if(res.ok) {
-        alert('등록되었습니다.');
-        this.newsForm.title = ''; this.newsForm.content = '';
-    }
-},
-async updateRecruit(id, status) {
-    await fetch('/api/recruit/status', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ id, status })
-    });
-}
+</script>
 
-    </script>
+
 </body>
 </html>
