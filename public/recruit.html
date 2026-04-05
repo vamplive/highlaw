@@ -273,5 +273,64 @@
             });
         });
     </script>
+
+<script>
+//추가한 함수
+    // --- 서버에서 채용 상태를 가져와서 화면을 업데이트하는 함수 ---
+    async function updateRecruitPage() {
+        try {
+            const res = await fetch('/api/public/recruit');
+            const data = await res.json();
+
+            // 서버 데이터와 HTML 요소 ID 매핑
+            const roleMap = {
+                'new-lawyer': 'status-new',
+                'exp-lawyer': 'status-exp',
+                'mil-lawyer': 'status-mil',
+                'staff': 'status-staff'
+            };
+
+            data.forEach(item => {
+                const badgeId = roleMap[item.role_id];
+                const badgeElement = document.getElementById(badgeId);
+                
+                if (badgeElement) {
+                    const cardElement = badgeElement.closest('.recruit-card');
+                    const applyBtn = cardElement.querySelector('.recruit-apply');
+                    const isOpen = item.status === 'status-open';
+
+                    if (isOpen) {
+                        // 모집 중 상태일 때
+                        badgeElement.className = 'status-badge status-open';
+                        cardElement.classList.remove('is-closed');
+                        applyBtn.textContent = 'Apply Now';
+                        applyBtn.style.pointerEvents = 'auto'; // 버튼 클릭 가능
+                    } else {
+                        // 모집 마감 상태일 때
+                        badgeElement.className = 'status-badge status-closed';
+                        cardElement.classList.add('is-closed');
+                        applyBtn.textContent = 'Closed';
+                        applyBtn.style.pointerEvents = 'none'; // 버튼 클릭 불가
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("채용 정보 로드 실패:", e);
+        }
+    }
+
+    // 페이지 로드 시 실행
+    window.addEventListener('DOMContentLoaded', updateRecruitPage);
+
+    // 모바일 메뉴 토글 (기존 코드)
+    const toggle = document.getElementById('mobile-toggle');
+    const nav = document.getElementById('nav-menu');
+    toggle.addEventListener('click', () => {
+        toggle.classList.toggle('active');
+        nav.classList.toggle('active');
+    });
+</script>
+
+
 </body>
 </html>

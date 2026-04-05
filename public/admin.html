@@ -115,15 +115,24 @@
                         this.newsForm.title = ''; this.newsForm.content = '';
                     }
                 },
-                async updateRecruit(id, status) {
-                    await fetch('/api/recruit/status', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ id, status })
-                    });
-                    alert('상태 업데이트 완료');
-                }
-            },
+
+async updateRecruit(id, status) {
+    try {
+        const res = await fetch('/api/recruit/status', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id, status })
+        });
+        if(res.ok) {
+            alert('채용 상태가 업데이트되었습니다.');
+            // (선택사항) 수정한 내용을 즉시 확인하고 싶다면 
+            // 실제 페이지 highlaw.co.kr/recruit.html 로 이동해서 확인하시면 됩니다.
+        }
+    } catch (error) {
+        alert('상태 업데이트에 실패했습니다.');
+    }
+}
+
             mounted() {
                 this.fetchInquiries();
                 this.fetchRecruitStatus();
