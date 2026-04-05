@@ -249,23 +249,21 @@
 </section>
 
 <script>
-async function loadNews() {
+async function loadPublicNews() {
     const targetGrid = document.getElementById('sync-news-grid');
     try {
         const res = await fetch('/api/public/news');
-        const newsData = await res.json();
-        if (newsData.length > 0) {
-            targetGrid.innerHTML = newsData.map(item => `
+        const data = await res.json();
+        if(data.length > 0) {
+            targetGrid.innerHTML = data.map(item => `
                 <div class="card">
                     <span class="news-date">${item.created_at}</span>
                     <h4 class="news-title">${item.title}</h4>
                     <p class="news-desc">${item.content}</p>
                 </div>
             `).join('');
-        } else {
-            targetGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">최신 소식이 없습니다.</p>';
         }
-    } catch (e) { console.error("뉴스 로드 실패", e); }
+    } catch (e) { console.error(e); }
 }
 </script>
 
@@ -302,11 +300,11 @@ async function loadNews() {
 </section>
 
 <script>
-async function loadRecruitStatus() {
+async function loadPublicRecruit() {
     try {
         const res = await fetch('/api/public/recruit');
-        const statuses = await res.json();
-        statuses.forEach(item => {
+        const data = await res.json();
+        data.forEach(item => {
             const targetLi = document.querySelector(`[data-recruit-id="${item.role_id}"]`);
             if (targetLi) {
                 const statusSpan = targetLi.querySelector('.status-text');
@@ -315,13 +313,14 @@ async function loadRecruitStatus() {
                 statusSpan.style.color = isOpen ? '#166534' : '#dc2626';
             }
         });
-    } catch (e) { console.error("채용 정보 로드 실패", e); }
+    } catch (e) { console.error(e); }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    loadNews();
-    loadRecruitStatus();
+    loadPublicNews();
+    loadPublicRecruit();
 });
+
 </script>
 
     <div id="contact" class="cta-box">
