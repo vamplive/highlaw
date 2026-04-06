@@ -32,19 +32,29 @@
             word-break: keep-all;
         }
 
-        /* --- Header --- */
+        /* --- Header (수정됨) --- */
         header {
-            position: fixed; top: 0; width: 100%; padding: 15px 60px; z-index: 1000;
+            position: fixed; top: 0; width: 100%; padding: 10px 60px; z-index: 1000;
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--border-color);
+            height: 80px; /* 헤더 높이 고정 */
         }
-        .logo-group { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .logo-text h1 { 
-            font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; letter-spacing: 4px; line-height: 1; text-transform: uppercase;
-            background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        .logo-group { 
+            display: flex; 
+            align-items: center; 
+            text-decoration: none; 
+            height: 100%;
         }
-        .logo-text p { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 5px; color: var(--text-secondary); font-weight: 500; opacity: 0.8; }
+        .main-logo {
+            height: 60px; /* 로고 크기 조절 */
+            width: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+        .logo-group:hover .main-logo {
+            transform: scale(1.02);
+        }
 
         nav ul { display: flex; list-style: none; gap: 25px; }
         nav a { color: var(--text-primary); text-decoration: none; font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; transition: 0.3s; }
@@ -99,12 +109,13 @@
 
         /* Responsive */
         @media (max-width: 1024px) { 
-            header { padding: 15px 30px; } 
+            header { padding: 10px 30px; } 
             .partner-grid, .news-grid { grid-template-columns: repeat(2, 1fr); }
             .recruit-container { grid-template-columns: 1fr; padding: 40px; }
         }
         @media (max-width: 768px) {
-            header { padding: 15px 20px; }
+            header { padding: 10px 20px; }
+            .main-logo { height: 50px; }
             .menu-toggle { display: block; }
             nav { position: fixed; top: 0; right: -100%; width: 80%; height: 100vh; background: white; padding: 100px 40px; transition: 0.4s ease; box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
             nav.active { right: 0; }
@@ -117,10 +128,8 @@
 
     <header>
         <a href="index.html" class="logo-group">
-            <div class="logo-text">
-                <h1>High & Law</h1>
-                <p>법무법인 하이로</p>
-            </div>
+            <!-- 로고 이미지로 교체된 부분 -->
+            <img src="logo.png" alt="법무법인 하이로 High & Law" class="main-logo">
         </a>
         <div class="menu-toggle" id="mobile-toggle">
             <div></div><div></div><div></div>
@@ -138,6 +147,7 @@
         </nav>
     </header>
 
+    <!-- 이하 기존 섹션 동일 -->
     <section class="hero">
         <div class="hero-content">
             <span class="label">Loyalty & Dignity</span>
@@ -178,7 +188,7 @@
         </div>
     </section>
 
-    <!-- Dynamic News Section -->
+    <!-- News & Recruit Sections (동일) -->
     <section id="news">
         <span class="label">Insights</span>
         <h2 class="section-title">Latest News</h2>
@@ -187,7 +197,6 @@
         </div>
     </section>
 
-    <!-- Dynamic Recruit Section -->
     <section id="recruit">
         <span class="label">Careers</span>
         <h2 class="section-title">Join High & Law</h2>
@@ -223,9 +232,7 @@
     </footer>
 
     <script>
-        // --- 서버에서 데이터 동기화 함수 ---
         async function syncMainData() {
-            // 1. 뉴스 데이터 (최신 3개)
             try {
                 const nRes = await fetch('/api/public/news');
                 const nData = await nRes.json();
@@ -243,27 +250,24 @@
                 }
             } catch (e) { console.error("뉴스 동기화 실패"); }
 
-// 2. 채용 상태 데이터 동기화
-try {
-    const rRes = await fetch('/api/public/recruit');
-    const rData = await rRes.json();
-    rData.forEach(item => {
-        const targetLi = document.querySelector(`[data-recruit-id="${item.role_id}"]`);
-        if (targetLi) {
-            const statusSpan = targetLi.querySelector('.status-text');
-            const isOpen = item.status === 'status-open';
-            statusSpan.textContent = isOpen ? '[모집 중]' : '[모집 마감]';
-            statusSpan.style.color = isOpen ? '#166534' : '#dc2626';
-            statusSpan.style.fontWeight = 'bold';
+            try {
+                const rRes = await fetch('/api/public/recruit');
+                const rData = await rRes.json();
+                rData.forEach(item => {
+                    const targetLi = document.querySelector(`[data-recruit-id="${item.role_id}"]`);
+                    if (targetLi) {
+                        const statusSpan = targetLi.querySelector('.status-text');
+                        const isOpen = item.status === 'status-open';
+                        statusSpan.textContent = isOpen ? '[모집 중]' : '[모집 마감]';
+                        statusSpan.style.color = isOpen ? '#166534' : '#dc2626';
+                        statusSpan.style.fontWeight = 'bold';
+                    }
+                });
+            } catch (e) { console.error("채용 동기화 실패"); }
         }
-    });
-} catch (e) { console.error("채용 동기화 실패"); }
-
-
 
         window.addEventListener('DOMContentLoaded', syncMainData);
 
-        // 모바일 메뉴 토글
         const toggle = document.getElementById('mobile-toggle');
         const nav = document.getElementById('nav-menu');
         toggle.addEventListener('click', () => {
