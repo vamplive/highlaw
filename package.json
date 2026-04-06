@@ -1,17 +1,19 @@
 {
-  "name": "highlaw-web",
+  "name": "high-law-web",
   "version": "1.0.0",
-  "description": "법무법인 하이로 웹사이트",
+  "description": "법무법인 하이로 공식 웹사이트",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "body-parser": "^1.20.2",
     "express": "^4.18.2",
-    "express-session": "^1.17.3",
+    "fs-extra": "^11.1.1",
     "multer": "^1.4.5-lts.1",
-    "path": "^0.12.7",
-    "sqlite3": "^5.1.7"
+    "path": "^0.12.7"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
