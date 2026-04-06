@@ -1,104 +1,139 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
-const bodyParser = require('body-parser');
+const fs = require('fs-extra');
 const multer = require('multer');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 // 데이터 저장 파일 경로
-const DB_PATH = path.join(__dirname, 'db.json');
+const DB_FILE = path.join(__dirname, 'db.json');
+const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
 
-// 초기 데이터 로드 함수
-function loadData() {
-    if (!fs.existsSync(DB_PATH)) {
-        const initialData = {
-            inquiries: [],
-            news: [{ id: 1, category: 'H&L News', title: '법무법인 하이로 홈페이지 개소', content: '새로운 시작을 알립니다.', created_at: '2024-01-01' }],
-            recruitStatus: [
-                { role_id: 'new-lawyer', status: 'status-open' },
-                { role_id: 'exp-lawyer', status: 'status-open' },
-                { role_id: 'mil-lawyer', status: 'status-closed' },
-                { role_id: 'staff', status: 'status-open' }
-            ]
-        };
-        fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2));
-        return initialData;
-    }
-    return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+// 기본 폴더 및 데이터 생성
+fs.ensureDirSync(UPLOAD_DIR);
+if (!fs.existsSync(DB_FILE)) {
+    const initialData = {
+        news: [],
+        recruit: [
+            { id: "new-lawyer", role_id: "new-lawyer", status: "status-open" },
+            { id: "exp-lawyer", role_id: "exp-lawyer", status: "status-closed" },
+            { id: "mil-lawyer", role_id: "mil-lawyer", status: "status-open" },
+            { id: "staff", role_id: "staff", status: "status-closed" }
+        ],
+        inquiries: []
+    };
+    fs.writeJsonSync(DB_FILE, initialData);
 }
 
-// 데이터 저장 함수
-function saveData(data) {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-}
+// 미들웨어 설정
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-let db = loadData();
-
-app.use(bodyParser.json());
+// [중요] 정적 파일 서버 설정 (public 폴더 안의 logo.png 등을 찾게 해줌)
 app.use(express.static(path.join(__dirname, 'public')));
-const upload = multer({ dest: 'uploads/' });
 
-// --- API 경로 ---
+// 파일 업로드 설정 (상담 신청용)
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+});
+const upload = multer({ storage: storage });
 
-// 1. 로그인
+// --- API 영역 ---
+
+// 1. 뉴스 데이터 가져오기 (공개)
+app.get('/api/public/news', async (req, res) => {
+    const db = await fs.readJson(DB_FILE);
+    res.json(db.news.reverse()); // 최신순
+});
+
+// 2. 채용 상태 가져오기 (공개 - index.html의 Checking 해결 핵심)
+app.get('/api/public/recruit', async (req, res) => {
+    const db = await fs.readJson(DB_FILE);
+    res.json(db.recruit);
+});
+
+// 3. 상담 신청 등록 (공개)
+app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        const newInquiry = {
+            id: Date.now(),
+            name: req.body.userName,
+            phone: req.body.userPhone,
+            type: req.body.cType,
+            summary: req.body.summary,
+            created_at: new Date().toISOString().split('T')[0],
+            files: req.files ? req.files.map(f => f.filename) : []
+        };
+        db.inquiries.push(newInquiry);
+        await fs.writeJson(DB_FILE, db);
+        res.status(200).send("Success");
+    } catch (e) {
+        res.status(500).send("Error");
+    }
+});
+
+// 4. 관리자 로그인 (임시)
 app.post('/api/login', (req, res) => {
     const { id, pw } = req.body;
-    if (id === 'highlaw1877' && pw === 'gkdlfh1877!') {
-        res.status(200).send('OK');
+    if (id === 'admin' && pw === 'highlaw123!') { // 아이디 비번 설정
+        res.status(200).send("OK");
     } else {
-        res.status(401).send('FAIL');
+        res.status(401).send("Fail");
     }
 });
 
-// 2. 상담 신청 (inquiry.html)
-app.post('/api/inquiry', upload.array('evidence'), (req, res) => {
-    const data = req.body;
-    const newInquiry = {
+// 5. 관리자 전용 API (뉴스 등록)
+app.post('/api/news', async (req, res) => {
+    const db = await fs.readJson(DB_FILE);
+    const newNews = {
         id: Date.now(),
-        name: data.userName,
-        phone: data.userPhone,
-        date_of_incident: data.incidentDate,
-        summary: data.summary,
+        category: req.body.category,
+        title: req.body.title,
+        content: req.body.content,
         created_at: new Date().toISOString().split('T')[0]
     };
-    db.inquiries.unshift(newInquiry);
-    saveData(db);
-    res.json({ success: true });
+    db.news.push(newNews);
+    await fs.writeJson(DB_FILE, db);
+    res.json(newNews);
 });
 
-// 3. 상담 신청 조회 및 삭제
-app.get('/api/admin/inquiries', (req, res) => res.json(db.inquiries));
-app.delete('/api/admin/inquiries/:id', (req, res) => {
-    db.inquiries = db.inquiries.filter(i => i.id != req.params.id);
-    saveData(db);
-    res.send('deleted');
-});
-
-// 4. 뉴스 관리 (조회, 등록, 삭제)
-app.get('/api/public/news', (req, res) => res.json(db.news));
-app.post('/api/news', (req, res) => {
-    const newEntry = { id: Date.now(), ...req.body, created_at: new Date().toISOString().split('T')[0] };
-    db.news.unshift(newEntry);
-    saveData(db);
-    res.send('ok');
-});
-app.delete('/api/news/:id', (req, res) => {
-    db.news = db.news.filter(n => n.id != req.params.id);
-    saveData(db);
-    res.send('deleted');
-});
-
-// 5. 채용 관리
-app.get('/api/public/recruit', (req, res) => res.json(db.recruitStatus));
-app.post('/api/recruit/status', (req, res) => {
+// 6. 관리자 전용 API (채용 상태 변경)
+app.post('/api/recruit/status', async (req, res) => {
     const { id, status } = req.body;
-    const target = db.recruitStatus.find(r => r.role_id === id);
-    if (target) target.status = status;
-    saveData(db);
-    res.json({ success: true });
+    const db = await fs.readJson(DB_FILE);
+    const role = db.recruit.find(r => r.role_id === id);
+    if (role) {
+        role.status = status;
+        await fs.writeJson(DB_FILE, db);
+        res.send("Updated");
+    } else {
+        res.status(404).send("Not Found");
+    }
 });
 
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+// 7. 관리자 전용 API (상담 내역 조회/삭제)
+app.get('/api/admin/inquiries', async (req, res) => {
+    const db = await fs.readJson(DB_FILE);
+    res.json(db.inquiries.reverse());
+});
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.delete('/api/admin/inquiries/:id', async (req, res) => {
+    const db = await fs.readJson(DB_FILE);
+    db.inquiries = db.inquiries.filter(i => i.id != req.params.id);
+    await fs.writeJson(DB_FILE, db);
+    res.send("Deleted");
+});
+
+// 서버 실행
+app.listen(PORT, () => {
+    console.log(`
+    =========================================
+    법무법인 하이로 서버가 가동되었습니다.
+    - 홈 페이지: http://localhost:${PORT}
+    - 관리자 로그인: http://localhost:${PORT}/login.html
+    - 로고 이미지 경로: http://localhost:${PORT}/logo.png
+    =========================================
+    `);
+});
