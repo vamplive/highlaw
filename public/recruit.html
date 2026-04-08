@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Careers | 법무법인 하이로</title>
-    <!-- Google Fonts: Playfair Display, Inter -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -45,7 +45,6 @@
             font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; letter-spacing: 4px; line-height: 1; text-transform: uppercase;
             background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .logo-text p { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 5px; color: var(--text-secondary); font-weight: 500; opacity: 0.8; }
 
         nav ul { display: flex; list-style: none; gap: 25px; }
         nav a { color: var(--text-primary); text-decoration: none; font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; transition: 0.3s; }
@@ -61,10 +60,9 @@
             text-align: center; border-bottom: 1px solid var(--border-color); 
         }
         .sub-hero h2 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 5vw, 56px); font-weight: 400; color: var(--text-primary); margin-bottom: 15px; }
-        .sub-hero p { font-family: 'Playfair Display', serif; font-style: italic; font-size: 18px; color: var(--gold-primary); }
         .label { display: block; text-align: center; font-size: 11px; letter-spacing: 4px; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 15px; font-weight: 700; }
 
-        /* --- Recruit Grid --- */
+        /* --- Recruit Grid (기존 스타일) --- */
         section { padding: 100px 20px; max-width: 1400px; margin: 0 auto; }
         .recruit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
         
@@ -74,7 +72,6 @@
         }
         .recruit-card:hover { border-color: var(--gold-primary); transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
         
-        /* Status Badges */
         .status-badge { 
             display: inline-block; width: fit-content; padding: 6px 14px; border-radius: 2px; 
             font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; 
@@ -91,18 +88,27 @@
             letter-spacing: 1.5px; text-transform: uppercase; transition: 0.3s; text-align: center;
         }
         .recruit-apply:hover { background: var(--gold-primary); color: #fff; }
-        
-        /* Card Closed State */
         .recruit-card.is-closed { opacity: 0.6; background-color: #fcfcfc; }
-        .recruit-card.is-closed .recruit-apply { border-color: #ccc; color: #999; cursor: not-allowed; }
 
-        /* --- Footer --- */
+        /* --- New Job Board Section (추가된 부분) --- */
+        .job-board-title { margin-top: 100px; border-top: 1px solid var(--border-color); padding-top: 100px; }
+        .job-list { display: flex; flex-direction: column; gap: 20px; margin-top: 50px; }
+        .job-item { 
+            background: #fff; border: 1px solid var(--border-color); padding: 30px 40px;
+            display: flex; justify-content: space-between; align-items: center; transition: 0.3s;
+        }
+        .job-item:hover { border-color: var(--gold-primary); background: #fafafa; }
+        .job-info h4 { font-family: 'Playfair Display', serif; font-size: 19px; margin-bottom: 5px; }
+        .job-info p { font-size: 13px; color: var(--text-secondary); }
+        .job-meta { text-align: right; }
+        .job-deadline-tag { font-size: 11px; font-weight: 700; color: var(--gold-primary); border: 1px solid var(--gold-primary); padding: 3px 10px; border-radius: 20px; }
+
+        /* --- Footer & CTA --- */
         .cta-box { background-color: #1a1a1a; color: var(--white); text-align: center; padding: 100px 20px; }
         .contact-link { display: inline-block; padding: 16px 45px; border: 1px solid var(--gold-primary); color: var(--gold-primary); text-decoration: none; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; margin-top: 20px; }
         .contact-link:hover { background: var(--gold-primary); color: #1a1a1a; }
-        footer { padding: 60px 20px; background-color: var(--white); border-top: 1px solid var(--border-color); text-align: center; font-size: 11px; color: #888; letter-spacing: 0.5px; }
+        footer { padding: 60px 20px; background-color: var(--white); border-top: 1px solid var(--border-color); text-align: center; font-size: 11px; color: #888; }
 
-        /* --- Responsive --- */
         @media (max-width: 1024px) { 
             header { padding: 15px 30px; } 
             .recruit-grid { grid-template-columns: 1fr; }
@@ -113,21 +119,18 @@
             nav { position: fixed; top: 0; right: -100%; width: 80%; height: 100vh; background: white; padding: 100px 40px; transition: 0.4s ease; box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
             nav.active { right: 0; }
             nav ul { flex-direction: column; gap: 25px; }
-            .sub-hero { padding-top: 140px; }
+            .job-item { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .job-meta { text-align: left; }
         }
     </style>
 </head>
 <body>
 
     <header>
-
-<a href="index.html" class="logo-group">
-    <img src="logo.png" alt="High & Law" style="height: 60px; width: auto; object-fit: contain;">
-</a>
-
-        <div class="menu-toggle" id="mobile-toggle">
-            <div></div><div></div><div></div>
-        </div>
+        <a href="index.html" class="logo-group">
+            <img src="logo.png" alt="High & Law" style="height: 60px; width: auto; object-fit: contain;">
+        </a>
+        <div class="menu-toggle" id="mobile-toggle"><div></div><div></div><div></div></div>
         <nav id="nav-menu">
             <ul>
                 <li><a href="index.html">Home</a></li>
@@ -144,41 +147,46 @@
     <div class="sub-hero">
         <span class="label">Talent Acquisition</span>
         <h2>Join Our Excellence</h2>
-        <p>Loyalty builds trust; professionalism earns respect.</p>
+        <p style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 18px; color: var(--gold-primary); margin-top: 10px;">Loyalty builds trust; professionalism earns respect.</p>
     </div>
 
     <section>
+        <!-- 1. 기존 상단 고정 카드 섹션 -->
         <div class="recruit-grid">
-            <!-- 1. 신규변호사 -->
             <div class="recruit-card" data-role="new-lawyer">
                 <div class="status-badge" id="status-new">Checking...</div>
                 <h3 class="recruit-title">신규 변호사 채용</h3>
                 <p class="recruit-desc">법학전문대학원 졸업 예정자 및 변호사 시험 합격자를 대상으로 하이로의 미래를 함께할 인재를 모집합니다.</p>
                 <a href="mailto:recruit@highnlaw.com" class="recruit-apply">Apply Now</a>
             </div>
-
-            <!-- 2. 경력변호사 -->
             <div class="recruit-card" data-role="exp-lawyer">
                 <div class="status-badge" id="status-exp">Checking...</div>
                 <h3 class="recruit-title">경력 변호사 채용</h3>
                 <p class="recruit-desc">민사, 형사, 기업 법무 등 특정 분야에서 1년 이상의 실무 경력을 보유한 전문 변호사를 모집합니다.</p>
                 <a href="mailto:recruit@highnlaw.com" class="recruit-apply">Apply Now</a>
             </div>
-
-            <!-- 3. 법무관 -->
             <div class="recruit-card" data-role="mil-lawyer">
                 <div class="status-badge" id="status-mil">Checking...</div>
                 <h3 class="recruit-title">전역예정 법무관 채용</h3>
                 <p class="recruit-desc">군사법 및 공공기관 관련 전문성을 발휘할 전역 예정 법무관 인재를 특별 채용합니다.</p>
                 <a href="mailto:recruit@highnlaw.com" class="recruit-apply">Apply Now</a>
             </div>
-
-            <!-- 4. 전문 직원 -->
             <div class="recruit-card" data-role="staff">
                 <div class="status-badge" id="status-staff">Checking...</div>
                 <h3 class="recruit-title">법무행정 및 전문직원 채용</h3>
                 <p class="recruit-desc">변호사 업무를 정교하게 지원하고 하이로의 하이엔드 서비스를 완성할 파트너 직원을 모집합니다.</p>
                 <a href="mailto:recruit@highnlaw.com" class="recruit-apply">Apply Now</a>
+            </div>
+        </div>
+
+        <!-- 2. 신규 동적 상세 공고 섹션 (하단 추가) -->
+        <div class="job-board-title">
+            <span class="label">Current Openings</span>
+            <h2 class="section-title">진행 중인 상세 공고</h2>
+            
+            <div id="dynamic-job-list" class="job-list">
+                <!-- 서버에서 데이터를 불러와 여기에 채움 -->
+                <p style="text-align: center; opacity: 0.5;">게시된 상세 공고를 확인 중입니다...</p>
             </div>
         </div>
     </section>
@@ -191,51 +199,64 @@
 
     <footer>
         <p style="font-family: 'Playfair Display', serif; font-size: 15px; color: var(--gold-primary); letter-spacing: 2px; font-weight: 700; margin-bottom: 15px;">HIGH & LAW</p>
-        <div class="footer-info">
-            법무법인 하이로 | 대표변호사 : 조덕재, 김범, 강민구 | 서울특별시 강남구 테헤란로 141, 역삼KR타워 15층
-        </div>
+        <div class="footer-info">법무법인 하이로 | 서울특별시 강남구 테헤란로 141, 역삼KR타워 15층</div>
         <p style="margin-top: 15px; opacity: 0.6;">&copy; 2026 HIGH & LAW FIRM. ALL RIGHTS RESERVED.</p>
     </footer>
 
     <script>
-        // --- 관리자 센터에서 설정한 상태를 가져와 화면을 업데이트하는 함수 ---
-async function loadStatus() {
-    try {
-        const res = await fetch('/api/public/recruit');
-        const data = await res.json();
+        // 1. 기존 상단 고정 카드 상태 로드
+        async function loadStatus() {
+            try {
+                const res = await fetch('/api/public/recruit');
+                const data = await res.json();
+                data.forEach(item => {
+                    const card = document.querySelector(`.recruit-card[data-role="${item.role_id}"]`);
+                    if (card) {
+                        const badge = card.querySelector('.status-badge');
+                        const applyBtn = card.querySelector('.recruit-apply');
+                        const isOpen = (item.status === 'status-open');
+                        badge.className = isOpen ? 'status-badge status-open' : 'status-badge status-closed';
+                        badge.textContent = isOpen ? '모집 중' : '모집 마감';
+                        if(!isOpen) card.classList.add('is-closed');
+                    }
+                });
+            } catch (e) { console.error("상태 로드 실패"); }
+        }
 
-        data.forEach(item => {
-            // role_id: new-lawyer, exp-lawyer, mil-lawyer, staff
-            const card = document.querySelector(`.recruit-card[data-role="${item.role_id}"]`);
-            if (card) {
-                const badge = card.querySelector('.status-badge');
-                const applyBtn = card.querySelector('.recruit-apply');
-                const isOpen = (item.status === 'status-open');
+        // 2. 신규 하단 동적 공고 리스트 로드
+        async function loadJobPostings() {
+            try {
+                const res = await fetch('/api/public/jobs');
+                const jobs = await res.json();
+                const container = document.getElementById('dynamic-job-list');
 
-                if (isOpen) {
-                    badge.className = 'status-badge status-open';
-                    badge.textContent = '모집 중';
-                    card.classList.remove('is-closed');
-                    applyBtn.textContent = 'Apply Now';
-                    applyBtn.style.pointerEvents = 'auto';
-                    applyBtn.style.opacity = '1';
-                } else {
-                    badge.className = 'status-badge status-closed';
-                    badge.textContent = '모집 마감';
-                    card.classList.add('is-closed');
-                    applyBtn.textContent = 'Closed';
-                    applyBtn.style.pointerEvents = 'none';
-                    applyBtn.style.opacity = '0.5';
+                if (!jobs || jobs.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; padding: 40px; border: 1px dashed #ddd; color: #999;">현재 진행 중인 상세 공고가 없습니다.</p>';
+                    return;
                 }
-            }
+
+                container.innerHTML = jobs.map(job => `
+                    <div class="job-item">
+                        <div class="job-info">
+                            <p style="color: var(--gold-primary); font-weight: 700; font-size: 11px; margin-bottom: 5px;">${job.category}</p>
+                            <h4>${job.title}</h4>
+                            <p style="margin-top: 10px; color: #666; font-size: 14px; line-height: 1.6;">${job.content.substring(0, 150)}...</p>
+                        </div>
+                        <div class="job-meta">
+                            <span class="job-deadline-tag">D-Day: ${job.deadline}</span>
+                            <div style="margin-top: 15px;">
+                                <a href="mailto:recruit@highnlaw.com" style="font-size: 11px; font-weight: 700; color: var(--text-primary); text-decoration: none; border-bottom: 2px solid var(--gold-primary);">자세히 보기 & 지원하기</a>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { console.error("공고 로드 실패"); }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStatus();
+            loadJobPostings();
         });
-    } catch (e) {
-        console.error("채용 상태 로드 실패", e);
-    }
-}
-
-
-        window.addEventListener('DOMContentLoaded', loadStatus);
 
         // 모바일 메뉴 토글
         const toggle = document.getElementById('mobile-toggle');
