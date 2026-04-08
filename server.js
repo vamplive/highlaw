@@ -4,10 +4,13 @@ const fs = require('fs-extra');
 const multer = require('multer');
 
 const app = express();
-// Render는 process.env.PORT를 사용합니다.
+// Render 환경의 포트 설정을 우선적으로 사용합니다.
 const PORT = process.env.PORT || 3000;
 
-// 데이터 저장 파일 경로 (루트 폴더의 db.json)
+/**
+ * [주의] 현재 폴더에 있는 highlaw.db 파일의 이름을 db.json으로 변경해서 배포하세요.
+ * 코드상에서는 db.json이라는 이름을 사용하도록 작성되어 있습니다.
+ */
 const DB_FILE = path.join(__dirname, 'db.json');
 const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
 
@@ -18,21 +21,21 @@ async function initDB() {
     
     const initialData = {
         news: [],
-        recruit: [ // 고정된 4개 직군의 상태값
+        recruit: [
             { role_id: "new-lawyer", status: "status-open" },
             { role_id: "exp-lawyer", status: "status-closed" },
             { role_id: "mil-lawyer", status: "status-open" },
             { role_id: "staff", status: "status-closed" }
         ],
-        jobs: [], // 신규: 동적 채용 공고 리스트
+        jobs: [],
         inquiries: []
     };
 
     if (!exists) {
         await fs.writeJson(DB_FILE, initialData);
     } else {
-        // 기존 파일이 있다면 jobs 항목이 없는 경우를 대비해 병합
         const currentData = await fs.readJson(DB_FILE);
+        // 기존 DB에 jobs 필드가 없는 경우 대비
         if (!currentData.jobs) {
             currentData.jobs = [];
             await fs.writeJson(DB_FILE, currentData);
@@ -46,8 +49,13 @@ initDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 정적 파일 서비스 (public 폴더)
-app.use(express.static(path.join(__dirname, 'public')));
+/**
+ * 정적 파일 서비스 설정 수정
+ * extensions: ['html'] 설정을 통해 /partners 접속 시 partners.html을 자동으로 보여줍니다.
+ */
+app.use(express.static(path.join(__dirname, 'public'), {
+    extensions: ['html']
+}));
 
 // 파일 업로드 설정 (상담 신청용)
 const storage = multer.diskStorage({
@@ -56,9 +64,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-/* --- API 영역 --- */
-
-/** 1. 공용 API (누구나 접근 가능) **/
+/* --- API 영역 (기존 로직 100% 유지) --- */
 
 // 뉴스/성공사례 가져오기
 app.get('/api/public/news', async (req, res) => {
@@ -76,7 +82,7 @@ app.get('/api/public/recruit', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// 신규: 상세 채용 공고 목록 가져오기
+// 상세 채용 공고 목록 가져오기
 app.get('/api/public/jobs', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -102,8 +108,6 @@ app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/** 2. 관리자 API (로그인 및 데이터 관리) **/
-
 // 관리자 로그인
 app.post('/api/login', (req, res) => {
     const { id, pw } = req.body;
@@ -114,7 +118,7 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// 뉴스 등록/삭제
+// 뉴스 등록
 app.post('/api/news', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -131,6 +135,7 @@ app.post('/api/news', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
+// 뉴스 삭제
 app.delete('/api/news/:id', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -154,7 +159,7 @@ app.post('/api/recruit/status', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 신규: 상세 채용 공고 등록
+// 상세 채용 공고 등록
 app.post('/api/admin/jobs', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -172,7 +177,7 @@ app.post('/api/admin/jobs', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 신규: 상세 채용 공고 삭제
+// 상세 채용 공고 삭제
 app.delete('/api/admin/jobs/:id', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -182,7 +187,7 @@ app.delete('/api/admin/jobs/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 상담 신청 조회/삭제
+// 상담 신청 조회
 app.get('/api/admin/inquiries', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -190,6 +195,7 @@ app.get('/api/admin/inquiries', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
+// 상담 신청 삭제
 app.delete('/api/admin/inquiries/:id', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -199,8 +205,8 @@ app.delete('/api/admin/inquiries/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 모든 경로를 index.html로 (Single Page Application 방식 대응)
-app.get('*', (req, res) => {
+// 메인 경로 처리 (SPA 대응 제거: 멀티 페이지 접속을 원활하게 함)
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
