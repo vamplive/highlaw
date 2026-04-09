@@ -10,11 +10,10 @@ const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'db.json');
 const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
 
-// [중요] 초기 폴더 및 파일 생성 로직 (배포 시 에러 방지)
+// [중요] 초기 폴더 및 파일 생성 로직
 async function initDB() {
     try {
-        await fs.ensureDir(UPLOAD_DIR); // uploads 폴더가 없으면 생성
-        
+        await fs.ensureDir(UPLOAD_DIR);
         const exists = await fs.pathExists(DB_FILE);
         if (!exists) {
             const initialData = {
@@ -29,7 +28,6 @@ async function initDB() {
                 inquiries: []
             };
             await fs.writeJson(DB_FILE, initialData);
-            console.log("새로운 db.json 파일이 생성되었습니다.");
         }
     } catch (err) {
         console.error("DB 초기화 에러:", err);
@@ -37,16 +35,10 @@ async function initDB() {
 }
 initDB();
 
-// 미들웨어 설정
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
-// 정적 파일 서비스 (public 폴더 내의 html, png, txt, xml 등)
-app.use(express.static(path.join(__dirname, 'public'), {
-    extensions: ['html'] // .html 확장자 생략 가능하게 함
-}));
-
-// 파일 업로드 설정
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOAD_DIR),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
@@ -55,7 +47,6 @@ const upload = multer({ storage: storage });
 
 /* --- API 영역 --- */
 
-// 뉴스 목록
 app.get('/api/public/news', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -63,7 +54,6 @@ app.get('/api/public/news', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// 채용 상태
 app.get('/api/public/recruit', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -71,7 +61,6 @@ app.get('/api/public/recruit', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// 상세 채용 공고
 app.get('/api/public/jobs', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -79,7 +68,6 @@ app.get('/api/public/jobs', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// 상담 신청 (파일 업로드 포함)
 app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -97,7 +85,6 @@ app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 관리자 로그인
 app.post('/api/login', (req, res) => {
     const { id, pw } = req.body;
     if (id === 'admin' && pw === 'highlaw123!') { 
@@ -107,7 +94,6 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// --- 관리자 전용 API (뉴스 등록/삭제, 채용 관리 등) ---
 app.post('/api/news', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -140,10 +126,19 @@ app.post('/api/recruit/status', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-app.post('/api/admin/jobs', async (req, res) => {
+// [수정] 상세 채용 공고 등록 (PDF 파일 업로드 추가)
+app.post('/api/admin/jobs', upload.single('jobPdf'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        const newJob = { id: Date.now(), ...req.body, created_at: new Date().toISOString().split('T')[0] };
+        const newJob = { 
+            id: Date.now(), 
+            category: req.body.category,
+            title: req.body.title,
+            deadline: req.body.deadline,
+            content: req.body.content,
+            filename: req.file ? req.file.filename : null, // PDF 파일명 저장
+            created_at: new Date().toISOString().split('T')[0] 
+        };
         db.jobs.push(newJob);
         await fs.writeJson(DB_FILE, db);
         res.json(newJob);
@@ -175,7 +170,6 @@ app.delete('/api/admin/inquiries/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 메인 페이지
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
