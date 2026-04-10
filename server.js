@@ -11,32 +11,33 @@ const DB_FILE = path.join(__dirname, 'db.json');
 const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
 
 /**
- * [추가 기능] 마감 기한이 지난 채용 공고 자동 삭제 로직
+ * 1. 채용 공고 자동 삭제 로직
+ * 마감 기한(deadline)이 오늘 날짜보다 이전인 공고를 db.json에서 필터링합니다.
  */
 async function cleanExpiredJobs() {
     try {
         const db = await fs.readJson(DB_FILE);
         if (!db.jobs || db.jobs.length === 0) return;
 
-        const today = new Date().toISOString().split('T')[0]; // 현재 날짜 (YYYY-MM-DD)
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
         const initialCount = db.jobs.length;
 
-        // 마감 기한이 오늘보다 이전인 공고 필터링 (기한이 없거나 오늘 이후인 것만 유지)
+        // 마감 기한이 없거나, 오늘 이후인 공고만 남김
         db.jobs = db.jobs.filter(job => {
-            if (!job.deadline) return true; // 기한이 없으면 유지
-            return job.deadline >= today;   // 기한이 오늘이거나 미래면 유지
+            if (!job.deadline) return true; 
+            return job.deadline >= today;
         });
 
         if (db.jobs.length !== initialCount) {
             await fs.writeJson(DB_FILE, db);
-            console.log(`[시스템] 마감 기한이 지난 공고 ${initialCount - db.jobs.length}건을 자동 삭제 처리했습니다.`);
+            console.log(`[시스템] 기간 만료된 공고 ${initialCount - db.jobs.length}건을 자동 삭제했습니다.`);
         }
     } catch (err) {
-        console.error("만료 공고 자동 삭제 중 에러 발생:", err);
+        console.error("자동 삭제 로직 에러:", err);
     }
 }
 
-// [초기화] 폴더 및 파일 생성, 자동 삭제 스케줄러 실행
+// 초기화: 폴더 및 DB 파일 생성, 스케줄러 실행
 async function initDB() {
     try {
         await fs.ensureDir(UPLOAD_DIR);
@@ -55,13 +56,10 @@ async function initDB() {
             };
             await fs.writeJson(DB_FILE, initialData);
         }
-        
-        // 서버 시작 시 1회 자동 삭제 실행
+        // 서버 시작 시 만료 공고 정리
         await cleanExpiredJobs();
-        
-        // 24시간마다 한 번씩 만료된 공고 자동 삭제 실행
+        // 24시간마다 반복 실행
         setInterval(cleanExpiredJobs, 1000 * 60 * 60 * 24);
-        
     } catch (err) {
         console.error("DB 초기화 에러:", err);
     }
@@ -72,16 +70,53 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
-// Multer 설정 (파일 업로드)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOAD_DIR),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({ storage: storage });
 
-/* --- API 영역 --- */
+/* --- 네이버 SEO 전용 RSS API --- */
 
-// 1. 공용 데이터 조회 (뉴스, 채용상태, 공고목록)
+app.get('/rss.xml', async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        const newsItems = db.news || [];
+        const siteUrl = 'https://highlaw.co.kr';
+
+        // 최신 뉴스 50개를 RSS 아이템으로 변환
+        const items = newsItems.slice(-50).reverse().map(item => {
+            return `
+        <item>
+            <title><![CDATA[${item.title}]]></title>
+            <link>${siteUrl}/news.html</link>
+            <description><![CDATA[${item.content.substring(0, 200)}...]]></description>
+            <pubDate>${new Date(item.id).toUTCString()}</pubDate>
+            <guid isPermaLink="false">${siteUrl}/news/${item.id}</guid>
+        </item>`;
+        }).join('');
+
+        const rss = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2000/svg">
+    <channel>
+        <title>법무법인 하이로 - 최신 뉴스 및 성공사례</title>
+        <link>${siteUrl}</link>
+        <description>법무법인 하이로(High & Law)의 공식 소식과 법률 가이드를 제공합니다.</description>
+        <language>ko-kr</language>
+        <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+        ${items}
+    </channel>
+</rss>`;
+
+        res.header('Content-Type', 'application/xml; charset=utf-8');
+        res.send(rss);
+    } catch (e) {
+        res.status(500).send("RSS 생성 오류");
+    }
+});
+
+/* --- 공용 API --- */
+
 app.get('/api/public/news', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -103,7 +138,6 @@ app.get('/api/public/jobs', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// 2. 상담 신청 (파일 첨부 포함)
 app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -121,7 +155,6 @@ app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 3. 관리자 로그인
 app.post('/api/login', (req, res) => {
     const { id, pw } = req.body;
     if (id === 'admin' && pw === 'highlaw123!') { 
@@ -131,7 +164,8 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// 4. 관리자 - 뉴스 관리
+/* --- 관리자 전용 API --- */
+
 app.post('/api/news', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -151,7 +185,6 @@ app.delete('/api/news/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 5. 관리자 - 상시 채용 상태 관리
 app.post('/api/recruit/status', async (req, res) => {
     try {
         const { id, status } = req.body;
@@ -165,9 +198,7 @@ app.post('/api/recruit/status', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 6. 관리자 - 상세 채용 공고 관리 (등록 / 수정 / 삭제)
-
-// [등록]
+// [등록] 상세 채용 공고
 app.post('/api/admin/jobs', upload.single('jobPdf'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -186,33 +217,27 @@ app.post('/api/admin/jobs', upload.single('jobPdf'), async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// [수정] 상세 채용 공고 수정 API 추가
+// [수정] 상세 채용 공고 (PUT)
 app.put('/api/admin/jobs/:id', upload.single('jobPdf'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
         const index = db.jobs.findIndex(j => j.id == req.params.id);
-        
         if (index !== -1) {
-            // 기존 데이터 유지하면서 전달받은 값 업데이트
-            db.jobs[index].category = req.body.category;
-            db.jobs[index].title = req.body.title;
-            db.jobs[index].deadline = req.body.deadline;
-            db.jobs[index].content = req.body.content;
-            
-            // 새 파일이 업로드된 경우 파일명 업데이트
-            if (req.file) {
-                db.jobs[index].filename = req.file.filename;
-            }
-            
+            db.jobs[index] = {
+                ...db.jobs[index],
+                category: req.body.category,
+                title: req.body.title,
+                deadline: req.body.deadline,
+                content: req.body.content,
+                filename: req.file ? req.file.filename : db.jobs[index].filename // 새 파일 없으면 기존 유지
+            };
             await fs.writeJson(DB_FILE, db);
             res.json(db.jobs[index]);
-        } else {
-            res.status(404).send("Not Found");
-        }
+        } else { res.status(404).send("Not Found"); }
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// [삭제]
+// [삭제] 상세 채용 공고 (DELETE)
 app.delete('/api/admin/jobs/:id', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -222,7 +247,6 @@ app.delete('/api/admin/jobs/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 7. 관리자 - 상담 신청 목록 관리
 app.get('/api/admin/inquiries', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -239,11 +263,6 @@ app.delete('/api/admin/inquiries/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// 메인 페이지 라우팅
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 app.listen(PORT, () => {
-    console.log(`[High & Law] 서버가 포트 ${PORT}에서 작동 중입니다.`);
+    console.log(`Server is running on port ${PORT}`);
 });

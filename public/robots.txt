@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://highlaw.co.kr/sitemap.xml
+RSS: https://highlaw.co.kr/rss.xml
