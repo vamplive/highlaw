@@ -51,10 +51,7 @@
         }
         .btn-gold:hover { background: var(--gold-primary); color: #1a1a1a; }
 
-        /* 에디터 스타일 커스텀 */
         .editor-wrapper { min-height: 300px; font-family: 'Inter', sans-serif; font-size: 16px; }
-        .ql-toolbar.ql-snow { border-color: #eee; background: #fafafa; }
-        .ql-container.ql-snow { border-color: #eee; }
     </style>
 </head>
 <body class="min-h-screen flex">
@@ -79,14 +76,14 @@
         <!-- Main Content -->
         <main class="ml-64 flex-1 p-12">
             
-            <!-- 1. 상담 신청 관리 -->
+            <!-- 1. 상담 신청 관리 (상세보기 및 파일 보기 기능 보완) -->
             <div v-show="tab === 'inquiry'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Inquiry Management</h2>
                 <div class="admin-card overflow-hidden">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="text-[11px] uppercase tracking-widest text-[#c5a059] border-bottom-2 border-[#f4eee0]">
-                                <th class="pb-4">접수일</th><th class="pb-4">신청자</th><th class="pb-4">연락처</th><th class="pb-4">내용 요약</th><th class="pb-4 text-center">관리</th>
+                                <th class="pb-4">접수일</th><th class="pb-4">신청자</th><th class="pb-4">연락처</th><th class="pb-4 text-center">관리</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -94,13 +91,50 @@
                                 <td class="py-4 text-xs text-gray-400">{{ item.created_at }}</td>
                                 <td class="py-4 font-bold text-gray-800">{{ item.name }}</td>
                                 <td class="py-4">{{ item.phone }}</td>
-                                <td class="py-4 text-gray-500 max-w-md truncate">{{ item.summary }}</td>
-                                <td class="py-4 text-center">
-                                    <button @click="deleteInquiry(item.id)" class="text-red-400 hover:text-red-700 text-xs font-bold">삭제</button>
+                                <td class="py-4 text-center space-x-3">
+                                    <button @click="viewInquiryDetail(item)" class="text-blue-500 hover:underline font-bold">상세내용 및 파일</button>
+                                    <button @click="deleteInquiry(item.id)" class="text-red-400 hover:text-red-700 font-bold">삭제</button>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- 상담 상세 모달 (상세 내용 및 파일 확인) -->
+                <div v-if="selectedInquiry" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-6">
+                    <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto p-10 rounded shadow-2xl">
+                        <div class="flex justify-between items-start mb-8 border-b pb-6">
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800">상담 신청 상세 정보</h3>
+                                <p class="text-xs text-gray-400 mt-1">접수번호: {{selectedInquiry.id}} | 일시: {{selectedInquiry.created_at}}</p>
+                            </div>
+                            <button @click="selectedInquiry = null" class="text-3xl leading-none">&times;</button>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-2 gap-8">
+                                <div><label class="text-[10px] uppercase font-bold text-gold-primary">Client Name</label><p class="text-lg font-medium">{{selectedInquiry.name}}</p></div>
+                                <div><label class="text-[10px] uppercase font-bold text-gold-primary">Contact</label><p class="text-lg font-medium">{{selectedInquiry.phone}}</p></div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] uppercase font-bold text-gold-primary">Message & Schedule</label>
+                                <div class="bg-gray-50 p-6 rounded mt-2 text-gray-700 whitespace-pre-wrap leading-relaxed border border-gray-100">
+                                    {{selectedInquiry.summary}}
+                                </div>
+                            </div>
+                            <div v-if="selectedInquiry.files && selectedInquiry.files.length > 0">
+                                <label class="text-[10px] uppercase font-bold text-gold-primary">Attached Files</label>
+                                <div class="grid grid-cols-1 gap-2 mt-2">
+                                    <a v-for="file in selectedInquiry.files" :href="'/uploads/'+file" download 
+                                       class="flex items-center p-3 bg-white border border-gray-200 text-xs hover:border-gold-primary transition group">
+                                        <span class="mr-3">📎</span>
+                                        <span class="flex-grow">{{file}}</span>
+                                        <span class="text-gold-primary opacity-0 group-hover:opacity-100 font-bold">DOWNLOAD</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <button @click="selectedInquiry = null" class="mt-10 w-full py-4 bg-gray-900 text-white text-xs tracking-widest uppercase">Close Window</button>
+                    </div>
                 </div>
             </div>
 
@@ -137,27 +171,29 @@
                 </div>
             </div>
 
-            <!-- 3. 채용 관리 (게시 기능 복구 및 강화) -->
+            <!-- 3. 채용 관리 (모집 여부에 따른 색상 적용) -->
             <div v-show="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment Management</h2>
                 
-                <!-- 상시 채용 상태 관리 -->
                 <div class="admin-card mb-8">
                     <p class="text-[10px] font-bold text-gray-400 mb-6 uppercase tracking-widest">직군별 실시간 상태 설정</p>
                     <div class="grid grid-cols-4 gap-6">
-                        <div v-for="role in roles" :key="role.role_id" class="p-4 border border-gray-100 bg-gray-50">
+                        <div v-for="role in roles" :key="role.role_id" 
+                             :class="role.status === 'status-open' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'"
+                             class="p-4 border rounded transition-colors duration-300">
                             <p class="text-xs font-bold mb-3">{{ getRoleLabel(role.role_id) }}</p>
-                            <select v-model="role.status" @change="updateRecruitStatus(role.role_id, role.status)" class="text-xs font-bold">
-                                <option value="status-open">모집 중 [OPEN]</option>
-                                <option value="status-closed">모집 마감 [CLOSED]</option>
+                            <select v-model="role.status" @change="updateRecruitStatus(role.role_id, role.status)" 
+                                    :class="role.status === 'status-open' ? 'text-green-700' : 'text-red-700'"
+                                    class="text-xs font-bold bg-transparent">
+                                <option value="status-open">● 모집 중 [OPEN]</option>
+                                <option value="status-closed">○ 모집 마감 [CLOSED]</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- 상세 채용 공고 게시 (신규 추가) -->
                 <div class="admin-card mb-8">
-                    <p class="text-[10px] font-bold text-gold-primary mb-6 uppercase tracking-widest">상세 채용 공고 게시 (WYSIWYG)</p>
+                    <p class="text-[10px] font-bold text-gold-primary mb-6 uppercase tracking-widest">상세 채용 공고 게시</p>
                     <div class="space-y-6">
                         <div class="grid grid-cols-3 gap-6">
                             <input v-model="jobForm.category" type="text" placeholder="카테고리 (예: 신입 변호사)">
@@ -166,14 +202,13 @@
                         </div>
                         <div id="job-editor" class="editor-wrapper"></div>
                         <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-                            <p class="text-xs font-bold mb-3">📎 공고 첨부 파일 (그림, 영상, 문서 등)</p>
+                            <p class="text-xs font-bold mb-3">📎 공고 첨부 파일</p>
                             <input type="file" ref="jobFiles" multiple class="text-xs block w-full">
                         </div>
                         <button @click="addJob" class="btn-gold w-full py-4 text-sm tracking-widest">상세 공고 게시하기</button>
                     </div>
                 </div>
 
-                <!-- 공고 목록 -->
                 <div class="space-y-4">
                     <div v-for="job in jobList" :key="job.id" class="admin-card flex justify-between items-center py-4">
                         <div class="flex items-center space-x-4">
@@ -198,6 +233,7 @@
                 return {
                     tab: 'inquiry',
                     inquiries: [],
+                    selectedInquiry: null, // 상세보기용
                     newsList: [],
                     newsForm: { category: 'H&L News', title: '' },
                     roles: [],
@@ -224,8 +260,11 @@
                     const res = await fetch('/api/admin/inquiries');
                     this.inquiries = await res.json();
                 },
+                viewInquiryDetail(item) {
+                    this.selectedInquiry = item;
+                },
                 async deleteInquiry(id) {
-                    if(!confirm('삭제하시겠습니까?')) return;
+                    if(!confirm('상담 기록을 삭제하시겠습니까?')) return;
                     await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' });
                     this.fetchInquiries();
                 },
