@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://highlaw.co.kr/sitemap.xml
