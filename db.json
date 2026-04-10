@@ -1,0 +1,23 @@
+{
+  "news": [],
+  "recruit": [
+    {
+      "role_id": "new-lawyer",
+      "status": "status-open"
+    },
+    {
+      "role_id": "exp-lawyer",
+      "status": "status-closed"
+    },
+    {
+      "role_id": "mil-lawyer",
+      "status": "status-open"
+    },
+    {
+      "role_id": "staff",
+      "status": "status-closed"
+    }
+  ],
+  "jobs": [],
+  "inquiries": []
+}
