@@ -9,13 +9,12 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- 공통 CSS 및 관리자 전용 Tailwind (레이아웃용) -->
+    <!-- 공통 CSS 및 관리자 전용 Tailwind -->
     <link rel="stylesheet" href="/css/main.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
     <style>
-        /* 관리자 전용 스타일 - main.css와 조화되도록 설정 */
         body { background-color: #f4f4f4; }
         
         .sidebar { background-color: #1a1a1a; color: white; border-right: 1px solid var(--gold-primary); }
@@ -34,7 +33,6 @@
         .admin-card { background: white; border: 1px solid var(--border-color); padding: 30px; }
         .table-header { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold-primary); border-bottom: 2px solid var(--gold-light); }
         
-        /* 입력 폼 스타일 (inquiry.html과 통일) */
         input[type="text"], input[type="date"], select, textarea {
             width: 100%; padding: 10px 0; border: none; border-bottom: 1px solid var(--border-color);
             font-size: 14px; outline: none; transition: 0.3s; background: transparent;
@@ -63,9 +61,9 @@
             </div>
             
             <nav class="flex-1 mt-6">
-                <button @click="tab='inquiry'" :class="{active: tab==='inquiry'}" class="nav-btn">상담 신청 관리</button>
-                <button @click="tab='news'" :class="{active: tab==='news'}" class="nav-btn">뉴스/성공사례 관리</button>
-                <button @click="tab='recruit'" :class="{active: tab==='recruit'}" class="nav-btn">채용 정보 통합 관리</button>
+                <button @click="setTab('inquiry')" :class="{active: tab==='inquiry'}" class="nav-btn">상담 신청 관리</button>
+                <button @click="setTab('news')" :class="{active: tab==='news'}" class="nav-btn">뉴스/성공사례 관리</button>
+                <button @click="setTab('recruit')" :class="{active: tab==='recruit'}" class="nav-btn">채용 정보 통합 관리</button>
                 <hr class="border-white/5 my-4">
                 <a href="/" class="nav-btn block opacity-40 hover:opacity-100">← 웹사이트 바로가기</a>
             </nav>
@@ -111,7 +109,6 @@
             <div v-if="tab === 'news'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News & Success Cases</h2>
                 <div class="grid grid-cols-3 gap-8">
-                    <!-- 등록 폼 -->
                     <div class="admin-card h-fit">
                         <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">새 소식 등록</p>
                         <div class="space-y-6">
@@ -125,15 +122,14 @@
                             <button @click="saveNews" class="btn-gold w-full">정보 등록하기</button>
                         </div>
                     </div>
-                    <!-- 목록 -->
                     <div class="col-span-2 space-y-4">
-                        <div v-for="item in newsList" :key="item.id" class="admin-card flex justify-between items-center group">
+                        <div v-for="item in newsList" :key="item.id" class="admin-card flex justify-between items-center">
                             <div class="flex items-center space-x-4">
                                 <span class="text-[9px] border border-[#c5a059] text-[#c5a059] px-2 py-0.5 font-bold uppercase">{{ item.category }}</span>
                                 <h4 class="font-medium text-sm text-gray-800">{{ item.title }}</h4>
                                 <span class="text-[10px] text-gray-300">{{ item.created_at }}</span>
                             </div>
-                            <button @click="deleteNews(item.id)" class="text-gray-300 hover:text-red-500 transition-colors">
+                            <button @click="deleteNews(item.id)" class="text-gray-300 hover:text-red-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
                         </div>
@@ -141,12 +137,13 @@
                 </div>
             </div>
 
-            <!-- 3. 채용 관리 -->
+            <!-- 3. 채용 관리 (수정/삭제 기능 강화) -->
             <div v-if="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment Management</h2>
 
+                <!-- 직군별 상태 설정 -->
                 <div class="admin-card mb-8">
-                    <p class="text-[10px] font-bold text-gray-400 mb-6 uppercase tracking-widest">직군별 실시간 상태 설정</p>
+                    <p class="text-[10px] font-bold text-gray-400 mb-6 uppercase tracking-widest">직군별 실시간 상태 설정 (상시채용)</p>
                     <div class="grid grid-cols-4 gap-6">
                         <div v-for="role in roles" :key="role.role_id" class="p-4 border border-gray-100 bg-gray-50">
                             <p class="text-xs font-bold mb-3">{{ getRoleLabel(role.role_id) }}</p>
@@ -160,28 +157,44 @@
                     </div>
                 </div>
 
+                <!-- 상세 공고 관리 -->
                 <div class="grid grid-cols-3 gap-8">
-                    <div class="admin-card">
-                        <p class="text-[10px] font-bold text-gray-400 mb-6 uppercase tracking-widest">상세 공고 게시</p>
+                    <div class="admin-card h-fit">
+                        <p class="text-[10px] font-bold text-gold-primary mb-6 uppercase tracking-widest">
+                            {{ isEditingJob ? '상세 공고 수정' : '상세 공고 게시' }}
+                        </p>
                         <div class="space-y-4">
                             <input v-model="jobForm.category" type="text" placeholder="카테고리 (예: 신입 변호사)">
                             <input v-model="jobForm.title" type="text" placeholder="공고 제목">
-                            <input v-model="jobForm.deadline" type="text" placeholder="마감일 (예: 2024-12-31)">
+                            <input v-model="jobForm.deadline" type="date" placeholder="마감일 선택">
                             <textarea v-model="jobForm.content" placeholder="공고 상세 설명" rows="4"></textarea>
-                            <input type="file" ref="jobFile" accept="application/pdf" class="text-xs mt-2">
-                            <button @click="addJob" class="btn-gold w-full mt-4">공고 게시하기</button>
+                            <div class="mt-2">
+                                <p class="text-[10px] text-gray-400 mb-1">공고 PDF 파일 {{ isEditingJob ? '(변경 시에만 선택)' : '' }}</p>
+                                <input type="file" ref="jobFile" accept="application/pdf" class="text-xs">
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <button @click="isEditingJob ? updateJob() : addJob()" class="btn-gold flex-1">
+                                    {{ isEditingJob ? '수정 완료' : '공고 게시하기' }}
+                                </button>
+                                <button v-if="isEditingJob" @click="cancelJobEdit" class="bg-gray-100 px-4 text-xs">취소</button>
+                            </div>
                         </div>
                     </div>
+
                     <div class="col-span-2 space-y-4">
-                        <div v-for="job in jobList" :key="job.id" class="admin-card flex justify-between items-start">
+                        <div v-for="job in jobList" :key="job.id" class="admin-card flex justify-between items-center group">
                             <div>
                                 <span class="text-[9px] bg-gray-100 px-2 py-0.5 font-bold text-gray-500 uppercase">{{ job.category }}</span>
                                 <h4 class="font-bold text-gray-800 mt-2">{{ job.title }}</h4>
                                 <p class="text-[10px] text-gray-400 mt-1">마감: {{ job.deadline }}</p>
                             </div>
-                            <button @click="deleteJob(job.id)" class="text-gray-300 hover:text-red-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
+                            <div class="flex space-x-3">
+                                <button @click="editJob(job)" class="text-blue-500 hover:underline text-xs font-bold">수정</button>
+                                <button @click="deleteJob(job.id)" class="text-red-400 hover:text-red-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -201,16 +214,22 @@
                     newsForm: { category: 'H&L News', title: '', content: '' },
                     roles: [],
                     jobList: [],
+                    isEditingJob: false,
+                    editingJobId: null,
                     jobForm: { title: '', category: '', content: '', deadline: '' }
                 }
             },
             methods: {
+                setTab(name) {
+                    this.tab = name;
+                    if(this.isEditingJob) this.cancelJobEdit();
+                },
                 async fetchInquiries() {
                     const res = await fetch('/api/admin/inquiries');
                     this.inquiries = await res.json();
                 },
                 async deleteInquiry(id) {
-                    if(!confirm('정말 삭제하시겠습니까?')) return;
+                    if(!confirm('상담 기록을 삭제하시겠습니까?')) return;
                     await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' });
                     this.fetchInquiries();
                 },
@@ -229,7 +248,7 @@
                     this.fetchNews();
                 },
                 async deleteNews(id) {
-                    if(!confirm('삭제하시겠습니까?')) return;
+                    if(!confirm('소식을 삭제하시겠습니까?')) return;
                     await fetch(`/api/news/${id}`, { method: 'DELETE' });
                     this.fetchNews();
                 },
@@ -263,11 +282,53 @@
                         this.jobForm = { title: '', category: '', content: '', deadline: '' };
                         this.$refs.jobFile.value = '';
                         this.fetchJobs();
-                        alert('공고가 게시되었습니다.');
+                        alert('새 공고가 게시되었습니다.');
                     }
                 },
+                // [추가] 수정 모드 진입
+                editJob(job) {
+                    this.isEditingJob = true;
+                    this.editingJobId = job.id;
+                    this.jobForm = { 
+                        title: job.title, 
+                        category: job.category, 
+                        content: job.content, 
+                        deadline: job.deadline 
+                    };
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+                // [추가] 수정 모드 취소
+                cancelJobEdit() {
+                    this.isEditingJob = false;
+                    this.editingJobId = null;
+                    this.jobForm = { title: '', category: '', content: '', deadline: '' };
+                    this.$refs.jobFile.value = '';
+                },
+                // [추가] 수정 완료 처리
+                async updateJob() {
+                    const formData = new FormData();
+                    formData.append('category', this.jobForm.category);
+                    formData.append('title', this.jobForm.title);
+                    formData.append('deadline', this.jobForm.deadline);
+                    formData.append('content', this.jobForm.content);
+                    if (this.$refs.jobFile.files[0]) {
+                        formData.append('jobPdf', this.$refs.jobFile.files[0]);
+                    }
+
+                    const res = await fetch(`/api/admin/jobs/${this.editingJobId}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+
+                    if(res.ok) {
+                        alert('공고가 수정되었습니다.');
+                        this.cancelJobEdit();
+                        this.fetchJobs();
+                    }
+                },
+                // [보완] 공고 삭제
                 async deleteJob(id) {
-                    if(!confirm('삭제하시겠습니까?')) return;
+                    if(!confirm('해당 상세 공고를 즉시 삭제하시겠습니까?')) return;
                     await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' });
                     this.fetchJobs();
                 },
