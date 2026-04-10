@@ -64,10 +64,8 @@ initDB();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// public 폴더를 정적으로 제공함으로써 /uploads/... 경로 접근 가능
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
-// Multer 설정: 한글 파일명 깨짐 방지 및 고유 파일명 생성
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOAD_DIR),
     filename: (req, file, cb) => {
@@ -109,7 +107,6 @@ app.get('/api/public/news', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// [상세보기] 개별 뉴스 데이터 가져오기
 app.get('/api/public/news/:id', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -133,9 +130,16 @@ app.get('/api/public/jobs', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-/* --- 관리자 및 사용자 입력 API --- */
+// [신규] 개별 채용 공고 상세 데이터 가져오기 API
+app.get('/api/public/jobs/:id', async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        const item = (db.jobs || []).find(j => j.id == req.params.id);
+        if (item) res.json(item);
+        else res.status(404).send("Not Found");
+    } catch (e) { res.status(500).json(null); }
+});
 
-// 상담 신청 (파일 다중 업로드)
 app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -159,36 +163,23 @@ app.post('/api/login', (req, res) => {
     else res.status(401).send("Fail");
 });
 
-/* --- 관리자 전용: 뉴스 관리 (업그레이드된 버전) --- */
+/* --- 관리자 전용: 뉴스 관리 --- */
 
-// [등록] 뉴스/사례 등록 (다중 파일 첨부 지원)
 app.post('/api/news', upload.array('attachments'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        
-        // 첨부된 파일 리스트 생성
         const attachments = req.files ? req.files.map(f => ({
-            filename: f.filename,
-            originalname: f.originalname,
-            mimetype: f.mimetype
+            filename: f.filename, originalname: f.originalname, mimetype: f.mimetype
         })) : [];
-
         const newNews = { 
-            id: Date.now(), 
-            category: req.body.category,
-            title: req.body.title,
-            content: req.body.content, // HTML 에디터 데이터
-            attachments: attachments,
+            id: Date.now(), category: req.body.category, title: req.body.title,
+            content: req.body.content, attachments: attachments,
             created_at: new Date().toISOString().split('T')[0] 
         };
-
         db.news.push(newNews);
         await fs.writeJson(DB_FILE, db);
         res.json(newNews);
-    } catch (e) { 
-        console.error(e);
-        res.status(500).send("Error"); 
-    }
+    } catch (e) { res.status(500).send("Error"); }
 });
 
 app.delete('/api/news/:id', async (req, res) => {
@@ -200,7 +191,7 @@ app.delete('/api/news/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 관리자 전용: 채용 및 기타 관리 --- */
+/* --- 관리자 전용: 채용 관리 --- */
 
 app.post('/api/recruit/status', async (req, res) => {
     try {
@@ -215,21 +206,34 @@ app.post('/api/recruit/status', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-app.post('/api/admin/jobs', upload.single('jobPdf'), async (req, res) => {
+// [수정] 상세 채용 공고 (다중 파일 및 에디터 본문 지원)
+app.post('/api/admin/jobs', upload.array('jobAttachments'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
+        const attachments = req.files ? req.files.map(f => ({
+            filename: f.filename, originalname: f.originalname, mimetype: f.mimetype
+        })) : [];
         const newJob = { 
             id: Date.now(), 
             category: req.body.category,
             title: req.body.title,
             deadline: req.body.deadline,
-            content: req.body.content,
-            filename: req.file ? req.file.filename : null,
+            content: req.body.content, // HTML 에디터 데이터
+            attachments: attachments,
             created_at: new Date().toISOString().split('T')[0] 
         };
         db.jobs.push(newJob);
         await fs.writeJson(DB_FILE, db);
         res.json(newJob);
+    } catch (e) { res.status(500).send("Error"); }
+});
+
+app.delete('/api/admin/jobs/:id', async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        db.jobs = db.jobs.filter(j => j.id != req.params.id);
+        await fs.writeJson(DB_FILE, db);
+        res.send("Deleted");
     } catch (e) { res.status(500).send("Error"); }
 });
 

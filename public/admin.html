@@ -13,7 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Quill 에디터 라이브러리 (추가됨) -->
+    <!-- Quill 에디터 라이브러리 -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
@@ -52,7 +52,7 @@
         .btn-gold:hover { background: var(--gold-primary); color: #1a1a1a; }
 
         /* 에디터 스타일 커스텀 */
-        #editor { min-height: 400px; font-family: 'Inter', sans-serif; font-size: 16px; }
+        .editor-wrapper { min-height: 300px; font-family: 'Inter', sans-serif; font-size: 16px; }
         .ql-toolbar.ql-snow { border-color: #eee; background: #fafafa; }
         .ql-container.ql-snow { border-color: #eee; }
     </style>
@@ -80,7 +80,7 @@
         <main class="ml-64 flex-1 p-12">
             
             <!-- 1. 상담 신청 관리 -->
-            <div v-if="tab === 'inquiry'">
+            <div v-show="tab === 'inquiry'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Inquiry Management</h2>
                 <div class="admin-card overflow-hidden">
                     <table class="w-full text-left">
@@ -104,13 +104,12 @@
                 </div>
             </div>
 
-            <!-- 2. 뉴스 관리 (업그레이드: 에디터 및 다중 파일 지원) -->
+            <!-- 2. 뉴스 관리 -->
             <div v-show="tab === 'news'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News & Success Cases</h2>
                 <div class="space-y-8">
-                    <!-- 뉴스 작성 폼 -->
                     <div class="admin-card">
-                        <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">새 소식/사례 상세 등록 (WYSIWYG)</p>
+                        <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">새 소식/사례 상세 등록</p>
                         <div class="space-y-6">
                             <div class="grid grid-cols-2 gap-6">
                                 <select v-model="newsForm.category">
@@ -120,62 +119,71 @@
                                 </select>
                                 <input v-model="newsForm.title" type="text" placeholder="제목을 입력하세요">
                             </div>
-                            
-                            <!-- Quill 에디터 -->
-                            <div>
-                                <p class="text-[11px] font-bold text-gray-400 mb-2 uppercase">내용 작성 (이미지 삽입 가능)</p>
-                                <div id="editor-container">
-                                    <div id="news-editor"></div>
-                                </div>
-                            </div>
-
-                            <!-- 다중 파일 업로드 -->
+                            <div id="news-editor" class="editor-wrapper"></div>
                             <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-                                <p class="text-xs font-bold mb-3 flex items-center">
-                                    <span class="mr-2">📎</span> 첨부 파일 추가 (PDF, HWP, WORD, 동영상 등)
-                                </p>
+                                <p class="text-xs font-bold mb-3">📎 뉴스 첨부 파일</p>
                                 <input type="file" ref="newsFiles" multiple class="text-xs block w-full">
-                                <p class="text-[10px] text-gray-400 mt-2">* 여러 파일을 드래그하여 선택할 수 있습니다.</p>
                             </div>
-
                             <button @click="saveNews" class="btn-gold w-full py-4 text-sm tracking-widest">웹사이트 게시하기</button>
                         </div>
                     </div>
-
-                    <!-- 뉴스 목록 -->
-                    <div class="grid grid-cols-1 gap-4">
-                        <div v-for="item in newsList" :key="item.id" class="admin-card flex justify-between items-center py-4">
-                            <div class="flex items-center space-x-4">
-                                <span class="text-[9px] border border-[#c5a059] text-[#c5a059] px-2 py-0.5 font-bold uppercase">{{ item.category }}</span>
-                                <h4 class="font-medium text-sm text-gray-800">{{ item.title }}</h4>
-                                <span class="text-[10px] text-gray-300">{{ item.created_at }}</span>
-                            </div>
-                            <button @click="deleteNews(item.id)" class="text-gray-300 hover:text-red-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
+                    <div v-for="item in newsList" :key="item.id" class="admin-card flex justify-between items-center py-4">
+                        <div class="flex items-center space-x-4">
+                            <span class="text-[9px] border border-[#c5a059] text-[#c5a059] px-2 py-0.5 font-bold uppercase">{{ item.category }}</span>
+                            <h4 class="font-medium text-sm text-gray-800">{{ item.title }}</h4>
                         </div>
+                        <button @click="deleteNews(item.id)" class="text-gray-300 hover:text-red-500">삭제</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. 채용 관리 -->
-            <div v-if="tab === 'recruit'">
+            <!-- 3. 채용 관리 (게시 기능 복구 및 강화) -->
+            <div v-show="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment Management</h2>
-                <!-- 직군별 상태 설정 및 상세 공고 관리는 기존과 동일하게 유지하거나 필요 시 보완 -->
+                
+                <!-- 상시 채용 상태 관리 -->
                 <div class="admin-card mb-8">
                     <p class="text-[10px] font-bold text-gray-400 mb-6 uppercase tracking-widest">직군별 실시간 상태 설정</p>
                     <div class="grid grid-cols-4 gap-6">
                         <div v-for="role in roles" :key="role.role_id" class="p-4 border border-gray-100 bg-gray-50">
                             <p class="text-xs font-bold mb-3">{{ getRoleLabel(role.role_id) }}</p>
-                            <select v-model="role.status" @change="updateRecruitStatus(role.role_id, role.status)" 
-                                    :class="role.status === 'status-open' ? 'text-green-600' : 'text-red-600'" class="text-xs font-bold">
+                            <select v-model="role.status" @change="updateRecruitStatus(role.role_id, role.status)" class="text-xs font-bold">
                                 <option value="status-open">모집 중 [OPEN]</option>
                                 <option value="status-closed">모집 마감 [CLOSED]</option>
                             </select>
                         </div>
                     </div>
                 </div>
-                <!-- 상세 공고 리스트 (코드 생략, 기존 코드 활용 가능) -->
+
+                <!-- 상세 채용 공고 게시 (신규 추가) -->
+                <div class="admin-card mb-8">
+                    <p class="text-[10px] font-bold text-gold-primary mb-6 uppercase tracking-widest">상세 채용 공고 게시 (WYSIWYG)</p>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-3 gap-6">
+                            <input v-model="jobForm.category" type="text" placeholder="카테고리 (예: 신입 변호사)">
+                            <input v-model="jobForm.title" type="text" placeholder="공고 제목">
+                            <input v-model="jobForm.deadline" type="date">
+                        </div>
+                        <div id="job-editor" class="editor-wrapper"></div>
+                        <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+                            <p class="text-xs font-bold mb-3">📎 공고 첨부 파일 (그림, 영상, 문서 등)</p>
+                            <input type="file" ref="jobFiles" multiple class="text-xs block w-full">
+                        </div>
+                        <button @click="addJob" class="btn-gold w-full py-4 text-sm tracking-widest">상세 공고 게시하기</button>
+                    </div>
+                </div>
+
+                <!-- 공고 목록 -->
+                <div class="space-y-4">
+                    <div v-for="job in jobList" :key="job.id" class="admin-card flex justify-between items-center py-4">
+                        <div class="flex items-center space-x-4">
+                            <span class="text-[9px] bg-gray-100 px-2 py-0.5 font-bold text-gray-500 uppercase">{{ job.category }}</span>
+                            <h4 class="font-bold text-gray-800 text-sm">{{ job.title }}</h4>
+                            <span class="text-[10px] text-red-500">마감: {{ job.deadline }}</span>
+                        </div>
+                        <button @click="deleteJob(job.id)" class="text-red-300 hover:text-red-500 text-xs">삭제</button>
+                    </div>
+                </div>
             </div>
 
         </main>
@@ -183,7 +191,7 @@
 
     <script>
         const { createApp } = Vue;
-        let quill; // 에디터 인스턴스 전역 관리
+        let newsQuill, jobQuill;
 
         createApp({
             data() {
@@ -194,33 +202,22 @@
                     newsForm: { category: 'H&L News', title: '' },
                     roles: [],
                     jobList: [],
-                    jobForm: { title: '', category: '', content: '', deadline: '' }
+                    jobForm: { title: '', category: '', deadline: '' }
                 }
             },
             methods: {
                 setTab(name) {
                     this.tab = name;
-                    // 뉴스 탭으로 전환 시 에디터가 없으면 초기화
-                    if(name === 'news' && !quill) {
-                        this.initQuill();
-                    }
+                    this.initQuill();
                 },
                 initQuill() {
                     setTimeout(() => {
-                        quill = new Quill('#news-editor', {
-                            theme: 'snow',
-                            modules: {
-                                toolbar: [
-                                    [{ 'header': [1, 2, 3, false] }],
-                                    ['bold', 'italic', 'underline', 'strike'],
-                                    [{ 'color': [] }, { 'background': [] }],
-                                    [{ 'align': [] }],
-                                    ['link', 'image', 'video'],
-                                    ['clean']
-                                ]
-                            },
-                            placeholder: '실제 홈페이지에 표시될 내용을 자유롭게 작성하세요...'
-                        });
+                        if (this.tab === 'news' && !newsQuill) {
+                            newsQuill = new Quill('#news-editor', { theme: 'snow', placeholder: '뉴스 내용을 작성하세요...', modules: { toolbar: [['bold', 'italic'], [{ 'header': 1 }, [{ 'color': [] }]], ['link', 'image', 'video']] } });
+                        }
+                        if (this.tab === 'recruit' && !jobQuill) {
+                            jobQuill = new Quill('#job-editor', { theme: 'snow', placeholder: '채용 요강을 작성하세요...', modules: { toolbar: [['bold', 'italic'], [{ 'header': 1 }, [{ 'color': [] }]], ['link', 'image', 'video']] } });
+                        }
                     }, 100);
                 },
                 async fetchInquiries() {
@@ -228,7 +225,7 @@
                     this.inquiries = await res.json();
                 },
                 async deleteInquiry(id) {
-                    if(!confirm('상담 기록을 삭제하시겠습니까?')) return;
+                    if(!confirm('삭제하시겠습니까?')) return;
                     await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' });
                     this.fetchInquiries();
                 },
@@ -237,38 +234,18 @@
                     this.newsList = await res.json();
                 },
                 async saveNews() {
-                    if(!this.newsForm.title) return alert('제목을 입력하세요.');
-                    const htmlContent = quill.root.innerHTML;
-                    if(htmlContent === '<p><br></p>') return alert('내용을 입력하세요.');
-
+                    if(!this.newsForm.title) return alert('제목 입력 필수');
                     const formData = new FormData();
                     formData.append('category', this.newsForm.category);
                     formData.append('title', this.newsForm.title);
-                    formData.append('content', htmlContent);
-
-                    // 다중 파일 첨부 처리
+                    formData.append('content', newsQuill.root.innerHTML);
                     const files = this.$refs.newsFiles.files;
-                    for (let i = 0; i < files.length; i++) {
-                        formData.append('attachments', files[i]);
-                    }
-
-                    const res = await fetch('/api/news', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if(res.ok) {
-                        alert('게시물이 성공적으로 등록되었습니다.');
-                        this.newsForm.title = '';
-                        quill.setContents([]);
-                        this.$refs.newsFiles.value = '';
-                        this.fetchNews();
-                    } else {
-                        alert('등록 중 오류가 발생했습니다.');
-                    }
+                    for (let i = 0; i < files.length; i++) formData.append('attachments', files[i]);
+                    const res = await fetch('/api/news', { method: 'POST', body: formData });
+                    if(res.ok) { alert('게시됨'); this.newsForm.title = ''; newsQuill.setContents([]); this.fetchNews(); }
                 },
                 async deleteNews(id) {
-                    if(!confirm('소식을 삭제하시겠습니까?')) return;
+                    if(!confirm('삭제?')) return;
                     await fetch(`/api/news/${id}`, { method: 'DELETE' });
                     this.fetchNews();
                 },
@@ -277,11 +254,28 @@
                     this.roles = await res.json();
                 },
                 async updateRecruitStatus(id, status) {
-                    await fetch('/api/recruit/status', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ id, status })
-                    });
+                    await fetch('/api/recruit/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id, status }) });
+                },
+                async fetchJobs() {
+                    const res = await fetch('/api/public/jobs');
+                    this.jobList = await res.json();
+                },
+                async addJob() {
+                    if(!this.jobForm.title) return alert('제목 입력 필수');
+                    const formData = new FormData();
+                    formData.append('category', this.jobForm.category);
+                    formData.append('title', this.jobForm.title);
+                    formData.append('deadline', this.jobForm.deadline);
+                    formData.append('content', jobQuill.root.innerHTML);
+                    const files = this.$refs.jobFiles.files;
+                    for (let i = 0; i < files.length; i++) formData.append('jobAttachments', files[i]);
+                    const res = await fetch('/api/admin/jobs', { method: 'POST', body: formData });
+                    if(res.ok) { alert('공고 게시됨'); this.jobForm = { title: '', category: '', deadline: '' }; jobQuill.setContents([]); this.fetchJobs(); }
+                },
+                async deleteJob(id) {
+                    if(!confirm('삭제?')) return;
+                    await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' });
+                    this.fetchJobs();
                 },
                 getRoleLabel(id) {
                     const labels = { 'new-lawyer': '신규 변호사', 'exp-lawyer': '경력 변호사', 'mil-lawyer': '법무관', 'staff': '행정/직원' };
@@ -292,8 +286,8 @@
                 this.fetchInquiries();
                 this.fetchNews();
                 this.fetchRecruitStatus();
-                // 첫 탭이 뉴스인 경우를 대비해 초기화 체크
-                if(this.tab === 'news') this.initQuill();
+                this.fetchJobs();
+                this.initQuill();
             }
         }).mount('#app')
     </script>

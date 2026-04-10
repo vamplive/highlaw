@@ -109,6 +109,8 @@
 
         /* 상세 공고 리스트 스타일 */
         .job-list-section { margin-top: 100px; padding-top: 80px; border-top: 1px solid var(--border-color); }
+        
+        /* 상세 공고 아이템 스타일 수정 (클릭 가능하도록) */
         .job-item { 
             background: white; 
             border: 1px solid var(--border-color); 
@@ -117,13 +119,28 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
+            transition: 0.3s;
+            cursor: pointer;
         }
+        .job-item:hover {
+            border-color: var(--gold-primary);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
         .job-info h4 { font-family: 'Playfair Display', serif; font-size: 20px; margin-bottom: 8px; }
         .job-info p { font-size: 14px; color: #777; }
+        
         .job-meta { text-align: right; }
         .deadline-tag { 
             display: block; font-size: 11px; font-weight: 700; color: var(--gold-primary); 
             margin-bottom: 15px; text-transform: uppercase; 
+        }
+        .view-detail-link {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-primary);
         }
 
         @media (max-width: 768px) {
@@ -249,7 +266,7 @@
             } catch (e) { console.error("상태 로드 실패"); }
         }
 
-        // 2. 상세 공고 로드
+        // 2. 상세 공고 로드 (상세 페이지 연결 기능 추가)
         async function loadJobs() {
             try {
                 const res = await fetch('/api/public/jobs');
@@ -262,15 +279,15 @@
                 }
 
                 container.innerHTML = jobs.map(job => `
-                    <div class="job-item">
+                    <div class="job-item" onclick="location.href='job-detail.html?id=${job.id}'">
                         <div class="job-info">
-                            <span style="font-size:11px; color:var(--gold-primary); font-weight:700;">${job.category}</span>
+                            <span style="font-size:11px; color:var(--gold-primary); font-weight:700; text-transform:uppercase;">${job.category}</span>
                             <h4>${job.title}</h4>
-                            <p>${job.content.substring(0, 100)}...</p>
+                            <p>서류 마감 기한 : ${job.deadline}</p>
                         </div>
                         <div class="job-meta">
-                            <span class="deadline-tag">마감 기한: ${job.deadline}</span>
-                            ${job.filename ? `<a href="/uploads/${job.filename}" class="download-btn" style="padding:10px 20px; font-size:10px;" download>공고 PDF 다운로드</a>` : ''}
+                            <span class="deadline-tag">${job.deadline >= new Date().toISOString().split('T')[0] ? 'D-DAY 진행중' : '기간 만료'}</span>
+                            <span class="view-detail-link">공고 상세 보기 →</span>
                         </div>
                     </div>
                 `).join('');

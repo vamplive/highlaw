@@ -7,22 +7,35 @@
     <link rel="stylesheet" href="/css/main.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .board-container { max-width: 1100px; margin: 0 auto; padding: 100px 20px; }
-        .board-table { width: 100%; border-collapse: collapse; margin-top: 40px; }
-        .board-table th { border-bottom: 2px solid var(--text-primary); padding: 20px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .board-table td { border-bottom: 1px solid var(--border-color); padding: 25px 20px; }
-        .board-cat { font-size: 10px; font-weight: 700; color: var(--gold-primary); border: 1px solid var(--gold-primary); padding: 2px 8px; }
-        .board-title-link { text-decoration: none; color: var(--text-primary); font-weight: 500; transition: 0.3s; }
-        .board-title-link:hover { color: var(--gold-primary); }
-        .board-date { font-size: 13px; color: #999; text-align: right; }
+        .board-container { max-width: 1100px; margin: 0 auto; padding: 60px 20px 100px; }
+        .board-table { width: 100%; border-collapse: collapse; margin-top: 20px; border-top: 2px solid var(--text-primary); }
+        .board-table th { padding: 20px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; background: #f9f9f9; border-bottom: 1px solid var(--border-color); }
+        .board-table td { border-bottom: 1px solid var(--border-color); padding: 20px; font-size: 15px; }
+        .board-cat { font-size: 10px; font-weight: 700; color: var(--gold-primary); border: 1px solid var(--gold-primary); padding: 2px 8px; white-space: nowrap; }
+        .board-title-link { text-decoration: none; color: var(--text-primary); font-weight: 500; transition: 0.3s; line-height: 1.4; display: block; }
+        .board-title-link:hover { color: var(--gold-primary); padding-left: 5px; }
+        .board-date { font-size: 13px; color: #999; text-align: right; white-space: nowrap; }
+        
+        @media (max-width: 768px) {
+            .board-table th:nth-child(1), .board-table td:nth-child(1) { display: none; } /* 모바일에서 카테고리 숨김 */
+            .board-table td { padding: 15px 10px; }
+        }
     </style>
 </head>
+
 <body>
+
     <header>
-        <a href="index.html" class="logo-group"><img src="logo.png" alt="High & Law"></a>
+        <a href="index.html" class="logo-group">
+            <img src="logo.png" alt="High & Law">
+        </a>
+        <div class="menu-toggle" id="mobile-toggle"><div></div><div></div><div></div></div>
         <nav id="nav-menu">
             <ul>
                 <li><a href="index.html">Home</a></li>
+                <li><a href="the-firm.html">The Firm</a></li>
+                <li><a href="partners.html">Partners</a></li>
+                <li><a href="practices.html">Practices</a></li>
                 <li><a href="news.html" style="color:var(--gold-primary)">News</a></li>
                 <li><a href="recruit.html">Recruit</a></li>
                 <li><a href="inquiry.html">Inquiry</a></li>
@@ -30,42 +43,85 @@
         </nav>
     </header>
 
+    <!-- [수정] 다른 페이지들 양식에 맞추어 p 태그(quote) 추가 -->
     <div class="sub-hero">
-        <span class="label" id="board-label">Category</span>
-        <h2 id="board-category-title">News & Insights</h2>
+        <span class="label" id="board-label">Category List</span>
+        <h2 id="board-category-title">Loading...</h2>
+        <p style="font-family: 'Playfair Display', serif; font-style: italic; color: var(--gold-primary);" id="board-quote"></p>
     </div>
 
     <div class="board-container">
         <table class="board-table">
+            <thead>
+                <tr>
+                    <th width="150">Category</th>
+                    <th>Title</th>
+                    <th width="120">Date</th>
+                </tr>
+            </thead>
             <tbody id="board-body">
-                <tr><td colspan="3" style="text-align:center; opacity:0.5;">데이터를 불러오고 있습니다...</td></tr>
+                <tr><td colspan="3" style="text-align:center; padding:100px; opacity:0.5;">데이터를 불러오고 있습니다...</td></tr>
             </tbody>
         </table>
+        
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="news.html" class="contact-link" style="font-size: 11px; padding: 12px 30px;">Back to News Main</a>
+        </div>
     </div>
+
+    <footer>
+        <p style="font-family: 'Playfair Display', serif; font-size: 15px; color: var(--gold-primary); font-weight: 700;">HIGH & LAW</p>
+        <p style="margin-top: 15px; opacity: 0.6; font-size: 11px;">&copy; 2026 HIGH & LAW FIRM. ALL RIGHTS RESERVED.</p>
+    </footer>
 
     <script>
         async function loadBoard() {
             const params = new URLSearchParams(window.location.search);
             const cat = params.get('cat');
-            document.getElementById('board-label').textContent = cat || 'All Updates';
-            document.getElementById('board-category-title').textContent = cat || 'News & Insights';
+            
+            // [수정] 카테고리별 sub-hero 동적 텍스트 할당
+            let labelText = "Updates & Insights";
+            let quoteText = "Commitment to excellence in every challenge.";
+
+            if (cat === 'H&L News') {
+                labelText = "Firm News & Events";
+                quoteText = "Building lasting partnerships through trust and transparency.";
+            } else if (cat === 'Leading Cases') {
+                labelText = "Success Stories";
+                quoteText = "A single precedent can redefine the boundaries of justice.";
+            } else if (cat === 'Latest Updates') {
+                labelText = "Legal Insights";
+                quoteText = "In law, knowledge of the present shapes the strategy of the future.";
+            }
+
+            document.getElementById('board-label').textContent = labelText;
+            document.getElementById('board-category-title').textContent = cat || 'All Updates';
+            document.getElementById('board-quote').textContent = quoteText;
 
             try {
                 const res = await fetch('/api/public/news');
                 const data = await res.json();
+                
                 const filtered = cat ? data.filter(item => item.category === cat) : data;
 
                 const body = document.getElementById('board-body');
+                if(filtered.length === 0) {
+                    body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:100px; opacity:0.5;">해당 카테고리에 등록된 소식이 없습니다.</td></tr>';
+                    return;
+                }
+
                 body.innerHTML = filtered.map(item => `
                     <tr>
-                        <td width="120"><span class="board-cat">${item.category}</span></td>
+                        <td align="center"><span class="board-cat">${item.category}</span></td>
                         <td><a href="news-detail.html?id=${item.id}" class="board-title-link">${item.title}</a></td>
-                        <td width="120" class="board-date">${item.created_at}</td>
+                        <td class="board-date">${item.created_at}</td>
                     </tr>
                 `).join('');
                 
-                if(filtered.length === 0) body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:100px; opacity:0.5;">등록된 소식이 없습니다.</td></tr>';
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                console.error(e);
+                document.getElementById('board-body').innerHTML = '<tr><td colspan="3" style="text-align:center; padding:100px; color:red;">데이터 로드 중 오류가 발생했습니다.</td></tr>';
+            }
         }
         window.addEventListener('DOMContentLoaded', loadBoard);
     </script>
