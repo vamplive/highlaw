@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Board | 법무법인 하이로</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .board-container { max-width: 1100px; margin: 0 auto; padding: 100px 20px; }
+        .board-table { width: 100%; border-collapse: collapse; margin-top: 40px; }
+        .board-table th { border-bottom: 2px solid var(--text-primary); padding: 20px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .board-table td { border-bottom: 1px solid var(--border-color); padding: 25px 20px; }
+        .board-cat { font-size: 10px; font-weight: 700; color: var(--gold-primary); border: 1px solid var(--gold-primary); padding: 2px 8px; }
+        .board-title-link { text-decoration: none; color: var(--text-primary); font-weight: 500; transition: 0.3s; }
+        .board-title-link:hover { color: var(--gold-primary); }
+        .board-date { font-size: 13px; color: #999; text-align: right; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-group"><img src="logo.png" alt="High & Law"></a>
+        <nav id="nav-menu">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="news.html" style="color:var(--gold-primary)">News</a></li>
+                <li><a href="recruit.html">Recruit</a></li>
+                <li><a href="inquiry.html">Inquiry</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="sub-hero">
+        <span class="label" id="board-label">Category</span>
+        <h2 id="board-category-title">News & Insights</h2>
+    </div>
+
+    <div class="board-container">
+        <table class="board-table">
+            <tbody id="board-body">
+                <tr><td colspan="3" style="text-align:center; opacity:0.5;">데이터를 불러오고 있습니다...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadBoard() {
+            const params = new URLSearchParams(window.location.search);
+            const cat = params.get('cat');
+            document.getElementById('board-label').textContent = cat || 'All Updates';
+            document.getElementById('board-category-title').textContent = cat || 'News & Insights';
+
+            try {
+                const res = await fetch('/api/public/news');
+                const data = await res.json();
+                const filtered = cat ? data.filter(item => item.category === cat) : data;
+
+                const body = document.getElementById('board-body');
+                body.innerHTML = filtered.map(item => `
+                    <tr>
+                        <td width="120"><span class="board-cat">${item.category}</span></td>
+                        <td><a href="news-detail.html?id=${item.id}" class="board-title-link">${item.title}</a></td>
+                        <td width="120" class="board-date">${item.created_at}</td>
+                    </tr>
+                `).join('');
+                
+                if(filtered.length === 0) body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:100px; opacity:0.5;">등록된 소식이 없습니다.</td></tr>';
+            } catch (e) { console.error(e); }
+        }
+        window.addEventListener('DOMContentLoaded', loadBoard);
+    </script>
+</body>
+</html>

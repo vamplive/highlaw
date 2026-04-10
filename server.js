@@ -12,7 +12,6 @@ const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
 
 /**
  * [기능] 채용 공고 자동 삭제 로직
- * 마감 기한이 지난 공고를 서버 시작 및 24시간마다 체크하여 삭제
  */
 async function cleanExpiredJobs() {
     try {
@@ -65,56 +64,40 @@ initDB();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// public 폴더를 정적으로 제공함으로써 /uploads/... 경로 접근 가능
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
+// Multer 설정: 한글 파일명 깨짐 방지 및 고유 파일명 생성
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+    }
 });
 const upload = multer({ storage: storage });
 
-/* --- 네이버 SEO: RSS Feed API (표준 규격 준수) --- */
-
+/* --- 네이버 SEO: RSS Feed API --- */
 app.get('/rss.xml', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
         const newsItems = db.news || [];
-        const siteUrl = 'https://highlaw.co.kr'; // 네이버 등록 도메인과 일치
-
-        // RFC822 날짜 형식 변환기
+        const siteUrl = 'https://highlaw.co.kr';
         const toRFC822 = (date) => new Date(date).toUTCString();
-
-        // 뉴스 아이템 생성 (최신 50개)
         const items = newsItems.slice(-50).reverse().map(item => {
             return `
         <item>
             <title><![CDATA[${item.title}]]></title>
-            <link>${siteUrl}/news.html</link>
-            <description><![CDATA[${item.content.replace(/<[^>]*>?/gm, '').substring(0, 300)}]]></description>
+            <link>${siteUrl}/news-detail.html?id=${item.id}</link>
+            <description><![CDATA[${(item.content || '').replace(/<[^>]*>?/gm, '').substring(0, 300)}]]></description>
             <pubDate>${toRFC822(item.id || Date.now())}</pubDate>
             <guid isPermaLink="false">${siteUrl}/news/${item.id}</guid>
         </item>`;
         }).join('');
-
-        const rss = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-    <channel>
-        <title>법무법인 하이로</title>
-        <link>${siteUrl}</link>
-        <description>법무법인 하이로(High &amp; Law) 공식 뉴스 및 성공사례</description>
-        <language>ko-kr</language>
-        <pubDate>${toRFC822(new Date())}</pubDate>
-        <lastBuildDate>${toRFC822(new Date())}</lastBuildDate>
-        <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml" />
-        ${items}
-    </channel>
-</rss>`;
-
+        const rss = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>법무법인 하이로</title><link>${siteUrl}</link><description>공식 뉴스 및 성공사례</description><language>ko-kr</language><pubDate>${toRFC822(new Date())}</pubDate><lastBuildDate>${toRFC822(new Date())}</lastBuildDate><atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml" />${items}</channel></rss>`;
         res.set('Content-Type', 'application/rss+xml; charset=utf-8');
         res.send(rss);
-    } catch (e) {
-        res.status(500).send("RSS generation error");
-    }
+    } catch (e) { res.status(500).send("RSS error"); }
 });
 
 /* --- 공용 API --- */
@@ -124,6 +107,16 @@ app.get('/api/public/news', async (req, res) => {
         const db = await fs.readJson(DB_FILE);
         res.json((db.news || []).slice().reverse());
     } catch (e) { res.status(500).json([]); }
+});
+
+// [상세보기] 개별 뉴스 데이터 가져오기
+app.get('/api/public/news/:id', async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        const item = (db.news || []).find(n => n.id == req.params.id);
+        if (item) res.json(item);
+        else res.status(404).send("Not Found");
+    } catch (e) { res.status(500).json(null); }
 });
 
 app.get('/api/public/recruit', async (req, res) => {
@@ -140,6 +133,9 @@ app.get('/api/public/jobs', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
+/* --- 관리자 및 사용자 입력 API --- */
+
+// 상담 신청 (파일 다중 업로드)
 app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -159,23 +155,40 @@ app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
 
 app.post('/api/login', (req, res) => {
     const { id, pw } = req.body;
-    if (id === 'admin' && pw === 'highlaw123!') { 
-        res.status(200).send("OK");
-    } else {
-        res.status(401).send("Fail");
-    }
+    if (id === 'admin' && pw === 'highlaw123!') res.status(200).send("OK");
+    else res.status(401).send("Fail");
 });
 
-/* --- 관리자 전용 API --- */
+/* --- 관리자 전용: 뉴스 관리 (업그레이드된 버전) --- */
 
-app.post('/api/news', async (req, res) => {
+// [등록] 뉴스/사례 등록 (다중 파일 첨부 지원)
+app.post('/api/news', upload.array('attachments'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        const newNews = { id: Date.now(), ...req.body, created_at: new Date().toISOString().split('T')[0] };
+        
+        // 첨부된 파일 리스트 생성
+        const attachments = req.files ? req.files.map(f => ({
+            filename: f.filename,
+            originalname: f.originalname,
+            mimetype: f.mimetype
+        })) : [];
+
+        const newNews = { 
+            id: Date.now(), 
+            category: req.body.category,
+            title: req.body.title,
+            content: req.body.content, // HTML 에디터 데이터
+            attachments: attachments,
+            created_at: new Date().toISOString().split('T')[0] 
+        };
+
         db.news.push(newNews);
         await fs.writeJson(DB_FILE, db);
         res.json(newNews);
-    } catch (e) { res.status(500).send("Error"); }
+    } catch (e) { 
+        console.error(e);
+        res.status(500).send("Error"); 
+    }
 });
 
 app.delete('/api/news/:id', async (req, res) => {
@@ -186,6 +199,8 @@ app.delete('/api/news/:id', async (req, res) => {
         res.send("Deleted");
     } catch (e) { res.status(500).send("Error"); }
 });
+
+/* --- 관리자 전용: 채용 및 기타 관리 --- */
 
 app.post('/api/recruit/status', async (req, res) => {
     try {
@@ -200,7 +215,6 @@ app.post('/api/recruit/status', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// [등록] 상세 채용 공고
 app.post('/api/admin/jobs', upload.single('jobPdf'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -216,36 +230,6 @@ app.post('/api/admin/jobs', upload.single('jobPdf'), async (req, res) => {
         db.jobs.push(newJob);
         await fs.writeJson(DB_FILE, db);
         res.json(newJob);
-    } catch (e) { res.status(500).send("Error"); }
-});
-
-// [수정] 상세 채용 공고 (PUT)
-app.put('/api/admin/jobs/:id', upload.single('jobPdf'), async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        const index = db.jobs.findIndex(j => j.id == req.params.id);
-        if (index !== -1) {
-            db.jobs[index] = {
-                ...db.jobs[index],
-                category: req.body.category,
-                title: req.body.title,
-                deadline: req.body.deadline,
-                content: req.body.content,
-                filename: req.file ? req.file.filename : db.jobs[index].filename 
-            };
-            await fs.writeJson(DB_FILE, db);
-            res.json(db.jobs[index]);
-        } else { res.status(404).send("Not Found"); }
-    } catch (e) { res.status(500).send("Error"); }
-});
-
-// [삭제] 상세 채용 공고
-app.delete('/api/admin/jobs/:id', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        db.jobs = db.jobs.filter(j => j.id != req.params.id);
-        await fs.writeJson(DB_FILE, db);
-        res.send("Deleted");
     } catch (e) { res.status(500).send("Error"); }
 });
 

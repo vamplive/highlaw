@@ -42,12 +42,37 @@
         .news-section { padding: 80px 20px; border-bottom: 1px solid var(--border-color); }
         .news-section:last-of-type { border-bottom: none; }
         
+        /* 섹션 헤더 스타일: 제목과 전체보기를 한 줄에 배치 */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--gold-light);
+            padding-bottom: 15px;
+        }
+        .section-header .section-title {
+            margin-bottom: 0;
+            text-align: left;
+        }
+        .view-all {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #999;
+            text-decoration: none;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+        .view-all:hover { color: var(--gold-primary); }
+
         .news-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
             gap: 30px; 
-            margin-top: 40px; 
+            margin-top: 20px; 
         }
+
 
         .news-card {
             background: var(--white);
@@ -81,6 +106,11 @@
             margin-bottom: 15px;
             color: var(--text-primary);
             word-break: keep-all;
+            /* 제목이 길 경우 2줄 제한 */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .news-card p {
@@ -89,7 +119,13 @@
             line-height: 1.7;
             opacity: 0.8;
             flex-grow: 1;
+            /* 본문 요약 3줄 제한 */
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
+
 
         .empty-msg {
             grid-column: 1 / -1;
@@ -107,6 +143,7 @@
         @media (max-width: 768px) {
             .news-grid { grid-template-columns: 1fr; }
             .news-section { padding: 60px 20px; }
+            .section-header { flex-direction: row; align-items: center; }
         }
     </style>
 </head>
@@ -136,10 +173,13 @@
         <p style="font-family: 'Playfair Display', serif; font-style: italic; color: var(--gold-primary);">Sharing knowledge and successful outcomes.</p>
     </div>
 
+
     <!-- 1. H&L News 섹션 -->
     <section class="news-section">
-        <span class="label">Internal Updates</span>
-        <h2 class="section-title">H&L News</h2>
+        <div class="section-header">
+            <h2 class="section-title">H&L News</h2>
+            <a href="news-board.html?cat=H&L News" class="view-all">View All +</a>
+        </div>
         <div class="news-grid" id="grid-news">
             <p class="empty-msg">소식을 불러오는 중입니다...</p>
         </div>
@@ -147,8 +187,10 @@
 
     <!-- 2. Leading Cases 섹션 -->
     <section class="news-section" style="background-color: #f9f9f9;">
-        <span class="label">Success Stories</span>
-        <h2 class="section-title">Leading Cases</h2>
+        <div class="section-header">
+            <h2 class="section-title">Leading Cases</h2>
+            <a href="news-board.html?cat=Leading Cases" class="view-all">View All +</a>
+        </div>
         <div class="news-grid" id="grid-cases">
             <p class="empty-msg">데이터를 불러오는 중입니다...</p>
         </div>
@@ -156,8 +198,10 @@
 
     <!-- 3. Latest Updates 섹션 -->
     <section class="news-section">
-        <span class="label">Legal Alerts</span>
-        <h2 class="section-title">Latest Updates</h2>
+        <div class="section-header">
+            <h2 class="section-title">Latest Updates</h2>
+            <a href="news-board.html?cat=Latest Updates" class="view-all">View All +</a>
+        </div>
         <div class="news-grid" id="grid-updates">
             <p class="empty-msg">데이터를 불러오는 중입니다...</p>
         </div>
@@ -207,21 +251,23 @@
                 let counts = { news: 0, cases: 0, updates: 0 };
 
                 data.forEach(item => {
+                    // [수정] onclick 이벤트를 추가하여 클릭 시 상세 페이지(news-detail.html)로 이동
                     const cardHtml = `
-                        <div class="news-card">
+                        <div class="news-card" onclick="location.href='news-detail.html?id=${item.id}'">
                             <span class="date">${item.created_at}</span>
                             <h4>${item.title}</h4>
                             <p>${item.content}</p>
                         </div>
                     `;
 
-                    if (item.category === 'H&L News') {
+                    // 각 카테고리별로 최대 3개까지만 메인에 노출 (전체는 게시판 페이지에서 확인)
+                    if (item.category === 'H&L News' && counts.news < 3) {
                         gridNews.innerHTML += cardHtml;
                         counts.news++;
-                    } else if (item.category === 'Leading Cases') {
+                    } else if (item.category === 'Leading Cases' && counts.cases < 3) {
                         gridCases.innerHTML += cardHtml;
                         counts.cases++;
-                    } else if (item.category === 'Latest Updates') {
+                    } else if (item.category === 'Latest Updates' && counts.updates < 3) {
                         gridUpdates.innerHTML += cardHtml;
                         counts.updates++;
                     }
