@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>News & Insights | 법무법인 하이로</title>
+
+    <!-- SEO 및 메타 태그 -->
+    <meta name="description" content="법무법인 하이로의 최신 소식과 주요 승소 사례, 법률 가이드를 전해드립니다.">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 공통 CSS 연결 -->
+    <link rel="stylesheet" href="/css/main.css">
+
+    <style>
+        /* 뉴스 페이지 전용 추가 스타일 */
+        .news-section { padding: 80px 20px; border-bottom: 1px solid var(--border-color); }
+        .news-section:last-of-type { border-bottom: none; }
+        
+        .news-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 30px; 
+            margin-top: 40px; 
+        }
+
+        .news-card {
+            background: var(--white);
+            padding: 40px 30px;
+            border: 1px solid var(--border-color);
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .news-card:hover {
+            border-color: var(--gold-primary);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+        }
+
+        .news-card .date {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--gold-primary);
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .news-card h4 {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            word-break: keep-all;
+        }
+
+        .news-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            opacity: 0.8;
+            flex-grow: 1;
+        }
+
+        .empty-msg {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px;
+            color: #bbb;
+            font-size: 14px;
+            background: #f9f9f9;
+            border: 1px dashed var(--border-color);
+        }
+
+        @media (max-width: 1024px) {
+            .news-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .news-grid { grid-template-columns: 1fr; }
+            .news-section { padding: 60px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo-group">
+            <img src="logo.png" alt="High & Law">
+        </a>
+        <div class="menu-toggle" id="mobile-toggle"><div></div><div></div><div></div></div>
+        <nav id="nav-menu">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="the-firm.html">The Firm</a></li>
+                <li><a href="partners.html">Partners</a></li>
+                <li><a href="practices.html">Practices</a></li>
+                <li><a href="news.html" style="color:var(--gold-primary)">News</a></li>
+                <li><a href="recruit.html">Recruit</a></li>
+                <li><a href="inquiry.html">Inquiry</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="sub-hero">
+        <span class="label">Updates & Insights</span>
+        <h2>News & Insights</h2>
+        <p style="font-family: 'Playfair Display', serif; font-style: italic; color: var(--gold-primary);">Sharing knowledge and successful outcomes.</p>
+    </div>
+
+    <!-- 1. H&L News 섹션 -->
+    <section class="news-section">
+        <span class="label">Internal Updates</span>
+        <h2 class="section-title">H&L News</h2>
+        <div class="news-grid" id="grid-news">
+            <p class="empty-msg">소식을 불러오는 중입니다...</p>
+        </div>
+    </section>
+
+    <!-- 2. Leading Cases 섹션 -->
+    <section class="news-section" style="background-color: #f9f9f9;">
+        <span class="label">Success Stories</span>
+        <h2 class="section-title">Leading Cases</h2>
+        <div class="news-grid" id="grid-cases">
+            <p class="empty-msg">데이터를 불러오는 중입니다...</p>
+        </div>
+    </section>
+
+    <!-- 3. Latest Updates 섹션 -->
+    <section class="news-section">
+        <span class="label">Legal Alerts</span>
+        <h2 class="section-title">Latest Updates</h2>
+        <div class="news-grid" id="grid-updates">
+            <p class="empty-msg">데이터를 불러오는 중입니다...</p>
+        </div>
+    </section>
+
+    <!-- 하단 CTA 박스 -->
+    <div class="cta-box">
+        <span class="label">Consultation</span>
+        <h2>Commitment to Excellence</h2>
+        <p>하이로의 전문 지식은 클라이언트의 권리를 보호하는 강력한 도구가 됩니다.</p>
+        <a href="inquiry.html" class="contact-link">Professional Consultation</a>
+    </div>
+
+    <footer>
+        <p style="font-family: 'Playfair Display', serif; font-size: 15px; color: var(--gold-primary); letter-spacing: 2px; font-weight: 700; margin-bottom: 15px;">HIGH & LAW</p>
+        <div class="footer-info">
+            법무법인 하이로 | 대표변호사 : 조덕재, 김범, 강민구 | 사업자등록번호 : xxx-xx-xxxxx<br>
+            서울특별시 강남구 테헤란로 141, 역삼KR타워 15층 | TEL : 02-xxx-xxxx
+        </div>
+ 
+        <p style="margin-top: 15px; opacity: 0.6; font-weight: 400; max-width: 600px; margin-inline: auto;">&copy; 2026 HIGH & LAW FIRM. ALL RIGHTS RESERVED.</p>
+        <p style="margin-top: 15px; opacity: 0.6; font-weight: 400; max-width: 600px; margin-inline: auto;">ATTORNEY ADVERTISING. PRIOR RESULTS DO NOT GUARANTEE A SIMILAR OUTCOME.</p>
+    </footer>
+
+
+    <script>
+        // 모바일 메뉴 토글
+        const toggle = document.getElementById('mobile-toggle');
+        const nav = document.getElementById('nav-menu');
+        toggle.addEventListener('click', () => { toggle.classList.toggle('active'); nav.classList.toggle('active'); });
+
+        // 뉴스 데이터 로드 및 분류
+        async function fetchNews() {
+            try {
+                const res = await fetch('/api/public/news');
+                const data = await res.json();
+
+                const gridNews = document.getElementById('grid-news');
+                const gridCases = document.getElementById('grid-cases');
+                const gridUpdates = document.getElementById('grid-updates');
+
+                // 초기화
+                gridNews.innerHTML = '';
+                gridCases.innerHTML = '';
+                gridUpdates.innerHTML = '';
+
+                let counts = { news: 0, cases: 0, updates: 0 };
+
+                data.forEach(item => {
+                    const cardHtml = `
+                        <div class="news-card">
+                            <span class="date">${item.created_at}</span>
+                            <h4>${item.title}</h4>
+                            <p>${item.content}</p>
+                        </div>
+                    `;
+
+                    if (item.category === 'H&L News') {
+                        gridNews.innerHTML += cardHtml;
+                        counts.news++;
+                    } else if (item.category === 'Leading Cases') {
+                        gridCases.innerHTML += cardHtml;
+                        counts.cases++;
+                    } else if (item.category === 'Latest Updates') {
+                        gridUpdates.innerHTML += cardHtml;
+                        counts.updates++;
+                    }
+                });
+
+                // 데이터가 없는 경우 처리
+                if(counts.news === 0) gridNews.innerHTML = '<p class="empty-msg">등록된 소식이 없습니다.</p>';
+                if(counts.cases === 0) gridCases.innerHTML = '<p class="empty-msg">등록된 사례가 없습니다.</p>';
+                if(counts.updates === 0) gridUpdates.innerHTML = '<p class="empty-msg">등록된 업데이트가 없습니다.</p>';
+
+            } catch (err) {
+                console.error("뉴스 데이터를 불러오지 못했습니다.", err);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchNews);
+    </script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Partners | 법무법인 하이로</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 공통 CSS 연결 -->
+    <link rel="stylesheet" href="/css/main.css">
+
+    <style>
+        /* 파트너 페이지 전용 추가 스타일 */
+        .partners-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 40px; 
+            margin-top: 20px;
+        }
+
+        .partner-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            padding: 50px 30px;
+            text-align: center;
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        .partner-card:hover {
+            border-color: var(--gold-primary);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        .partner-photo-box {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            border-radius: 50%;
+            background: var(--gold-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            color: var(--gold-primary);
+            border: 1px solid var(--gold-primary);
+        }
+
+        .partner-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .partner-card .specialty {
+            font-size: 13px;
+            color: var(--gold-primary);
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+            display: block;
+        }
+
+        .view-profile {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 10px 25px;
+            border: 1px solid var(--border-color);
+            transition: 0.3s;
+            color: var(--text-secondary);
+        }
+
+        .partner-card:hover .view-profile {
+            background: var(--gold-primary);
+            color: white;
+            border-color: var(--gold-primary);
+        }
+
+        /* 상세 프로필 모달 스타일 */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 2000; backdrop-filter: blur(10px);
+            justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal-content {
+            background: var(--white); width: 100%; max-width: 900px; max-height: 90vh;
+            overflow-y: auto; position: relative; display: grid; grid-template-columns: 1fr 1.5fr;
+        }
+        .modal-left { background: #1a1a1a; color: white; padding: 60px 40px; text-align: center; }
+        .modal-right { padding: 60px; background: white; }
+        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 30px; cursor: pointer; color: var(--text-primary); z-index: 10; }
+        
+        .modal-right h4 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--gold-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; margin-top: 30px; }
+        .modal-right h4:first-child { margin-top: 0; }
+        
+        .history-list { list-style: none; font-size: 14px; color: var(--text-secondary); line-height: 1.8; }
+        .history-list li { margin-bottom: 8px; position: relative; padding-left: 15px; }
+        .history-list li::before { content: ""; position: absolute; left: 0; top: 11px; width: 6px; height: 1px; background: var(--gold-primary); }
+
+        @media (max-width: 1024px) {
+            .partners-grid { grid-template-columns: repeat(2, 1fr); }
+            .modal-content { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .partners-grid { grid-template-columns: 1fr; }
+            .modal-right { padding: 40px 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo-group">
+            <img src="logo.png" alt="High & Law">
+        </a>
+        <div class="menu-toggle" id="mobile-toggle"><div></div><div></div><div></div></div>
+        <nav id="nav-menu">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="the-firm.html">The Firm</a></li>
+                <li><a href="partners.html" style="color:var(--gold-primary)">Partners</a></li>
+                <li><a href="practices.html">Practices</a></li>
+                <li><a href="news.html">News</a></li>
+                <li><a href="recruit.html">Recruit</a></li>
+                <li><a href="inquiry.html">Inquiry</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="sub-hero">
+        <span class="label">Professionals</span>
+        <h2>The Partners</h2>
+        <p style="font-family: 'Playfair Display', serif; font-style: italic; color: var(--gold-primary);">Leading with integrity and exceptional expertise.</p>
+    </div>
+
+    <section>
+        <div class="partners-grid" id="partnersGrid">
+            <!-- 자바스크립트로 파트너 카드 생성 -->
+        </div>
+    </section>
+
+    <!-- 프로필 상세 모달 -->
+    <div id="lawyerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeModal">&times;</span>
+            <div class="modal-left" id="modalLeft"></div>
+            <div class="modal-right" id="modalRight"></div>
+        </div>
+    </div>
+
+    <!-- 하단 CTA 박스 -->
+    <div class="cta-box">
+        <span class="label">Consultation</span>
+        <h2>Commitment to Excellence</h2>
+        <p>검증된 파트너들이 당신의 곁에서 최상의 결과를 위해 함께합니다.</p>
+        <a href="inquiry.html" class="contact-link">Professional Consultation</a>
+    </div>
+
+    <footer>
+        <p style="font-family: 'Playfair Display', serif; font-size: 15px; color: var(--gold-primary); letter-spacing: 2px; font-weight: 700; margin-bottom: 15px;">HIGH & LAW</p>
+        <div class="footer-info">
+            법무법인 하이로 | 대표변호사 : 조덕재, 김범, 강민구 | 사업자등록번호 : xxx-xx-xxxxx<br>
+            서울특별시 강남구 테헤란로 141, 역삼KR타워 15층 | TEL : 02-xxx-xxxx
+        </div>
+ 
+        <p style="margin-top: 15px; opacity: 0.6; font-weight: 400; max-width: 600px; margin-inline: auto;">&copy; 2026 HIGH & LAW FIRM. ALL RIGHTS RESERVED.</p>
+        <p style="margin-top: 15px; opacity: 0.6; font-weight: 400; max-width: 600px; margin-inline: auto;">ATTORNEY ADVERTISING. PRIOR RESULTS DO NOT GUARANTEE A SIMILAR OUTCOME.</p>
+    </footer>
+
+
+    <script>
+        // 모바일 메뉴 토글
+        const toggle = document.getElementById('mobile-toggle');
+        const nav = document.getElementById('nav-menu');
+        toggle.addEventListener('click', () => { toggle.classList.toggle('active'); nav.classList.toggle('active'); });
+
+        // 파트너 데이터
+        const partners = [
+            {
+                id: 'Cho', name: '조덕재', engName: 'Deok Jae Cho', 
+                title: '대표변호사 / 중대재해 · 노동 · 형사',
+                edu: ['영남대학교 법학전문대학원 졸업', '부산대학교 법학과 졸업'],
+                exp: ['전) 육군 군검사', '전) 법무법인 와이케이 변호사']
+            },
+            {
+                id: 'Kim', name: '김범', engName: 'Beom Kim', 
+                title: '대표변호사 / 소송 · 기업자문',
+                edu: ['전남대학교 법학전문대학원 졸업', '동국대학교 정치외교 · 경제학 졸업'],
+                exp: ['전) 육군 군검사', '전) 법무법인(유) 로고스 변호사']
+            },
+            {
+                id: 'Kang', name: '강민구', engName: 'Min Gu Kang', 
+                title: '대표변호사 / 노동 · 방산 · 기업법무',
+                edu: ['고려대학교 법학전문대학원 졸업', '고려대학교 사회학 · 정치외교학 졸업'],
+                exp: ['전) 해군·해병대 법무관', '전) 방위사업청 소송수행자', '전) 법무법인 와이케이 변호사']
+            }
+        ];
+
+        // 카드 생성
+        const grid = document.getElementById('partnersGrid');
+        partners.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'partner-card';
+            card.onclick = () => openModal(p);
+            card.innerHTML = `
+                <div class="partner-photo-box">${p.name.charAt(0)}</div>
+                <h3>${p.name}</h3>
+                <span class="specialty">${p.title.split('/')[1]}</span>
+                <span class="view-profile">View Profile</span>
+            `;
+            grid.appendChild(card);
+        });
+
+        // 모달 열기
+        function openModal(data) {
+            const modal = document.getElementById('lawyerModal');
+            document.getElementById('modalLeft').innerHTML = `
+                <div style="width:100px; height:100px; border:1px solid #c5a059; border-radius:50%; margin:0 auto 25px; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display'; font-size:32px; color:#c5a059;">${data.name.charAt(0)}</div>
+                <h2 style="font-family:'Playfair Display'; font-size:32px;">${data.name}</h2>
+                <div style="font-size:12px; letter-spacing:3px; color:#c5a059; text-transform:uppercase; margin-top:10px;">${data.engName}</div>
+                <p style="margin-top:20px; font-size:14px; opacity:0.7;">${data.title}</p>
+            `;
+            document.getElementById('modalRight').innerHTML = `
+                <h4>Education</h4>
+                <ul class="history-list">${data.edu.map(e => `<li>${e}</li>`).join('')}</ul>
+                <h4>Professional Experience</h4>
+                <ul class="history-list">${data.exp.map(x => `<li>${x}</li>`).join('')}</ul>
+            `;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 모달 닫기
+        document.getElementById('closeModal').onclick = () => {
+            document.getElementById('lawyerModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+
+        window.onclick = (event) => {
+            const modal = document.getElementById('lawyerModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        };
+    </script>
+</body>
+</html>
