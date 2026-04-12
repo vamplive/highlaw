@@ -43,6 +43,7 @@ async function initDB() {
         if (!exists) {
             const initialData = {
                 news: [],
+                partners: [], // 파트너 항목 추가
                 recruit: [
                     { role_id: "new-lawyer", status: "status-open" },
                     { role_id: "exp-lawyer", status: "status-closed" },
@@ -53,6 +54,13 @@ async function initDB() {
                 inquiries: []
             };
             await fs.writeJson(DB_FILE, initialData);
+        } else {
+            // 기존 DB 파일이 있을 경우 partners 키가 없으면 추가
+            const db = await fs.readJson(DB_FILE);
+            if (!db.partners) {
+                db.partners = [];
+                await fs.writeJson(DB_FILE, db);
+            }
         }
         await cleanExpiredJobs();
         setInterval(cleanExpiredJobs, 1000 * 60 * 60 * 24);
@@ -116,6 +124,14 @@ app.get('/api/public/news/:id', async (req, res) => {
     } catch (e) { res.status(500).json(null); }
 });
 
+// [추가] 공용 API: 파트너 목록 가져오기
+app.get('/api/public/partners', async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        res.json(db.partners || []);
+    } catch (e) { res.status(500).json([]); }
+});
+
 app.get('/api/public/recruit', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -130,7 +146,6 @@ app.get('/api/public/jobs', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// [신규] 개별 채용 공고 상세 데이터 가져오기 API
 app.get('/api/public/jobs/:id', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -191,6 +206,48 @@ app.delete('/api/news/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
+/* --- [추가] 관리자 전용: 파트너 관리 --- */
+
+app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        const id = req.body.id ? parseInt(req.body.id) : Date.now();
+        
+        const partnerData = {
+            id: id,
+            name: req.body.name,
+            engName: req.body.engName,
+            title: req.body.title,
+            edu: req.body.edu ? req.body.edu.split('\n').filter(l => l.trim() !== "") : [],
+            exp: req.body.exp ? req.body.exp.split('\n').filter(l => l.trim() !== "") : [],
+            photo: req.body.existingPhoto || null
+        };
+
+        if (req.file) {
+            partnerData.photo = req.file.filename;
+        }
+
+        const index = db.partners.findIndex(p => p.id === id);
+        if (index > -1) {
+            db.partners[index] = partnerData; 
+        } else {
+            db.partners.push(partnerData);
+        }
+
+        await fs.writeJson(DB_FILE, db);
+        res.json(partnerData);
+    } catch (e) { res.status(500).send("Error"); }
+});
+
+app.delete('/api/admin/partners/:id', async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        db.partners = db.partners.filter(p => p.id != req.params.id);
+        await fs.writeJson(DB_FILE, db);
+        res.send("Deleted");
+    } catch (e) { res.status(500).send("Error"); }
+});
+
 /* --- 관리자 전용: 채용 관리 --- */
 
 app.post('/api/recruit/status', async (req, res) => {
@@ -206,7 +263,6 @@ app.post('/api/recruit/status', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// [수정] 상세 채용 공고 (다중 파일 및 에디터 본문 지원)
 app.post('/api/admin/jobs', upload.array('jobAttachments'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -218,7 +274,7 @@ app.post('/api/admin/jobs', upload.array('jobAttachments'), async (req, res) => 
             category: req.body.category,
             title: req.body.title,
             deadline: req.body.deadline,
-            content: req.body.content, // HTML 에디터 데이터
+            content: req.body.content, 
             attachments: attachments,
             created_at: new Date().toISOString().split('T')[0] 
         };

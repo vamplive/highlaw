@@ -66,6 +66,7 @@
             <nav class="flex-1 mt-6">
                 <button @click="setTab('inquiry')" :class="{active: tab==='inquiry'}" class="nav-btn">상담 신청 관리</button>
                 <button @click="setTab('news')" :class="{active: tab==='news'}" class="nav-btn">뉴스/성공사례 관리</button>
+                <button @click="setTab('partner')" :class="{active: tab==='partner'}" class="nav-btn">구성원 관리</button>
                 <button @click="setTab('recruit')" :class="{active: tab==='recruit'}" class="nav-btn">채용 정보 통합 관리</button>
                 <hr class="border-white/5 my-4">
                 <a href="/" class="nav-btn block opacity-40 hover:opacity-100">← 웹사이트 바로가기</a>
@@ -76,7 +77,7 @@
         <!-- Main Content -->
         <main class="ml-64 flex-1 p-12">
             
-            <!-- 1. 상담 신청 관리 (상세보기 및 파일 보기 기능 보완) -->
+            <!-- 1. 상담 신청 관리 -->
             <div v-show="tab === 'inquiry'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Inquiry Management</h2>
                 <div class="admin-card overflow-hidden">
@@ -100,7 +101,7 @@
                     </table>
                 </div>
 
-                <!-- 상담 상세 모달 (상세 내용 및 파일 확인) -->
+                <!-- 상담 상세 모달 -->
                 <div v-if="selectedInquiry" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-6">
                     <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto p-10 rounded shadow-2xl">
                         <div class="flex justify-between items-start mb-8 border-b pb-6">
@@ -171,7 +172,62 @@
                 </div>
             </div>
 
-            <!-- 3. 채용 관리 (모집 여부에 따른 색상 적용) -->
+            <!-- 3. 구성원(파트너) 관리 [신규 추가] -->
+            <div v-show="tab === 'partner'">
+                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Partner Management</h2>
+                <div class="admin-card mb-8">
+                    <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">변호사 정보 등록 및 수정</p>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <input v-model="partnerForm.name" type="text" placeholder="변호사 성함 (예: 조덕재)">
+                            <input v-model="partnerForm.engName" type="text" placeholder="영문 성함 (예: Deok Jae Cho)">
+                        </div>
+                        <input v-model="partnerForm.title" type="text" placeholder="직책 및 전문분야 (예: 대표변호사 / 중대재해 · 노동 · 형사)">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">학력 (줄바꿈으로 구분)</label>
+                                <textarea v-model="partnerForm.edu" rows="4" class="mt-2 border p-3 w-full text-sm" placeholder="영남대학교 법학전문대학원 졸업..."></textarea>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">주요 경력 (줄바꿈으로 구분)</label>
+                                <textarea v-model="partnerForm.exp" rows="4" class="mt-2 border p-3 w-full text-sm" placeholder="전) 육군 군검사..."></textarea>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+                            <p class="text-xs font-bold mb-3">📸 변호사 사진 업로드 (정방향 권장)</p>
+                            <input type="file" ref="partnerPhoto" accept="image/*" class="text-xs block w-full">
+                            <p v-if="partnerForm.existingPhoto" class="mt-2 text-[11px] text-blue-500">기존 사진: {{ partnerForm.existingPhoto }}</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button @click="savePartner" class="btn-gold flex-1 py-4 text-sm tracking-widest">
+                                {{ partnerForm.id ? '변호사 정보 수정하기' : '새 변호사 등록하기' }}
+                            </button>
+                            <button v-if="partnerForm.id" @click="resetPartnerForm" class="bg-gray-100 px-6 text-xs uppercase hover:bg-gray-200 transition">취소</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <div v-for="p in partners" :key="p.id" class="admin-card flex justify-between items-center py-4">
+                        <div class="flex items-center space-x-6">
+                            <div class="w-12 h-12 rounded-full bg-gray-100 overflow-hidden border border-gray-200">
+                                <img v-if="p.photo" :src="'/uploads/'+p.photo" class="w-full h-full object-cover">
+                                <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-xs">N/A</div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">{{ p.name }} <span class="text-gray-400 font-normal ml-1">{{ p.engName }}</span></h4>
+                                <p class="text-[11px] text-gold-primary mt-0.5">{{ p.title }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <button @click="editPartner(p)" class="text-blue-500 hover:underline text-xs font-bold">수정</button>
+                            <button @click="deletePartner(p.id)" class="text-red-300 hover:text-red-600 text-xs font-bold">삭제</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 채용 관리 -->
             <div v-show="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment Management</h2>
                 
@@ -233,12 +289,15 @@
                 return {
                     tab: 'inquiry',
                     inquiries: [],
-                    selectedInquiry: null, // 상세보기용
+                    selectedInquiry: null,
                     newsList: [],
                     newsForm: { category: 'H&L News', title: '' },
                     roles: [],
                     jobList: [],
-                    jobForm: { title: '', category: '', deadline: '' }
+                    jobForm: { title: '', category: '', deadline: '' },
+                    // 파트너 데이터 추가
+                    partners: [],
+                    partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '', existingPhoto: '' }
                 }
             },
             methods: {
@@ -319,6 +378,53 @@
                 getRoleLabel(id) {
                     const labels = { 'new-lawyer': '신규 변호사', 'exp-lawyer': '경력 변호사', 'mil-lawyer': '법무관', 'staff': '행정/직원' };
                     return labels[id] || id;
+                },
+                /* --- 파트너 관리 로직 [신규 추가] --- */
+                async fetchPartners() {
+                    const res = await fetch('/api/public/partners');
+                    this.partners = await res.json();
+                },
+                async savePartner() {
+                    if(!this.partnerForm.name) return alert('성함을 입력해주세요.');
+                    const formData = new FormData();
+                    if(this.partnerForm.id) formData.append('id', this.partnerForm.id);
+                    formData.append('name', this.partnerForm.name);
+                    formData.append('engName', this.partnerForm.engName);
+                    formData.append('title', this.partnerForm.title);
+                    formData.append('edu', this.partnerForm.edu);
+                    formData.append('exp', this.partnerForm.exp);
+                    if(this.partnerForm.existingPhoto) formData.append('existingPhoto', this.partnerForm.existingPhoto);
+                    
+                    const photo = this.$refs.partnerPhoto.files[0];
+                    if(photo) formData.append('photo', photo);
+
+                    const res = await fetch('/api/admin/partners', { method: 'POST', body: formData });
+                    if(res.ok) {
+                        alert('저장되었습니다.');
+                        this.resetPartnerForm();
+                        this.fetchPartners();
+                    }
+                },
+                editPartner(p) {
+                    this.partnerForm = {
+                        id: p.id,
+                        name: p.name,
+                        engName: p.engName,
+                        title: p.title,
+                        edu: p.edu.join('\n'),
+                        exp: p.exp.join('\n'),
+                        existingPhoto: p.photo
+                    };
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+                resetPartnerForm() {
+                    this.partnerForm = { id: null, name: '', engName: '', title: '', edu: '', exp: '', existingPhoto: '' };
+                    this.$refs.partnerPhoto.value = '';
+                },
+                async deletePartner(id) {
+                    if(!confirm('정말 삭제하시겠습니까?')) return;
+                    await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' });
+                    this.fetchPartners();
                 }
             },
             mounted() {
@@ -326,6 +432,7 @@
                 this.fetchNews();
                 this.fetchRecruitStatus();
                 this.fetchJobs();
+                this.fetchPartners(); // 추가
                 this.initQuill();
             }
         }).mount('#app')

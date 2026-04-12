@@ -74,6 +74,7 @@
             font-size: 36px;
             color: var(--gold-primary);
             border: 1px solid var(--gold-primary);
+            overflow: hidden; /* 사진 추가를 위해 추가 */
         }
 
         .partner-card h3 {
@@ -206,48 +207,48 @@
         const nav = document.getElementById('nav-menu');
         toggle.addEventListener('click', () => { toggle.classList.toggle('active'); nav.classList.toggle('active'); });
 
-        // 파트너 데이터
-        const partners = [
-            {
-                id: 'Cho', name: '조덕재', engName: 'Deok Jae Cho', 
-                title: '대표변호사 / 중대재해 · 노동 · 형사',
-                edu: ['영남대학교 법학전문대학원 졸업', '부산대학교 법학과 졸업'],
-                exp: ['전) 육군 15사단 법무부 군검사', '전) 육군 2군단 법무부 군검사 (지역검찰단 파견)', '전) 국방시설본부 소송수행자(부동산·건설 민·행정소송)', '전) 법무법인 와이케이 변호사(중대재해노동형사부)']
-            },
-            {
-                id: 'Kim', name: '김범', engName: 'Beom Kim', 
-                title: '대표변호사 / 소송 · 기업자문',
-                edu: ['전남대학교 법학전문대학원 졸업', '동국대학교 정치외교 · 경제학 졸업', '전민고등학교 졸업'],
-                exp: ['전) 육군 23사단 법무부 군검사 및 징계장교', '전) 국방부 차관실 소송수행자', '전) 법무법인(유) 로고스 변호사']
-            },
-            {
-                id: 'Kang', name: '강민구', engName: 'Min Gu Kang', 
-                title: '대표변호사 / 노동 · 방산 · 기업법무',
-                edu: ['고려대학교 법학전문대학원 졸업', '고려대학교 사회학 · 정치외교학 졸업', '휘문고등학교 졸업'],
-                exp: ['전) 해군 작전사령부 법무관' , '전) 해병대 해병대사령부 법무관', '전) 소말리아해역 호송전대(청해부대) 법무참모', '전) 해군 군검사', '전) 방위사업청 소송수행자(방산 및 조달소송)', '전) 법무법인 와이케이 우수변호사(노동·중대재해·방산 등)']
-            }
-        ];
+        // 파트너 데이터 로드 및 카드 생성
+        async function loadPartners() {
+            try {
+                const res = await fetch('/api/public/partners');
+                const partners = await res.json();
+                const grid = document.getElementById('partnersGrid');
+                grid.innerHTML = '';
 
-        // 카드 생성
-        const grid = document.getElementById('partnersGrid');
-        partners.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'partner-card';
-            card.onclick = () => openModal(p);
-            card.innerHTML = `
-                <div class="partner-photo-box">${p.name.charAt(0)}</div>
-                <h3>${p.name}</h3>
-                <span class="specialty">${p.title.split('/')[1]}</span>
-                <span class="view-profile">View Profile</span>
-            `;
-            grid.appendChild(card);
-        });
+                partners.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'partner-card';
+                    card.onclick = () => openModal(p);
+                    
+                    // 사진 유무에 따른 처리
+                    const photoHtml = p.photo 
+                        ? `<img src="/uploads/${p.photo}" style="width:100%; height:100%; object-fit:cover;">`
+                        : p.name.charAt(0);
+
+                    // 직함/분야 텍스트 처리
+                    const specialtyText = p.title.includes('/') ? p.title.split('/')[1] : p.title;
+
+                    card.innerHTML = `
+                        <div class="partner-photo-box" style="padding:0;">${photoHtml}</div>
+                        <h3>${p.name}</h3>
+                        <span class="specialty">${specialtyText}</span>
+                        <span class="view-profile">View Profile</span>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (e) { console.error("데이터 로드 실패"); }
+        }
 
         // 모달 열기
         function openModal(data) {
             const modal = document.getElementById('lawyerModal');
+            
+            const photoHtml = data.photo 
+                ? `<img src="/uploads/${data.photo}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`
+                : data.name.charAt(0);
+
             document.getElementById('modalLeft').innerHTML = `
-                <div style="width:100px; height:100px; border:1px solid #c5a059; border-radius:50%; margin:0 auto 25px; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display'; font-size:32px; color:#c5a059;">${data.name.charAt(0)}</div>
+                <div style="width:100px; height:100px; border:1px solid #c5a059; border-radius:50%; margin:0 auto 25px; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display'; font-size:32px; color:#c5a059; overflow:hidden; padding:0;">${photoHtml}</div>
                 <h2 style="font-family:'Playfair Display'; font-size:32px;">${data.name}</h2>
                 <div style="font-size:12px; letter-spacing:3px; color:#c5a059; text-transform:uppercase; margin-top:10px;">${data.engName}</div>
                 <p style="margin-top:20px; font-size:14px; opacity:0.7;">${data.title}</p>
@@ -275,6 +276,9 @@
                 document.body.style.overflow = 'auto';
             }
         };
+
+        // 초기 실행
+        window.addEventListener('DOMContentLoaded', loadPartners);
     </script>
 </body>
 </html>
