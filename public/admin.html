@@ -348,7 +348,7 @@
                 }
             },
             methods: {
-                // 드래그 앤 드롭 파일 처리 핸들러 (기존 유지)
+                // [수정] 드래그 앤 드롭 파일 처리 핸들러 (안정성 강화)
                 handleDrop(event, refName) {
                     this.dragStates.news = false;
                     this.dragStates.partner = false;
@@ -356,8 +356,12 @@
                     this.dragStates.hero = false;
                     
                     const files = event.dataTransfer.files;
-                    if (files.length > 0) {
-                        this.$refs[refName].files = files;
+                    if (files && files.length > 0) {
+                        const dataTransfer = new DataTransfer();
+                        for (let i = 0; i < files.length; i++) {
+                            dataTransfer.items.add(files[i]);
+                        }
+                        this.$refs[refName].files = dataTransfer.files;
                     }
                 },
                 // 메인 히어로 전용 드롭 핸들러
@@ -448,47 +452,65 @@
                     const res = await fetch('/api/public/partners');
                     this.partners = await res.json();
                 },
+                // [수정] 파트너 저장 로직 강화
                 async savePartner() {
                     if(!this.partnerForm.name) return alert('성함을 입력해주세요.');
                     const formData = new FormData();
+                    
                     if(this.partnerForm.id) formData.append('id', this.partnerForm.id);
                     formData.append('name', this.partnerForm.name);
                     formData.append('engName', this.partnerForm.engName);
                     formData.append('title', this.partnerForm.title);
                     formData.append('edu', this.partnerForm.edu);
                     formData.append('exp', this.partnerForm.exp);
-                    if(this.partnerForm.existingPhoto) formData.append('existingPhoto', this.partnerForm.existingPhoto);
                     
-                    const photo = this.$refs.partnerPhoto.files[0];
-                    if(photo) formData.append('photo', photo);
+                    if(this.partnerForm.existingPhoto) {
+                        formData.append('existingPhoto', this.partnerForm.existingPhoto);
+                    }
+                    
+                    const photoInput = this.$refs.partnerPhoto;
+                    if(photoInput.files && photoInput.files[0]) {
+                        formData.append('photo', photoInput.files[0]);
+                    }
 
-                    const res = await fetch('/api/admin/partners', { method: 'POST', body: formData });
-                    if(res.ok) {
-                        alert('저장되었습니다.');
-                        this.resetPartnerForm();
-                        this.fetchPartners();
+                    try {
+                        const res = await fetch('/api/admin/partners', { method: 'POST', body: formData });
+                        if(res.ok) {
+                            alert('정상적으로 저장되었습니다.');
+                            this.resetPartnerForm();
+                            this.fetchPartners();
+                        } else {
+                            alert('저장 중 오류가 발생했습니다.');
+                        }
+                    } catch (e) {
+                        alert('서버와 통신할 수 없습니다.');
                     }
                 },
+                // [수정] 수정 모드 시 데이터 안정성 보완
                 editPartner(p) {
                     this.partnerForm = {
                         id: p.id,
-                        name: p.name,
-                        engName: p.engName,
-                        title: p.title,
-                        edu: p.edu.join('\n'),
-                        exp: p.exp.join('\n'),
-                        existingPhoto: p.photo
+                        name: p.name || '',
+                        engName: p.engName || '',
+                        title: p.title || '',
+                        edu: Array.isArray(p.edu) ? p.edu.join('\n') : '',
+                        exp: Array.isArray(p.exp) ? p.exp.join('\n') : '',
+                        existingPhoto: p.photo || ''
                     };
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 },
                 resetPartnerForm() {
                     this.partnerForm = { id: null, name: '', engName: '', title: '', edu: '', exp: '', existingPhoto: '' };
-                    this.$refs.partnerPhoto.value = '';
+                    if(this.$refs.partnerPhoto) this.$refs.partnerPhoto.value = '';
                 },
                 async deletePartner(id) {
                     if(!confirm('정말 삭제하시겠습니까?')) return;
-                    await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' });
-                    this.fetchPartners();
+                    try {
+                        const res = await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' });
+                        if(res.ok) this.fetchPartners();
+                    } catch (e) {
+                        alert('삭제 요청 중 오류가 발생했습니다.');
+                    }
                 },
                 // 메인 히어로 관리 로직
                 async fetchHeroMedia() {

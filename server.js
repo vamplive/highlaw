@@ -220,12 +220,16 @@ app.delete('/api/news/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 관리자 전용: 파트너 관리 --- */
+/* --- 관리자 전용: 파트너 관리 (수정됨) --- */
 
 app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        const id = (req.body.id && req.body.id !== "null") ? parseInt(req.body.id) : Date.now();
+        
+        // ID 처리: 신규 등록(null/undefined)인지 수정인지 판별
+        const idBody = req.body.id;
+        const isNew = (!idBody || idBody === "null" || idBody === "undefined");
+        const id = isNew ? Date.now() : parseInt(idBody);
         
         const partnerData = {
             id: id,
@@ -237,6 +241,7 @@ app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
             photo: (req.body.existingPhoto && req.body.existingPhoto !== "null") ? req.body.existingPhoto : null
         };
 
+        // 새 사진 파일이 업로드된 경우 교체
         if (req.file) {
             partnerData.photo = req.file.filename;
         }
@@ -259,6 +264,7 @@ app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
 app.delete('/api/admin/partners/:id', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
+        // req.params.id는 문자열이므로 loose equality(!=) 사용하여 숫자 ID와 비교
         db.partners = db.partners.filter(p => p.id != req.params.id);
         await fs.writeJson(DB_FILE, db);
         res.send("Deleted");
