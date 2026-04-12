@@ -1,3 +1,4 @@
+--- START OF FILE text/javascript ---
 const express = require('express');
 const path = require('path');
 const fs = require('fs-extra');
@@ -85,29 +86,50 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOAD_DIR),
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + '-' + file.originalname);
+        // [수정] 한글 파일명 깨짐 방지: latin1 -> utf8 변환
+        const decodedName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+        cb(null, uniqueSuffix + '-' + decodedName);
     }
 });
 const upload = multer({ storage: storage });
 
-/* --- 네이버 SEO: RSS Feed API --- */
+/* --- 네이버 SEO: RSS Feed API (수정됨) --- */
 app.get('/rss.xml', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
         const newsItems = db.news || [];
         const siteUrl = 'https://highlaw.co.kr';
-        const toRFC822 = (date) => new Date(date).toUTCString();
+        const toRFC822 = (date) => {
+            const d = new Date(date);
+            return d.toUTCString();
+        };
+        
         const items = newsItems.slice(-50).reverse().map(item => {
+            const plainContent = (item.content || '').replace(/<[^>]*>?/gm, '').substring(0, 500);
             return `
         <item>
             <title><![CDATA[${item.title}]]></title>
             <link>${siteUrl}/news-detail.html?id=${item.id}</link>
-            <description><![CDATA[${(item.content || '').replace(/<[^>]*>?/gm, '').substring(0, 300)}]]></description>
-            <pubDate>${toRFC822(item.id || Date.now())}</pubDate>
-            <guid isPermaLink="false">${siteUrl}/news/${item.id}</guid>
+            <description><![CDATA[${plainContent}]]></description>
+            <author>법무법인 하이로</author>
+            <pubDate>${toRFC822(item.id)}</pubDate>
+            <guid>${siteUrl}/news-detail.html?id=${item.id}</guid>
         </item>`;
         }).join('');
-        const rss = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>법무법인 하이로</title><link>${siteUrl}</link><description>공식 뉴스 및 성공사례</description><language>ko-kr</language><pubDate>${toRFC822(new Date())}</pubDate><lastBuildDate>${toRFC822(new Date())}</lastBuildDate><atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml" />${items}</channel></rss>`;
+
+        const rss = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>법무법인 하이로</title>
+        <link>${siteUrl}</link>
+        <description>법무법인 하이로 공식 뉴스 및 성공사례</description>
+        <language>ko-kr</language>
+        <pubDate>${toRFC822(new Date())}</pubDate>
+        <lastBuildDate>${toRFC822(new Date())}</lastBuildDate>
+        <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml" />
+        ${items}
+    </channel>
+</rss>`;
         res.set('Content-Type', 'application/rss+xml; charset=utf-8');
         res.send(rss);
     } catch (e) { res.status(500).send("RSS error"); }
@@ -220,13 +242,11 @@ app.delete('/api/news/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 관리자 전용: 파트너 관리 (수정됨) --- */
+/* --- 관리자 전용: 파트너 관리 --- */
 
 app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        
-        // ID 처리: 신규 등록(null/undefined)인지 수정인지 판별
         const idBody = req.body.id;
         const isNew = (!idBody || idBody === "null" || idBody === "undefined");
         const id = isNew ? Date.now() : parseInt(idBody);
@@ -241,7 +261,6 @@ app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
             photo: (req.body.existingPhoto && req.body.existingPhoto !== "null") ? req.body.existingPhoto : null
         };
 
-        // 새 사진 파일이 업로드된 경우 교체
         if (req.file) {
             partnerData.photo = req.file.filename;
         }
@@ -264,14 +283,13 @@ app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
 app.delete('/api/admin/partners/:id', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        // req.params.id는 문자열이므로 loose equality(!=) 사용하여 숫자 ID와 비교
         db.partners = db.partners.filter(p => p.id != req.params.id);
         await fs.writeJson(DB_FILE, db);
         res.send("Deleted");
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- [추가] 관리자 전용: 메인 히어로 관리 --- */
+/* --- 관리자 전용: 메인 히어로 관리 --- */
 
 app.post('/api/admin/hero', upload.single('heroFile'), async (req, res) => {
     try {

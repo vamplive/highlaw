@@ -53,7 +53,6 @@
 
         .editor-wrapper { min-height: 300px; font-family: 'Inter', sans-serif; font-size: 16px; }
 
-        /* 드래그 앤 드롭 하이라이트 효과 */
         .drop-zone-active { border-color: var(--gold-primary) !important; background-color: rgba(197, 160, 89, 0.05) !important; }
     </style>
 </head>
@@ -68,10 +67,10 @@
             </div>
             <nav class="flex-1 mt-6">
                 <button @click="setTab('inquiry')" :class="{active: tab==='inquiry'}" class="nav-btn">상담 신청 관리</button>
+                <button @click="setTab('hero')" :class="{active: tab==='hero'}" class="nav-btn">메인 비주얼 관리</button>
                 <button @click="setTab('news')" :class="{active: tab==='news'}" class="nav-btn">뉴스/성공사례 관리</button>
                 <button @click="setTab('partner')" :class="{active: tab==='partner'}" class="nav-btn">구성원 관리</button>
                 <button @click="setTab('recruit')" :class="{active: tab==='recruit'}" class="nav-btn">채용 정보 통합 관리</button>
-                <button @click="setTab('hero')" :class="{active: tab==='hero'}" class="nav-btn">메인 비주얼 관리</button>
                 <hr class="border-white/5 my-4">
                 <a href="/" class="nav-btn block opacity-40 hover:opacity-100">← 웹사이트 바로가기</a>
             </nav>
@@ -180,17 +179,20 @@
                 </div>
             </div>
 
-            <!-- 3. 구성원(파트너) 관리 -->
+            <!-- 3. [수정됨] 구성원(파트너) 관리 - 메인 페이지 연동 안내 추가 -->
             <div v-show="tab === 'partner'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Partner Management</h2>
                 <div class="admin-card mb-8">
-                    <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">변호사 정보 등록 및 수정</p>
+                    <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">메인 화면 및 구성원 페이지 통합 관리</p>
                     <div class="space-y-6">
                         <div class="grid grid-cols-2 gap-6">
                             <input v-model="partnerForm.name" type="text" placeholder="변호사 성함 (예: 조덕재)">
                             <input v-model="partnerForm.engName" type="text" placeholder="영문 성함 (예: Deok Jae Cho)">
                         </div>
-                        <input v-model="partnerForm.title" type="text" placeholder="직책 및 전문분야 (예: 대표변호사 / 중대재해 · 노동 · 형사)">
+                        <div class="relative">
+                            <input v-model="partnerForm.title" type="text" placeholder="직책 및 전문분야 (예: 대표변호사 / 중대재해 · 노동)">
+                            <p class="text-[9px] text-gray-400 mt-1">* 메인 화면에는 '/' 앞의 직책과 성함이 함께 표시됩니다.</p>
+                        </div>
                         <div class="grid grid-cols-2 gap-6">
                             <div>
                                 <label class="text-[10px] font-bold text-gray-400 uppercase">학력 (줄바꿈으로 구분)</label>
@@ -199,6 +201,7 @@
                             <div>
                                 <label class="text-[10px] font-bold text-gray-400 uppercase">주요 경력 (줄바꿈으로 구분)</label>
                                 <textarea v-model="partnerForm.exp" rows="4" class="mt-2 border p-3 w-full text-sm" placeholder="전) 육군 군검사..."></textarea>
+                                <p class="text-[9px] text-gray-400 mt-1">* 상위 3개 항목이 메인 화면 카드에 노출됩니다.</p>
                             </div>
                         </div>
                         <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg transition-all"
@@ -206,7 +209,7 @@
                              @dragover.prevent="dragStates.partner = true"
                              @dragleave.prevent="dragStates.partner = false"
                              @drop.prevent="handleDrop($event, 'partnerPhoto')">
-                            <p class="text-xs font-bold mb-3">📸 변호사 사진 업로드 (마우스로 파일을 끌어오세요)</p>
+                            <p class="text-xs font-bold mb-3">📸 변호사 사진 업로드 (메인 및 상세페이지 공용)</p>
                             <input type="file" ref="partnerPhoto" accept="image/*" class="text-xs block w-full">
                             <p v-if="partnerForm.existingPhoto" class="mt-2 text-[11px] text-blue-500">기존 사진: {{ partnerForm.existingPhoto }}</p>
                         </div>
@@ -343,12 +346,10 @@
                     partners: [],
                     partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '', existingPhoto: '' },
                     heroMediaList: [],
-                    // 드래그 상태 관리
                     dragStates: { news: false, partner: false, job: false, hero: false }
                 }
             },
             methods: {
-                // [수정] 드래그 앤 드롭 파일 처리 핸들러 (안정성 강화)
                 handleDrop(event, refName) {
                     this.dragStates.news = false;
                     this.dragStates.partner = false;
@@ -364,7 +365,6 @@
                         this.$refs[refName].files = dataTransfer.files;
                     }
                 },
-                // 메인 히어로 전용 드롭 핸들러
                 handleHeroDrop(event) {
                     this.dragStates.hero = false;
                     const file = event.dataTransfer.files[0];
@@ -452,26 +452,18 @@
                     const res = await fetch('/api/public/partners');
                     this.partners = await res.json();
                 },
-                // [수정] 파트너 저장 로직 강화
                 async savePartner() {
                     if(!this.partnerForm.name) return alert('성함을 입력해주세요.');
                     const formData = new FormData();
-                    
                     if(this.partnerForm.id) formData.append('id', this.partnerForm.id);
                     formData.append('name', this.partnerForm.name);
                     formData.append('engName', this.partnerForm.engName);
                     formData.append('title', this.partnerForm.title);
                     formData.append('edu', this.partnerForm.edu);
                     formData.append('exp', this.partnerForm.exp);
-                    
-                    if(this.partnerForm.existingPhoto) {
-                        formData.append('existingPhoto', this.partnerForm.existingPhoto);
-                    }
-                    
+                    if(this.partnerForm.existingPhoto) formData.append('existingPhoto', this.partnerForm.existingPhoto);
                     const photoInput = this.$refs.partnerPhoto;
-                    if(photoInput.files && photoInput.files[0]) {
-                        formData.append('photo', photoInput.files[0]);
-                    }
+                    if(photoInput.files && photoInput.files[0]) formData.append('photo', photoInput.files[0]);
 
                     try {
                         const res = await fetch('/api/admin/partners', { method: 'POST', body: formData });
@@ -479,14 +471,9 @@
                             alert('정상적으로 저장되었습니다.');
                             this.resetPartnerForm();
                             this.fetchPartners();
-                        } else {
-                            alert('저장 중 오류가 발생했습니다.');
                         }
-                    } catch (e) {
-                        alert('서버와 통신할 수 없습니다.');
-                    }
+                    } catch (e) { alert('에러 발생'); }
                 },
-                // [수정] 수정 모드 시 데이터 안정성 보완
                 editPartner(p) {
                     this.partnerForm = {
                         id: p.id,
@@ -505,14 +492,9 @@
                 },
                 async deletePartner(id) {
                     if(!confirm('정말 삭제하시겠습니까?')) return;
-                    try {
-                        const res = await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' });
-                        if(res.ok) this.fetchPartners();
-                    } catch (e) {
-                        alert('삭제 요청 중 오류가 발생했습니다.');
-                    }
+                    await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' });
+                    this.fetchPartners();
                 },
-                // 메인 히어로 관리 로직
                 async fetchHeroMedia() {
                     const res = await fetch('/api/public/hero');
                     this.heroMediaList = await res.json();
@@ -525,13 +507,10 @@
                     const formData = new FormData();
                     formData.append('heroFile', file);
                     const res = await fetch('/api/admin/hero', { method: 'POST', body: formData });
-                    if(res.ok) { 
-                        this.fetchHeroMedia(); 
-                        alert('업로드 완료');
-                    }
+                    if(res.ok) { this.fetchHeroMedia(); alert('업로드 완료'); }
                 },
                 async deleteHeroMedia(id) {
-                    if(!confirm('이 이미지를 배경 목록에서 삭제하시겠습니까?')) return;
+                    if(!confirm('삭제하시겠습니까?')) return;
                     await fetch(`/api/admin/hero/${id}`, { method: 'DELETE' });
                     this.fetchHeroMedia();
                 }

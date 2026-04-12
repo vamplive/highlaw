@@ -28,25 +28,21 @@
     <meta name="twitter:description" content="의뢰인의 신뢰를 바탕으로 최상의 법률 서비스를 제공하는 법무법인 하이로입니다.">
     <meta name="twitter:image" content="https://highlaw.co.kr/logo.png">
 
-    <!-- 기존 CSS 연결 등 -->
+    <!-- 기존 CSS 연결 -->
     <link rel="stylesheet" href="/css/main.css">
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- 공통 CSS 연결 -->
-    <link rel="stylesheet" href="/css/main.css">
-
     <style>
         /* 메인 페이지 전용 추가 스타일 */
         .hero-main {
             height: 90vh; display: flex; align-items: center; justify-content: center;
             position: relative; overflow: hidden;
             text-align: center; border-bottom: 1px solid var(--border-color);
-            background: #fdfdfd; /* 미디어 로드 전 배경색 */
+            background: #fdfdfd;
         }
         
-        /* 배경 슬라이더 스타일 */
         .hero-bg-slider {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
         }
@@ -56,26 +52,34 @@
         }
         .hero-bg-item.active { opacity: 1; }
         
-        /* 가독성을 위한 오버레이 */
+        /* [수정] 가독성 개선을 위한 오버레이 강화 */
         .hero-main::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(244,238,224,0.3));
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.25)); /* 오버레이 어둡기 증가 */
             z-index: 2;
         }
 
-        .hero-content { position: relative; z-index: 10; }
+        /* [수정] 히어로 텍스트 그림자 추가로 가독성 확보 */
+        .hero-content { 
+            position: relative; z-index: 10; 
+            text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 40px rgba(255,255,255,0.4); 
+        }
         .hero-main h2 {
             font-family: 'Playfair Display', serif; font-size: clamp(40px, 8vw, 80px);
-            font-weight: 400; line-height: 1.1; color: var(--text-primary); margin-bottom: 25px;
+            font-weight: 400; line-height: 1.1; color: #111; margin-bottom: 25px;
         }
-        .hero-main p { font-size: clamp(16px, 3vw, 22px); color: var(--text-secondary); max-width: 800px; margin: 0 auto; font-weight: 300; }
+        .hero-main p { font-size: clamp(16px, 3vw, 22px); color: #222; max-width: 800px; margin: 0 auto; font-weight: 400; }
 
         .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
-        .partner-card { background: var(--white); padding: 50px 40px; border: 1px solid var(--border-color); transition: 0.4s; }
+        .partner-card { background: var(--white); padding: 40px 30px; border: 1px solid var(--border-color); transition: 0.4s; text-align: center; }
         .partner-card:hover { border-color: var(--gold-primary); transform: translateY(-10px); }
-        .partner-card h3 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 20px; }
+        
+        /* [추가] 파트너 카드용 이미지 스타일 */
+        .partner-img-main { width: 100%; height: 320px; object-fit: cover; margin-bottom: 25px; border: 1px solid var(--border-color); }
+        .partner-card h3 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 15px; color: var(--text-primary); }
+        
         .career-list { list-style: none; font-size: 13.5px; color: var(--text-secondary); text-align: left; }
-        .career-list li { margin-bottom: 10px; position: relative; padding-left: 15px; }
+        .career-list li { margin-bottom: 8px; position: relative; padding-left: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .career-list li::before { content: ""; position: absolute; left: 0; top: 10px; width: 6px; height: 1px; background: var(--gold-primary); }
 
         .news-grid-main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
@@ -122,9 +126,7 @@
 
     <!-- 메인 히어로 영역 -->
     <section class="hero-main">
-        <div class="hero-bg-slider" id="hero-slider">
-            <!-- 자바스크립트로 배경 로드 -->
-        </div>
+        <div class="hero-bg-slider" id="hero-slider"></div>
         <div class="hero-content">
             <span class="label">Loyalty & Dignity</span>
             <h2>High Dignity,<br>Law's Solution</h2>
@@ -132,35 +134,12 @@
         </div>
     </section>
 
-    <!-- 전문가 소개 영역 -->
+    <!-- 전문가 소개 영역 (ID 변경 및 동적 연동 준비) -->
     <section id="professionals">
         <span class="label">Expertise</span>
         <h2 class="section-title">The Partners</h2>
-        <div class="partner-grid">
-            <div class="partner-card">
-                <h3>조덕재 대표변호사</h3>
-                <ul class="career-list">
-                    <li>영남대학교 법학전문대학원</li>
-                    <li>전) 육군 군검사</li>
-                    <li>전) 법무법인 와이케이</li>
-                </ul>
-            </div>
-            <div class="partner-card">
-                <h3>김범 대표변호사</h3>
-                <ul class="career-list">
-                    <li>전남대학교 법학전문대학원</li>
-                    <li>전) 육군 군검사</li>
-                    <li>전) 법무법인 로고스</li>
-                </ul>
-            </div>
-            <div class="partner-card">
-                <h3>강민구 대표변호사</h3>
-                <ul class="career-list">
-                    <li>고려대학교 법학전문대학원</li>
-                    <li>전) 해군·해병대 법무관</li>
-                    <li>전) 방위사업청 소송수행자</li>
-                </ul>
-            </div>
+        <div class="partner-grid" id="main-partner-grid">
+            <p style="grid-column: 1/-1; text-align: center; opacity: 0.5;">데이터를 불러오고 있습니다...</p>
         </div>
     </section>
 
@@ -169,7 +148,6 @@
         <span class="label">Insights</span>
         <h2 class="section-title">Latest Updates</h2>
         <div class="news-grid-main" id="sync-news-grid">
-            <!-- 자바스크립트로 뉴스 로드 -->
             <p style="grid-column: 1/-1; text-align: center; opacity: 0.5;">소식을 불러오고 있습니다...</p>
         </div>
     </section>
@@ -245,15 +223,32 @@
                             items[current].classList.remove('active');
                             current = (current + 1) % items.length;
                             items[current].classList.add('active');
-                        }, 6000); // 6초마다 전환
+                        }, 6000);
                     }
                 } else {
-                    // 기본 배경 설정 (파일 없을 때)
                     slider.style.background = "linear-gradient(to bottom right, #fdfdfd, #f4eee0)";
                 }
             } catch (e) { console.error("히어로 배경 로드 실패"); }
 
-            // 1. 뉴스 데이터 가져오기
+            // [추가] 1. 파트너 데이터 동기화 (Admin 연동)
+            try {
+                const pRes = await fetch('/api/public/partners');
+                const pData = await pRes.json();
+                const partnerGrid = document.getElementById('main-partner-grid');
+                if(pData.length > 0) {
+                    partnerGrid.innerHTML = pData.map(p => `
+                        <div class="partner-card" onclick="location.href='partners.html'" style="cursor:pointer">
+                            ${p.photo ? `<img src="/uploads/${p.photo}" class="partner-img-main">` : `<div class="partner-img-main" style="display:flex; align-items:center; justify-content:center; background:#f4eee0; font-family:'Playfair Display'; font-size:40px; color:#c5a059;">${p.name[0]}</div>`}
+                            <h3>${p.name} <span style="font-size:14px; color:#999; font-weight:normal;">${p.title.split('/')[0]}</span></h3>
+                            <ul class="career-list">
+                                ${Array.isArray(p.exp) ? p.exp.slice(0, 3).map(line => `<li>${line}</li>`).join('') : ''}
+                            </ul>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) { console.error("파트너 로드 실패"); }
+
+            // 2. 뉴스 데이터 가져오기
             try {
                 const nRes = await fetch('/api/public/news');
                 const nData = await nRes.json();
@@ -269,7 +264,7 @@
                 }
             } catch (e) { console.error("뉴스 로드 실패"); }
 
-            // 2. 채용 상태 가져오기
+            // 3. 채용 상태 가져오기
             try {
                 const rRes = await fetch('/api/public/recruit');
                 const rData = await rRes.json();
