@@ -377,6 +377,6 @@ app.delete('/api/admin/inquiries/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`High & Law Server Running on port ${PORT}`);
 });
