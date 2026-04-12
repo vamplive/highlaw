@@ -43,7 +43,7 @@ async function initDB() {
         if (!exists) {
             const initialData = {
                 news: [],
-                partners: [], // 파트너 항목 추가
+                partners: [], 
                 recruit: [
                     { role_id: "new-lawyer", status: "status-open" },
                     { role_id: "exp-lawyer", status: "status-closed" },
@@ -51,16 +51,23 @@ async function initDB() {
                     { role_id: "staff", status: "status-closed" }
                 ],
                 jobs: [],
-                inquiries: []
+                inquiries: [],
+                heroMedia: [] // [추가] 메인 히어로 항목 초기화
             };
             await fs.writeJson(DB_FILE, initialData);
         } else {
-            // 기존 DB 파일이 있을 경우 partners 키가 없으면 추가
             const db = await fs.readJson(DB_FILE);
+            let updated = false;
             if (!db.partners) {
                 db.partners = [];
-                await fs.writeJson(DB_FILE, db);
+                updated = true;
             }
+            // [추가] 기존 DB 파일에 heroMedia 키가 없으면 추가
+            if (!db.heroMedia) {
+                db.heroMedia = [];
+                updated = true;
+            }
+            if (updated) await fs.writeJson(DB_FILE, db);
         }
         await cleanExpiredJobs();
         setInterval(cleanExpiredJobs, 1000 * 60 * 60 * 24);
@@ -108,6 +115,14 @@ app.get('/rss.xml', async (req, res) => {
 
 /* --- 공용 API --- */
 
+// [추가] 공용 API: 메인 히어로 목록 가져오기
+app.get('/api/public/hero', async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        res.json(db.heroMedia || []);
+    } catch (e) { res.status(500).json([]); }
+});
+
 app.get('/api/public/news', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -124,7 +139,6 @@ app.get('/api/public/news/:id', async (req, res) => {
     } catch (e) { res.status(500).json(null); }
 });
 
-// [추가] 공용 API: 파트너 목록 가져오기
 app.get('/api/public/partners', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -206,12 +220,11 @@ app.delete('/api/news/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- [수정] 관리자 전용: 파트너 관리 --- */
+/* --- 관리자 전용: 파트너 관리 --- */
 
 app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        // ID가 "null" 문자열로 오거나 없을 경우 신규 생성, 있을 경우 기존 ID 사용
         const id = (req.body.id && req.body.id !== "null") ? parseInt(req.body.id) : Date.now();
         
         const partnerData = {
@@ -247,6 +260,33 @@ app.delete('/api/admin/partners/:id', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
         db.partners = db.partners.filter(p => p.id != req.params.id);
+        await fs.writeJson(DB_FILE, db);
+        res.send("Deleted");
+    } catch (e) { res.status(500).send("Error"); }
+});
+
+/* --- [추가] 관리자 전용: 메인 히어로 관리 --- */
+
+app.post('/api/admin/hero', upload.single('heroFile'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).send("No file uploaded");
+        const db = await fs.readJson(DB_FILE);
+        const newMedia = {
+            id: Date.now(),
+            filename: req.file.filename,
+            mimetype: req.file.mimetype,
+            created_at: new Date().toISOString()
+        };
+        db.heroMedia.push(newMedia);
+        await fs.writeJson(DB_FILE, db);
+        res.json(newMedia);
+    } catch (e) { res.status(500).send("Error"); }
+});
+
+app.delete('/api/admin/hero/:id', async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        db.heroMedia = db.heroMedia.filter(m => m.id != req.params.id);
         await fs.writeJson(DB_FILE, db);
         res.send("Deleted");
     } catch (e) { res.status(500).send("Error"); }

@@ -71,6 +71,7 @@
                 <button @click="setTab('news')" :class="{active: tab==='news'}" class="nav-btn">뉴스/성공사례 관리</button>
                 <button @click="setTab('partner')" :class="{active: tab==='partner'}" class="nav-btn">구성원 관리</button>
                 <button @click="setTab('recruit')" :class="{active: tab==='recruit'}" class="nav-btn">채용 정보 통합 관리</button>
+                <button @click="setTab('hero')" :class="{active: tab==='hero'}" class="nav-btn">메인 비주얼 관리</button>
                 <hr class="border-white/5 my-4">
                 <a href="/" class="nav-btn block opacity-40 hover:opacity-100">← 웹사이트 바로가기</a>
             </nav>
@@ -292,6 +293,35 @@
                 </div>
             </div>
 
+            <!-- 5. 메인 히어로 관리 -->
+            <div v-show="tab === 'hero'">
+                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Main Hero Management</h2>
+                <div class="admin-card mb-8">
+                    <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">메인 배경 사진/영상 업로드</p>
+                    <div class="p-10 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-center transition-all"
+                         :class="{'drop-zone-active': dragStates.hero}"
+                         @dragover.prevent="dragStates.hero = true"
+                         @dragleave.prevent="dragStates.hero = false"
+                         @drop.prevent="handleHeroDrop">
+                        <p class="text-sm text-gray-500 mb-4">사진(JPG, PNG) 또는 영상(MP4) 파일을 드래그하여 놓으세요.</p>
+                        <input type="file" ref="heroFile" @change="uploadHeroMedia" class="hidden" id="heroFileInput">
+                        <label for="heroFileInput" class="btn-gold cursor-pointer inline-block">파일 선택하기</label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-6">
+                    <div v-for="m in heroMediaList" :key="m.id" class="relative group border border-gray-200 bg-black h-48 overflow-hidden rounded">
+                        <img v-if="m.mimetype.startsWith('image')" :src="'/uploads/'+m.filename" class="w-full h-full object-cover opacity-80">
+                        <video v-else class="w-full h-full object-cover opacity-80" muted>
+                            <source :src="'/uploads/'+m.filename">
+                        </video>
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button @click="deleteHeroMedia(m.id)" class="bg-red-500 text-white px-4 py-2 text-xs font-bold rounded">삭제</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -312,21 +342,29 @@
                     jobForm: { title: '', category: '', deadline: '' },
                     partners: [],
                     partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '', existingPhoto: '' },
+                    heroMediaList: [],
                     // 드래그 상태 관리
-                    dragStates: { news: false, partner: false, job: false }
+                    dragStates: { news: false, partner: false, job: false, hero: false }
                 }
             },
             methods: {
-                // 드래그 앤 드롭 파일 처리 핸들러
+                // 드래그 앤 드롭 파일 처리 핸들러 (기존 유지)
                 handleDrop(event, refName) {
                     this.dragStates.news = false;
                     this.dragStates.partner = false;
                     this.dragStates.job = false;
+                    this.dragStates.hero = false;
                     
                     const files = event.dataTransfer.files;
                     if (files.length > 0) {
                         this.$refs[refName].files = files;
                     }
+                },
+                // 메인 히어로 전용 드롭 핸들러
+                handleHeroDrop(event) {
+                    this.dragStates.hero = false;
+                    const file = event.dataTransfer.files[0];
+                    if (file) this.uploadHeroMediaAction(file);
                 },
                 setTab(name) {
                     this.tab = name;
@@ -413,7 +451,6 @@
                 async savePartner() {
                     if(!this.partnerForm.name) return alert('성함을 입력해주세요.');
                     const formData = new FormData();
-                    // 수정 시에만 ID를 보내고 신규 시에는 보내지 않음 (혹은 null 처리)
                     if(this.partnerForm.id) formData.append('id', this.partnerForm.id);
                     formData.append('name', this.partnerForm.name);
                     formData.append('engName', this.partnerForm.engName);
@@ -452,6 +489,29 @@
                     if(!confirm('정말 삭제하시겠습니까?')) return;
                     await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' });
                     this.fetchPartners();
+                },
+                // 메인 히어로 관리 로직
+                async fetchHeroMedia() {
+                    const res = await fetch('/api/public/hero');
+                    this.heroMediaList = await res.json();
+                },
+                async uploadHeroMedia(e) {
+                    const file = e.target.files[0];
+                    if (file) this.uploadHeroMediaAction(file);
+                },
+                async uploadHeroMediaAction(file) {
+                    const formData = new FormData();
+                    formData.append('heroFile', file);
+                    const res = await fetch('/api/admin/hero', { method: 'POST', body: formData });
+                    if(res.ok) { 
+                        this.fetchHeroMedia(); 
+                        alert('업로드 완료');
+                    }
+                },
+                async deleteHeroMedia(id) {
+                    if(!confirm('이 이미지를 배경 목록에서 삭제하시겠습니까?')) return;
+                    await fetch(`/api/admin/hero/${id}`, { method: 'DELETE' });
+                    this.fetchHeroMedia();
                 }
             },
             mounted() {
@@ -460,6 +520,7 @@
                 this.fetchRecruitStatus();
                 this.fetchJobs();
                 this.fetchPartners();
+                this.fetchHeroMedia();
                 this.initQuill();
             }
         }).mount('#app')

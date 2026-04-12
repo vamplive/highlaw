@@ -41,9 +41,29 @@
         /* 메인 페이지 전용 추가 스타일 */
         .hero-main {
             height: 90vh; display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(to bottom right, #fdfdfd, #f4eee0);
+            position: relative; overflow: hidden;
             text-align: center; border-bottom: 1px solid var(--border-color);
+            background: #fdfdfd; /* 미디어 로드 전 배경색 */
         }
+        
+        /* 배경 슬라이더 스타일 */
+        .hero-bg-slider {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+        }
+        .hero-bg-item {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; opacity: 0; transition: opacity 2s ease-in-out;
+        }
+        .hero-bg-item.active { opacity: 1; }
+        
+        /* 가독성을 위한 오버레이 */
+        .hero-main::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(244,238,224,0.3));
+            z-index: 2;
+        }
+
+        .hero-content { position: relative; z-index: 10; }
         .hero-main h2 {
             font-family: 'Playfair Display', serif; font-size: clamp(40px, 8vw, 80px);
             font-weight: 400; line-height: 1.1; color: var(--text-primary); margin-bottom: 25px;
@@ -102,6 +122,9 @@
 
     <!-- 메인 히어로 영역 -->
     <section class="hero-main">
+        <div class="hero-bg-slider" id="hero-slider">
+            <!-- 자바스크립트로 배경 로드 -->
+        </div>
         <div class="hero-content">
             <span class="label">Loyalty & Dignity</span>
             <h2>High Dignity,<br>Law's Solution</h2>
@@ -200,6 +223,36 @@
 
         // 데이터 동기화 함수
         async function syncData() {
+            // 0. 메인 히어로 배경 동기화
+            try {
+                const hRes = await fetch('/api/public/hero');
+                const hData = await hRes.json();
+                const slider = document.getElementById('hero-slider');
+                
+                if (hData && hData.length > 0) {
+                    slider.innerHTML = hData.map((m, idx) => {
+                        if (m.mimetype.startsWith('image')) {
+                            return `<img src="/uploads/${m.filename}" class="hero-bg-item ${idx === 0 ? 'active' : ''}">`;
+                        } else {
+                            return `<video src="/uploads/${m.filename}" class="hero-bg-item ${idx === 0 ? 'active' : ''}" autoplay muted loop playsinline></video>`;
+                        }
+                    }).join('');
+
+                    let current = 0;
+                    const items = document.querySelectorAll('.hero-bg-item');
+                    if (items.length > 1) {
+                        setInterval(() => {
+                            items[current].classList.remove('active');
+                            current = (current + 1) % items.length;
+                            items[current].classList.add('active');
+                        }, 6000); // 6초마다 전환
+                    }
+                } else {
+                    // 기본 배경 설정 (파일 없을 때)
+                    slider.style.background = "linear-gradient(to bottom right, #fdfdfd, #f4eee0)";
+                }
+            } catch (e) { console.error("히어로 배경 로드 실패"); }
+
             // 1. 뉴스 데이터 가져오기
             try {
                 const nRes = await fetch('/api/public/news');
@@ -210,7 +263,7 @@
                         <div class="news-card-small">
                             <span class="date">${item.created_at}</span>
                             <h4>${item.title}</h4>
-                            <p style="font-size:13px; color:#777;">${item.content.substring(0, 60)}...</p>
+                            <p style="font-size:13px; color:#777;">${item.content.replace(/<[^>]*>?/gm, '').substring(0, 60)}...</p>
                         </div>
                     `).join('');
                 }
