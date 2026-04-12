@@ -52,6 +52,9 @@
         .btn-gold:hover { background: var(--gold-primary); color: #1a1a1a; }
 
         .editor-wrapper { min-height: 300px; font-family: 'Inter', sans-serif; font-size: 16px; }
+
+        /* 드래그 앤 드롭 하이라이트 효과 */
+        .drop-zone-active { border-color: var(--gold-primary) !important; background-color: rgba(197, 160, 89, 0.05) !important; }
     </style>
 </head>
 <body class="min-h-screen flex">
@@ -155,8 +158,12 @@
                                 <input v-model="newsForm.title" type="text" placeholder="제목을 입력하세요">
                             </div>
                             <div id="news-editor" class="editor-wrapper"></div>
-                            <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-                                <p class="text-xs font-bold mb-3">📎 뉴스 첨부 파일</p>
+                            <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg transition-all"
+                                 :class="{'drop-zone-active': dragStates.news}"
+                                 @dragover.prevent="dragStates.news = true"
+                                 @dragleave.prevent="dragStates.news = false"
+                                 @drop.prevent="handleDrop($event, 'newsFiles')">
+                                <p class="text-xs font-bold mb-3">📎 뉴스 첨부 파일 (마우스로 파일을 끌어오세요)</p>
                                 <input type="file" ref="newsFiles" multiple class="text-xs block w-full">
                             </div>
                             <button @click="saveNews" class="btn-gold w-full py-4 text-sm tracking-widest">웹사이트 게시하기</button>
@@ -172,7 +179,7 @@
                 </div>
             </div>
 
-            <!-- 3. 구성원(파트너) 관리 [신규 추가] -->
+            <!-- 3. 구성원(파트너) 관리 -->
             <div v-show="tab === 'partner'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Partner Management</h2>
                 <div class="admin-card mb-8">
@@ -193,8 +200,12 @@
                                 <textarea v-model="partnerForm.exp" rows="4" class="mt-2 border p-3 w-full text-sm" placeholder="전) 육군 군검사..."></textarea>
                             </div>
                         </div>
-                        <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-                            <p class="text-xs font-bold mb-3">📸 변호사 사진 업로드 (정방향 권장)</p>
+                        <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg transition-all"
+                             :class="{'drop-zone-active': dragStates.partner}"
+                             @dragover.prevent="dragStates.partner = true"
+                             @dragleave.prevent="dragStates.partner = false"
+                             @drop.prevent="handleDrop($event, 'partnerPhoto')">
+                            <p class="text-xs font-bold mb-3">📸 변호사 사진 업로드 (마우스로 파일을 끌어오세요)</p>
                             <input type="file" ref="partnerPhoto" accept="image/*" class="text-xs block w-full">
                             <p v-if="partnerForm.existingPhoto" class="mt-2 text-[11px] text-blue-500">기존 사진: {{ partnerForm.existingPhoto }}</p>
                         </div>
@@ -257,8 +268,12 @@
                             <input v-model="jobForm.deadline" type="date">
                         </div>
                         <div id="job-editor" class="editor-wrapper"></div>
-                        <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-                            <p class="text-xs font-bold mb-3">📎 공고 첨부 파일</p>
+                        <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg transition-all"
+                             :class="{'drop-zone-active': dragStates.job}"
+                             @dragover.prevent="dragStates.job = true"
+                             @dragleave.prevent="dragStates.job = false"
+                             @drop.prevent="handleDrop($event, 'jobFiles')">
+                            <p class="text-xs font-bold mb-3">📎 공고 첨부 파일 (마우스로 파일을 끌어오세요)</p>
                             <input type="file" ref="jobFiles" multiple class="text-xs block w-full">
                         </div>
                         <button @click="addJob" class="btn-gold w-full py-4 text-sm tracking-widest">상세 공고 게시하기</button>
@@ -295,12 +310,24 @@
                     roles: [],
                     jobList: [],
                     jobForm: { title: '', category: '', deadline: '' },
-                    // 파트너 데이터 추가
                     partners: [],
-                    partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '', existingPhoto: '' }
+                    partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '', existingPhoto: '' },
+                    // 드래그 상태 관리
+                    dragStates: { news: false, partner: false, job: false }
                 }
             },
             methods: {
+                // 드래그 앤 드롭 파일 처리 핸들러
+                handleDrop(event, refName) {
+                    this.dragStates.news = false;
+                    this.dragStates.partner = false;
+                    this.dragStates.job = false;
+                    
+                    const files = event.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.$refs[refName].files = files;
+                    }
+                },
                 setTab(name) {
                     this.tab = name;
                     this.initQuill();
@@ -340,7 +367,7 @@
                     const files = this.$refs.newsFiles.files;
                     for (let i = 0; i < files.length; i++) formData.append('attachments', files[i]);
                     const res = await fetch('/api/news', { method: 'POST', body: formData });
-                    if(res.ok) { alert('게시됨'); this.newsForm.title = ''; newsQuill.setContents([]); this.fetchNews(); }
+                    if(res.ok) { alert('게시됨'); this.newsForm.title = ''; newsQuill.setContents([]); this.$refs.newsFiles.value=''; this.fetchNews(); }
                 },
                 async deleteNews(id) {
                     if(!confirm('삭제?')) return;
@@ -368,7 +395,7 @@
                     const files = this.$refs.jobFiles.files;
                     for (let i = 0; i < files.length; i++) formData.append('jobAttachments', files[i]);
                     const res = await fetch('/api/admin/jobs', { method: 'POST', body: formData });
-                    if(res.ok) { alert('공고 게시됨'); this.jobForm = { title: '', category: '', deadline: '' }; jobQuill.setContents([]); this.fetchJobs(); }
+                    if(res.ok) { alert('공고 게시됨'); this.jobForm = { title: '', category: '', deadline: '' }; jobQuill.setContents([]); this.$refs.jobFiles.value=''; this.fetchJobs(); }
                 },
                 async deleteJob(id) {
                     if(!confirm('삭제?')) return;
@@ -379,7 +406,6 @@
                     const labels = { 'new-lawyer': '신규 변호사', 'exp-lawyer': '경력 변호사', 'mil-lawyer': '법무관', 'staff': '행정/직원' };
                     return labels[id] || id;
                 },
-                /* --- 파트너 관리 로직 [신규 추가] --- */
                 async fetchPartners() {
                     const res = await fetch('/api/public/partners');
                     this.partners = await res.json();
@@ -387,6 +413,7 @@
                 async savePartner() {
                     if(!this.partnerForm.name) return alert('성함을 입력해주세요.');
                     const formData = new FormData();
+                    // 수정 시에만 ID를 보내고 신규 시에는 보내지 않음 (혹은 null 처리)
                     if(this.partnerForm.id) formData.append('id', this.partnerForm.id);
                     formData.append('name', this.partnerForm.name);
                     formData.append('engName', this.partnerForm.engName);
@@ -432,7 +459,7 @@
                 this.fetchNews();
                 this.fetchRecruitStatus();
                 this.fetchJobs();
-                this.fetchPartners(); // 추가
+                this.fetchPartners();
                 this.initQuill();
             }
         }).mount('#app')

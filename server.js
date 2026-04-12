@@ -206,21 +206,22 @@ app.delete('/api/news/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- [추가] 관리자 전용: 파트너 관리 --- */
+/* --- [수정] 관리자 전용: 파트너 관리 --- */
 
 app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        const id = req.body.id ? parseInt(req.body.id) : Date.now();
+        // ID가 "null" 문자열로 오거나 없을 경우 신규 생성, 있을 경우 기존 ID 사용
+        const id = (req.body.id && req.body.id !== "null") ? parseInt(req.body.id) : Date.now();
         
         const partnerData = {
             id: id,
-            name: req.body.name,
-            engName: req.body.engName,
-            title: req.body.title,
+            name: req.body.name || "",
+            engName: req.body.engName || "",
+            title: req.body.title || "",
             edu: req.body.edu ? req.body.edu.split('\n').filter(l => l.trim() !== "") : [],
             exp: req.body.exp ? req.body.exp.split('\n').filter(l => l.trim() !== "") : [],
-            photo: req.body.existingPhoto || null
+            photo: (req.body.existingPhoto && req.body.existingPhoto !== "null") ? req.body.existingPhoto : null
         };
 
         if (req.file) {
@@ -236,7 +237,10 @@ app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
 
         await fs.writeJson(DB_FILE, db);
         res.json(partnerData);
-    } catch (e) { res.status(500).send("Error"); }
+    } catch (e) { 
+        console.error("Partner Save Error:", e);
+        res.status(500).send("Error"); 
+    }
 });
 
 app.delete('/api/admin/partners/:id', async (req, res) => {
