@@ -179,7 +179,7 @@
                 </div>
             </div>
 
-            <!-- 3. [수정됨] 구성원(파트너) 관리 - 메인 페이지 연동 안내 추가 -->
+            <!-- 3. 구성원(파트너) 관리 -->
             <div v-show="tab === 'partner'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Partner Management</h2>
                 <div class="admin-card mb-8">
@@ -242,7 +242,7 @@
                 </div>
             </div>
 
-            <!-- 4. 채용 관리 -->
+            <!-- 4. 채용 관리 (수정됨) -->
             <div v-show="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment Management</h2>
                 
@@ -264,7 +264,7 @@
                 </div>
 
                 <div class="admin-card mb-8">
-                    <p class="text-[10px] font-bold text-gold-primary mb-6 uppercase tracking-widest">상세 채용 공고 게시</p>
+                    <p class="text-[10px] font-bold text-gold-primary mb-6 uppercase tracking-widest">상세 채용 공고 게시 및 수정</p>
                     <div class="space-y-6">
                         <div class="grid grid-cols-3 gap-6">
                             <input v-model="jobForm.category" type="text" placeholder="카테고리 (예: 신입 변호사)">
@@ -280,7 +280,12 @@
                             <p class="text-xs font-bold mb-3">📎 공고 첨부 파일 (마우스로 파일을 끌어오세요)</p>
                             <input type="file" ref="jobFiles" multiple class="text-xs block w-full">
                         </div>
-                        <button @click="addJob" class="btn-gold w-full py-4 text-sm tracking-widest">상세 공고 게시하기</button>
+                        <div class="flex gap-3">
+                            <button @click="addJob" class="btn-gold flex-1 py-4 text-sm tracking-widest">
+                                {{ jobForm.id ? '상세 공고 수정하기' : '상세 공고 게시하기' }}
+                            </button>
+                            <button v-if="jobForm.id" @click="resetJobForm" class="bg-gray-100 px-6 text-xs uppercase hover:bg-gray-200 transition">취소</button>
+                        </div>
                     </div>
                 </div>
 
@@ -291,7 +296,10 @@
                             <h4 class="font-bold text-gray-800 text-sm">{{ job.title }}</h4>
                             <span class="text-[10px] text-red-500">마감: {{ job.deadline }}</span>
                         </div>
-                        <button @click="deleteJob(job.id)" class="text-red-300 hover:text-red-500 text-xs">삭제</button>
+                        <div class="flex items-center space-x-4">
+                            <button @click="editJob(job)" class="text-blue-500 hover:underline text-xs font-bold">수정</button>
+                            <button @click="deleteJob(job.id)" class="text-red-300 hover:text-red-500 text-xs">삭제</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -342,7 +350,7 @@
                     newsForm: { category: 'H&L News', title: '' },
                     roles: [],
                     jobList: [],
-                    jobForm: { title: '', category: '', deadline: '' },
+                    jobForm: { id: null, title: '', category: '', deadline: '' },
                     partners: [],
                     partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '', existingPhoto: '' },
                     heroMediaList: [],
@@ -430,6 +438,7 @@
                 async addJob() {
                     if(!this.jobForm.title) return alert('제목 입력 필수');
                     const formData = new FormData();
+                    if(this.jobForm.id) formData.append('id', this.jobForm.id);
                     formData.append('category', this.jobForm.category);
                     formData.append('title', this.jobForm.title);
                     formData.append('deadline', this.jobForm.deadline);
@@ -437,7 +446,28 @@
                     const files = this.$refs.jobFiles.files;
                     for (let i = 0; i < files.length; i++) formData.append('jobAttachments', files[i]);
                     const res = await fetch('/api/admin/jobs', { method: 'POST', body: formData });
-                    if(res.ok) { alert('공고 게시됨'); this.jobForm = { title: '', category: '', deadline: '' }; jobQuill.setContents([]); this.$refs.jobFiles.value=''; this.fetchJobs(); }
+                    if(res.ok) { 
+                        alert(this.jobForm.id ? '공고가 수정되었습니다.' : '공고가 게시되었습니다.'); 
+                        this.resetJobForm(); 
+                        this.fetchJobs(); 
+                    }
+                },
+                editJob(job) {
+                    this.jobForm = {
+                        id: job.id,
+                        title: job.title,
+                        category: job.category,
+                        deadline: job.deadline
+                    };
+                    if (jobQuill) {
+                        jobQuill.root.innerHTML = job.content;
+                    }
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+                resetJobForm() {
+                    this.jobForm = { id: null, title: '', category: '', deadline: '' };
+                    if (jobQuill) jobQuill.setContents([]);
+                    if (this.$refs.jobFiles) this.$refs.jobFiles.value = '';
                 },
                 async deleteJob(id) {
                     if(!confirm('삭제?')) return;

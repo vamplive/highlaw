@@ -52,7 +52,7 @@ async function initDB() {
                 ],
                 jobs: [],
                 inquiries: [],
-                heroMedia: [] // [추가] 메인 히어로 항목 초기화
+                heroMedia: [] 
             };
             await fs.writeJson(DB_FILE, initialData);
         } else {
@@ -62,7 +62,6 @@ async function initDB() {
                 db.partners = [];
                 updated = true;
             }
-            // [추가] 기존 DB 파일에 heroMedia 키가 없으면 추가
             if (!db.heroMedia) {
                 db.heroMedia = [];
                 updated = true;
@@ -85,14 +84,13 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOAD_DIR),
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        // [수정] 한글 파일명 깨짐 방지: latin1 -> utf8 변환
         const decodedName = Buffer.from(file.originalname, 'latin1').toString('utf8');
         cb(null, uniqueSuffix + '-' + decodedName);
     }
 });
 const upload = multer({ storage: storage });
 
-/* --- 네이버 SEO: RSS Feed API (수정됨) --- */
+/* --- 네이버 SEO: RSS Feed API --- */
 app.get('/rss.xml', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -136,7 +134,6 @@ app.get('/rss.xml', async (req, res) => {
 
 /* --- 공용 API --- */
 
-// [추가] 공용 API: 메인 히어로 목록 가져오기
 app.get('/api/public/hero', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -315,7 +312,7 @@ app.delete('/api/admin/hero/:id', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 관리자 전용: 채용 관리 --- */
+/* --- 관리자 전용: 채용 관리 (수정됨) --- */
 
 app.post('/api/recruit/status', async (req, res) => {
     try {
@@ -333,22 +330,41 @@ app.post('/api/recruit/status', async (req, res) => {
 app.post('/api/admin/jobs', upload.array('jobAttachments'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        const attachments = req.files ? req.files.map(f => ({
-            filename: f.filename, originalname: f.originalname, mimetype: f.mimetype
-        })) : [];
-        const newJob = { 
-            id: Date.now(), 
+        const idBody = req.body.id;
+        const isNew = (!idBody || idBody === "null" || idBody === "undefined");
+        const id = isNew ? Date.now() : parseInt(idBody);
+
+        const attachments = req.files && req.files.length > 0 
+            ? req.files.map(f => ({ filename: f.filename, originalname: f.originalname, mimetype: f.mimetype }))
+            : null;
+
+        const jobData = { 
+            id: id, 
             category: req.body.category,
             title: req.body.title,
             deadline: req.body.deadline,
             content: req.body.content, 
-            attachments: attachments,
-            created_at: new Date().toISOString().split('T')[0] 
+            created_at: req.body.created_at || new Date().toISOString().split('T')[0] 
         };
-        db.jobs.push(newJob);
+
+        const index = db.jobs.findIndex(j => j.id === id);
+
+        if (index > -1) {
+            // 수정 모드: 파일 업로드가 있으면 교체, 없으면 기존 파일 유지
+            jobData.attachments = attachments ? attachments : db.jobs[index].attachments;
+            db.jobs[index] = jobData;
+        } else {
+            // 신규 등록 모드
+            jobData.attachments = attachments || [];
+            db.jobs.push(jobData);
+        }
+
         await fs.writeJson(DB_FILE, db);
-        res.json(newJob);
-    } catch (e) { res.status(500).send("Error"); }
+        res.json(jobData);
+    } catch (e) { 
+        console.error("Job Save Error:", e);
+        res.status(500).send("Error"); 
+    }
 });
 
 app.delete('/api/admin/jobs/:id', async (req, res) => {
