@@ -1,4 +1,3 @@
---- START OF FILE text/javascript ---
 const express = require('express');
 const path = require('path');
 const fs = require('fs-extra');
