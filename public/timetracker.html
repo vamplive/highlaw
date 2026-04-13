@@ -4,164 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Time Tracker | 법무법인 하이로</title>
-
-    <!-- 파비콘 설정 -->
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- 공통 CSS 및 Vue 3 / Tailwind -->
     <link rel="stylesheet" href="/css/main.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-
     <style>
-        body { background-color: #fcfcfc; font-family: 'Inter', sans-serif; }
+        body { background-color: #fcfcfc; }
         .sub-hero-mini { background: #1a1a1a; color: white; padding: 40px 0; text-align: center; border-bottom: 1px solid var(--gold-primary); }
-        
-        .tracker-card { background: white; border: 1px solid var(--border-color); padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-        .project-group-card { border: 1px solid #f0f0f0; border-left: 4px solid var(--gold-primary); margin-bottom: 20px; background: white; transition: 0.3s; }
-        .project-group-card:hover { border-color: var(--gold-primary); }
-        
-        .btn-black { background: #1a1a1a; color: white; border: 1px solid var(--gold-primary); padding: 12px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; font-weight: 600; }
+        .tracker-card { background: white; border: 1px solid var(--border-color); padding: 30px; }
+        .project-group-card { border-left: 4px solid var(--gold-primary); margin-bottom: 15px; background: white; border-right: 1px solid #eee; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
+        .btn-black { background: #1a1a1a; color: white; border: 1px solid var(--gold-primary); padding: 12px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
         .btn-black:hover { background: var(--gold-primary); color: #1a1a1a; }
-        
-        .form-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold-primary); margin-bottom: 8px; }
-        
-        input, select, textarea {
-            width: 100%; padding: 10px 0; border: none; border-bottom: 1px solid var(--border-color);
-            font-size: 14px; outline: none; transition: 0.3s; background: transparent; border-radius: 0;
-        }
+        input, select, textarea { width: 100%; padding: 10px 0; border: none; border-bottom: 1px solid #eee; outline: none; background: transparent; font-size: 14px; }
         input:focus, select:focus, textarea:focus { border-bottom-color: var(--gold-primary); }
-
-        .time-badge { font-family: 'Playfair Display', serif; color: var(--gold-primary); font-weight: 700; }
-        .task-row { border-bottom: 1px solid #f9f9f9; padding: 10px 0; font-size: 13px; }
-        .task-row:last-child { border-bottom: none; }
+        .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
     </style>
 </head>
 <body>
-
     <div id="app" class="min-h-screen flex flex-col">
-        <!-- 상단 헤더 -->
         <header class="bg-white border-b p-4">
             <div class="max-w-7xl mx-auto flex justify-between items-center">
-                <a href="/"><img src="/logo.png" alt="High & Law" class="h-10"></a>
-                <div class="flex items-center gap-6">
-                    <div class="text-right">
-                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Active Member</p>
-                        <p class="text-xs font-bold text-gray-800">{{userName}} <span class="text-gold-primary">/ {{position}}</span></p>
-                    </div>
-                    <button @click="logout" class="text-[10px] font-bold text-red-400 border border-red-100 px-3 py-1 hover:bg-red-50 transition">LOGOUT</button>
+                <img src="/logo.png" alt="High & Law" class="h-10">
+                <div class="flex items-center gap-6 text-xs">
+                    <span>{{userName}} ({{position}})</span>
+                    <button @click="logout" class="text-red-500 font-bold">LOGOUT</button>
                 </div>
             </div>
         </header>
 
-        <!-- 타이틀 섹션 -->
         <div class="sub-hero-mini">
-            <h2 class="font-serif text-2xl tracking-widest">TIME TRACKING SYSTEM</h2>
-            <p class="text-[10px] text-gold-primary mt-2 uppercase tracking-[0.3em]">Personal Efficiency & Case Management</p>
+            <h2 class="font-serif text-2xl tracking-widest">PERSONAL WORK TRACKER</h2>
+            <p class="text-[10px] text-gold-primary mt-2 uppercase tracking-[0.3em]">Integrity & Efficiency</p>
         </div>
 
-        <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-12">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                
-                <!-- 왼쪽: 업무 기록 입력 폼 -->
-                <div class="lg:col-span-4">
-                    <div class="tracker-card sticky top-10">
-                        <h3 class="font-serif text-xl mb-8 border-b pb-4">New Time Entry</h3>
-                        
-                        <div class="space-y-6">
-                            <div>
-                                <label class="form-label">Case / Project</label>
-                                <select v-model="logForm.projectId">
-                                    <option value="" disabled>사건을 선택해 주세요</option>
-                                    <option v-for="p in projects" :key="p.id" :value="p.id">[{{p.client}}] {{p.name}}</option>
-                                </select>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="form-label">Date</label>
-                                    <input type="date" v-model="logForm.date">
-                                </div>
-                                <div>
-                                    <label class="form-label">Minutes Spent</label>
-                                    <input type="number" v-model="logForm.duration" placeholder="분 단위">
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="form-label">Task Description</label>
-                                <textarea v-model="logForm.description" rows="4" placeholder="수행한 업무를 상세히 기록하세요"></textarea>
-                            </div>
-
-                            <button @click="saveLog" class="btn-black w-full mt-4">Save Entry</button>
+        <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <!-- 입력 폼 및 사건 등록 -->
+            <div class="lg:col-span-4">
+                <div class="tracker-card sticky top-10">
+                    <h3 class="font-bold mb-6 border-b pb-2">Entry</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="text-[10px] text-gray-400 font-bold uppercase">Select Case</label>
+                            <select v-model="logForm.projectId">
+                                <option value="">사건을 선택하세요</option>
+                                <option v-for="p in projects" :key="p.id" :value="p.id">[{{p.client}}] {{p.name}}</option>
+                            </select>
+                            <button @click="showProjectModal = true" class="text-[10px] text-blue-500 font-bold mt-2 hover:underline">+ REGISTER NEW CASE</button>
                         </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="date" v-model="logForm.date">
+                            <input type="number" v-model="logForm.duration" placeholder="분(Min)">
+                        </div>
+                        <textarea v-model="logForm.description" rows="4" placeholder="업무 내용"></textarea>
+                        <button @click="saveLog" class="btn-black w-full">Save Record</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 목록 -->
+            <div class="lg:col-span-8">
+                <div class="flex justify-between items-end mb-6">
+                    <h3 class="font-bold">Summary</h3>
+                    <div class="text-right">
+                        <p class="text-[10px] text-gray-400">TOTAL TIME</p>
+                        <p class="text-2xl font-serif text-gold-primary">{{Math.floor(totalMinutes/60)}}h {{totalMinutes%60}}m</p>
                     </div>
                 </div>
 
-                <!-- 오른쪽: 사건별 업무 요약 및 상세 -->
-                <div class="lg:col-span-8">
-                    
-                    <!-- 상단 총계 요약 -->
-                    <div class="flex justify-between items-center mb-8 px-2">
-                        <div>
-                            <h3 class="font-serif text-2xl">Case Summaries</h3>
-                            <p class="text-xs text-gray-400 mt-1">사건별로 집계된 업무 시간과 세부 수행 내역입니다.</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-[10px] text-gray-400 font-bold uppercase">Total Monthly Time</span>
-                            <p class="text-3xl time-badge">{{Math.floor(totalMinutes / 60)}}h {{totalMinutes % 60}}m</p>
-                        </div>
+                <div v-for="(group, projId) in groupedLogs" :key="projId" class="project-group-card p-5">
+                    <div class="flex justify-between border-b pb-2 mb-3">
+                        <span class="font-bold text-gray-800">[{{group.client}}] {{group.name}}</span>
+                        <span class="text-gold-primary font-serif font-bold">{{Math.floor(group.totalTime/60)}}h {{group.totalTime%60}}m</span>
                     </div>
-
-                    <!-- 사건별 그룹 리스트 -->
-                    <div v-if="Object.keys(groupedLogs).length > 0">
-                        <div v-for="(group, projId) in groupedLogs" :key="projId" class="project-group-card p-6">
-                            <!-- 그룹 헤더 -->
-                            <div class="flex justify-between items-start border-b border-dashed pb-4 mb-4">
-                                <div>
-                                    <span class="text-[10px] text-gold-primary font-bold uppercase tracking-widest">{{group.client}}</span>
-                                    <h4 class="text-lg font-bold text-gray-800">{{group.name}}</h4>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-[10px] text-gray-400 font-bold block mb-1">ACCUMULATED TIME</span>
-                                    <span class="time-badge text-xl">{{Math.floor(group.totalTime / 60)}}h {{group.totalTime % 60}}m</span>
-                                </div>
-                            </div>
-
-                            <!-- 세부 항목 리스트 -->
-                            <div class="space-y-1">
-                                <div v-for="entry in group.entries" :key="entry.id" class="task-row flex justify-between items-center group">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-3">
-                                            <span class="text-[11px] font-mono text-gray-300">{{entry.date}}</span>
-                                            <span class="text-gray-700">{{entry.description}}</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-6">
-                                        <span class="text-xs font-bold text-gray-400">{{entry.duration}}m</span>
-                                        <button @click="deleteLog(entry.id)" class="text-[10px] text-red-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition font-bold uppercase">Del</button>
-                                    </div>
-                                </div>
-                            </div>
+                    <div v-for="entry in group.entries" :key="entry.id" class="flex justify-between text-xs py-1 border-b border-gray-50 last:border-0 group">
+                        <span class="text-gray-400 w-24">{{entry.date}}</span>
+                        <span class="flex-1 px-4 text-gray-600">{{entry.description}}</span>
+                        <div class="flex gap-4">
+                            <span class="text-gray-400 font-bold">{{entry.duration}}m</span>
+                            <button @click="deleteLog(entry.id)" class="text-red-200 opacity-0 group-hover:opacity-100 hover:text-red-500 transition">Del</button>
                         </div>
                     </div>
-
-                    <!-- 데이터 없을 때 -->
-                    <div v-else class="tracker-card py-20 text-center">
-                        <p class="text-gray-300">기록된 업무 내역이 없습니다. 왼쪽 폼을 통해 첫 기록을 시작하세요.</p>
-                    </div>
-
                 </div>
             </div>
         </main>
 
-        <footer class="py-10 border-t border-gray-100 text-center mt-auto">
-            <p class="text-[10px] text-gray-300 font-serif tracking-[0.4em] uppercase">&copy; 2026 HIGH & LAW FIRM. INTEGRITY & DIGNITY.</p>
-        </footer>
+        <!-- 사건 등록 모달 -->
+        <div v-if="showProjectModal" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-6">
+            <div class="bg-white w-full max-w-md p-10">
+                <h3 class="font-bold text-xl mb-6">Register New Case</h3>
+                <div class="space-y-4">
+                    <input v-model="projForm.client" placeholder="의뢰인명">
+                    <input v-model="projForm.name" placeholder="사건명">
+                    <div class="flex gap-3 mt-6">
+                        <button @click="addProject" class="btn-black flex-1">Register</button>
+                        <button @click="showProjectModal = false" class="flex-1 bg-gray-100 text-xs font-bold">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -169,30 +109,19 @@
         createApp({
             data() {
                 return {
-                    userName: '',
-                    position: '',
-                    projects: [],
-                    logs: [],
-                    logForm: { projectId: '', date: new Date().toISOString().split('T')[0], duration: '', description: '' }
+                    userName: '', position: '', projects: [], logs: [], showProjectModal: false,
+                    logForm: { projectId: '', date: new Date().toISOString().split('T')[0], duration: '', description: '' },
+                    projForm: { name: '', client: '' }
                 }
             },
             computed: {
-                totalMinutes() {
-                    return this.logs.reduce((acc, log) => acc + log.duration, 0);
-                },
-                // 사건(Project)별로 로그를 그룹화하는 계산된 속성
+                totalMinutes() { return this.logs.reduce((acc, log) => acc + log.duration, 0); },
                 groupedLogs() {
                     const groups = {};
-                    // 최신 기록이 위로 오도록 정렬된 로그 사용
                     this.logs.forEach(log => {
                         if (!groups[log.projectId]) {
-                            const project = this.projects.find(p => p.id === log.projectId);
-                            groups[log.projectId] = {
-                                name: project ? project.name : 'Unknown Case',
-                                client: project ? project.client : 'No Client',
-                                totalTime: 0,
-                                entries: []
-                            };
+                            const p = this.projects.find(proj => proj.id === log.projectId);
+                            groups[log.projectId] = { name: p?p.name:'Unknown', client: p?p.client:'-', totalTime: 0, entries: [] };
                         }
                         groups[log.projectId].totalTime += log.duration;
                         groups[log.projectId].entries.push(log);
@@ -202,60 +131,27 @@
             },
             methods: {
                 async fetchData() {
-                    try {
-                        const [pRes, lRes] = await Promise.all([
-                            fetch('/api/projects'),
-                            fetch('/api/timelogs')
-                        ]);
-                        if(pRes.ok) this.projects = await pRes.json();
-                        // 전체 기록을 가져오고 날짜순으로 정렬
-                        if(lRes.ok) {
-                            const data = await lRes.json();
-                            this.logs = data.sort((a, b) => new Date(b.date) - new Date(a.date));
-                        }
-                    } catch (e) {
-                        console.error("데이터 동기화 실패");
-                    }
+                    const [pRes, lRes] = await Promise.all([fetch('/api/projects'), fetch('/api/timelogs')]);
+                    this.projects = await pRes.json();
+                    this.logs = (await lRes.json()).sort((a,b)=> new Date(b.date)-new Date(a.date));
                 },
                 async saveLog() {
-                    if(!this.logForm.projectId || !this.logForm.duration || !this.logForm.description) {
-                        alert("모든 항목을 입력해 주세요.");
-                        return;
-                    }
-                    const res = await fetch('/api/timelogs', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(this.logForm)
-                    });
-                    if(res.ok) {
-                        this.logForm.description = '';
-                        this.logForm.duration = '';
-                        this.fetchData();
-                    } else {
-                        alert("저장 실패. 다시 시도해 주세요.");
-                    }
+                    if(!this.logForm.projectId || !this.logForm.duration) return alert('필수 입력');
+                    await fetch('/api/timelogs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(this.logForm) });
+                    this.logForm.description = ''; this.fetchData();
                 },
-                async deleteLog(id) {
-                    if(!confirm("해당 업무 기록을 삭제하시겠습니까?")) return;
-                    const res = await fetch(`/api/timelogs/${id}`, { method: 'DELETE' });
-                    if(res.ok) this.fetchData();
+                async addProject() {
+                    if(!this.projForm.name) return;
+                    await fetch('/api/projects', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(this.projForm) });
+                    this.projForm = { name: '', client: '' }; this.showProjectModal = false; this.fetchData();
                 },
-                logout() {
-                    fetch('/api/logout', {method:'POST'}).then(() => {
-                        localStorage.removeItem('user');
-                        location.href = '/login.html';
-                    });
-                }
+                async deleteLog(id) { if(confirm('삭제?')) { await fetch(`/api/timelogs/${id}`, { method: 'DELETE' }); this.fetchData(); } },
+                logout() { fetch('/api/logout', {method:'POST'}).then(() => { localStorage.removeItem('user'); location.href='/login.html'; }); }
             },
             mounted() {
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
-                if(!user.name) {
-                    location.href = '/login.html';
-                    return;
-                }
-                this.userName = user.name;
-                this.position = user.position;
-                this.fetchData();
+                if(!user.name) location.href='/login.html';
+                this.userName = user.name; this.position = user.position; this.fetchData();
             }
         }).mount('#app')
     </script>

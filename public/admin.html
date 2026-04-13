@@ -55,8 +55,8 @@
 
         .drop-zone-active { border-color: var(--gold-primary) !important; background-color: rgba(197, 160, 89, 0.05) !important; }
         
-        /* 사이드바 로고 영역 스타일 */
-        .sidebar-logo { filter: brightness(0) invert(1); max-height: 45px; }
+        /* 사이드바 로고 영역 - 사이드바 너비에 맞춰 최대화 */
+        .sidebar-logo { filter: brightness(0) invert(1); width: 100%; height: auto; display: block; }
     </style>
 </head>
 <body class="min-h-screen flex">
@@ -64,9 +64,9 @@
     <div id="app" class="flex w-full">
         <!-- Sidebar -->
         <aside class="sidebar w-64 fixed h-full flex flex-col">
-            <div class="p-8 border-b border-white/10">
-                <img src="/logo.png" alt="High & Law" class="sidebar-logo mb-2">
-                <p class="text-[9px] uppercase tracking-widest opacity-50 mt-1">Management System</p>
+            <div class="p-6 border-b border-white/10">
+                <img src="/logo.png" alt="High & Law" class="sidebar-logo">
+                <p class="text-[9px] uppercase tracking-widest opacity-50 mt-3 text-center">Management System</p>
             </div>
             <nav class="flex-1 mt-6">
                 <button @click="setTab('inquiry')" :class="{active: tab==='inquiry'}" class="nav-btn">상담 신청 관리</button>
@@ -136,7 +136,7 @@
                                 <td class="py-4 font-bold text-gray-800">{{ item.name }}</td>
                                 <td class="py-4">{{ item.phone }}</td>
                                 <td class="py-4 text-center space-x-3">
-                                    <button @click="viewInquiryDetail(item)" class="text-blue-500 hover:underline font-bold">상세내용 및 파일</button>
+                                    <button @click="viewInquiryDetail(item)" class="text-blue-500 hover:underline font-bold">상세</button>
                                     <button @click="deleteInquiry(item.id)" class="text-red-400 hover:text-red-700 font-bold">삭제</button>
                                 </td>
                             </tr>
@@ -147,11 +147,11 @@
 
             <!-- 2. 뉴스 관리 -->
             <div v-show="tab === 'news'">
-                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News & Success Cases</h2>
+                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News Management</h2>
                 <div class="space-y-8">
                     <div class="admin-card">
                         <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">
-                            {{ newsForm.id ? '소식/사례 수정하기' : '새 소식/사례 상세 등록' }}
+                            {{ newsForm.id ? '수정하기' : '신규 등록' }}
                         </p>
                         <div class="space-y-6">
                             <div class="grid grid-cols-2 gap-6">
@@ -160,41 +160,27 @@
                                     <option value="Leading Cases">Leading Cases</option>
                                     <option value="Latest Updates">Latest Updates</option>
                                 </select>
-                                <input v-model="newsForm.title" type="text" placeholder="제목을 입력하세요">
+                                <input v-model="newsForm.title" type="text" placeholder="제목">
                             </div>
                             <div id="news-editor" class="editor-wrapper"></div>
-                            <div class="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg transition-all"
-                                 :class="{'drop-zone-active': dragStates.news}"
-                                 @dragover.prevent="dragStates.news = true"
-                                 @dragleave.prevent="dragStates.news = false"
-                                 @drop.prevent="handleDrop($event, 'newsFiles')">
-                                <p class="text-xs font-bold mb-3">📎 첨부 파일 (사진, 영상, 문서 - 드래그 가능)</p>
-                                <input type="file" ref="newsFiles" multiple class="text-xs block w-full">
-                            </div>
+                            <input type="file" ref="newsFiles" multiple class="text-xs block w-full">
                             <div class="flex gap-4">
-                                <button @click="saveNews" class="btn-gold flex-1 py-4 text-sm tracking-widest">
-                                    {{ newsForm.id ? '수정 내용 저장하기' : '웹사이트 게시하기' }}
-                                </button>
-                                <button v-if="newsForm.id" @click="resetNewsForm" class="bg-gray-100 px-8 text-xs uppercase hover:bg-gray-200">취소</button>
+                                <button @click="saveNews" class="btn-gold flex-1 py-4 uppercase">Save Post</button>
+                                <button v-if="newsForm.id" @click="resetNewsForm" class="bg-gray-100 px-8 text-xs uppercase">Cancel</button>
                             </div>
                         </div>
                     </div>
-
                     <div v-for="item in newsList" :key="item.id" class="admin-card flex justify-between items-center py-4">
-                        <div class="flex items-center space-x-4">
-                            <span class="text-[9px] border border-[#c5a059] text-[#c5a059] px-2 py-0.5 font-bold uppercase">{{ item.category }}</span>
-                            <h4 class="font-medium text-sm text-gray-800">{{ item.title }}</h4>
-                        </div>
-                        <div class="flex gap-4">
-                            <button @click="editNews(item)" class="text-blue-500 hover:underline text-xs font-bold">수정</button>
-                            <button @click="deleteNews(item.id)" class="text-gray-300 hover:text-red-500 text-xs font-bold">삭제</button>
+                        <span class="text-sm">{{ item.title }}</span>
+                        <div class="flex gap-3">
+                            <button @click="editNews(item)" class="text-blue-500 text-xs">수정</button>
+                            <button @click="deleteNews(item.id)" class="text-red-300 text-xs">삭제</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 나머지 탭들 (Partner, Recruit, Hero)은 기존 UI를 유지하되 로직만 일관되게 적용 -->
-            <!-- 3. 구성원 관리 (코드 중복 방지를 위해 축약, 구조 동일) -->
+            <!-- 3. 구성원 관리 (동일 구조 유지) -->
             <div v-show="tab === 'partner'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Partner Management</h2>
                 <div class="admin-card mb-8">
@@ -204,59 +190,33 @@
                             <input v-model="partnerForm.engName" type="text" placeholder="영문 성함">
                         </div>
                         <input v-model="partnerForm.title" type="text" placeholder="직책/분야">
-                        <div class="grid grid-cols-2 gap-6">
-                            <textarea v-model="partnerForm.edu" rows="4" class="border p-3 w-full text-sm" placeholder="학력"></textarea>
-                            <textarea v-model="partnerForm.exp" rows="4" class="border p-3 w-full text-sm" placeholder="경력"></textarea>
-                        </div>
-                        <input type="file" ref="partnerPhoto" accept="image/*" class="text-xs block w-full">
-                        <button @click="savePartner" class="btn-gold w-full py-4">{{ partnerForm.id ? '수정하기' : '등록하기' }}</button>
+                        <textarea v-model="partnerForm.edu" rows="3" class="border p-2 w-full text-sm" placeholder="학력"></textarea>
+                        <textarea v-model="partnerForm.exp" rows="3" class="border p-2 w-full text-sm" placeholder="경력"></textarea>
+                        <input type="file" ref="partnerPhoto" accept="image/*" class="text-xs">
+                        <button @click="savePartner" class="btn-gold w-full py-4">{{ partnerForm.id ? '수정' : '등록' }}</button>
                     </div>
                 </div>
-                <div v-for="p in partners" :key="p.id" class="admin-card flex justify-between items-center py-4 mb-2">
-                    <span>{{p.name}} ({{p.title}})</span>
+                <div v-for="p in partners" :key="p.id" class="admin-card py-2 flex justify-between mb-2">
+                    <span class="text-sm">{{p.name}}</span>
                     <button @click="editPartner(p)" class="text-blue-500 text-xs">수정</button>
                 </div>
             </div>
-
         </main>
     </div>
 
     <script>
         const { createApp } = Vue;
         let newsQuill;
-
         createApp({
             data() {
                 return {
-                    tab: 'inquiry',
-                    inquiries: [],
-                    newsList: [],
-                    newsForm: { id: null, category: 'H&L News', title: '' },
-                    partners: [],
-                    partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '' },
-                    heroMediaList: [],
-                    userList: [],
-                    roles: [],
-                    jobList: [],
-                    jobForm: { id: null, title: '', category: '', deadline: '' },
-                    dragStates: { news: false }
+                    tab: 'inquiry', inquiries: [], newsList: [], newsForm: { id: null, category: 'H&L News', title: '' },
+                    partners: [], partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '' },
+                    userList: [], dragStates: { news: false }
                 }
             },
             methods: {
-                handleDrop(event, refName) {
-                    this.dragStates.news = false;
-                    const files = event.dataTransfer.files;
-                    if (files && files.length > 0) {
-                        const dataTransfer = new DataTransfer();
-                        for (let i = 0; i < files.length; i++) dataTransfer.items.add(files[i]);
-                        this.$refs[refName].files = dataTransfer.files;
-                    }
-                },
-                setTab(name) {
-                    this.tab = name;
-                    this.initQuill();
-                    if(name === 'users') this.fetchUsers();
-                },
+                setTab(name) { this.tab = name; this.initQuill(); if(name === 'users') this.fetchUsers(); },
                 initQuill() {
                     setTimeout(() => {
                         const toolbarOptions = [
@@ -264,37 +224,20 @@
                             ['bold', 'italic', 'underline', 'strike'],
                             [{ 'color': [] }, { 'background': [] }],
                             [{ 'header': 1 }, { 'header': 2 }],
-                            ['link', 'image', 'video'],
-                            ['clean']
+                            ['link', 'image', 'video'], ['clean']
                         ];
                         if (this.tab === 'news' && !newsQuill) {
                             newsQuill = new Quill('#news-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                         }
                     }, 100);
                 },
-                async fetchUsers() {
-                    const res = await fetch('/api/admin/users');
-                    this.userList = await res.json();
-                },
-                async updateUserStatus(userId, payload) {
-                    await fetch('/api/admin/users/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId, ...payload }) });
-                    this.fetchUsers();
-                },
-                async fetchNews() {
-                    const res = await fetch('/api/public/news');
-                    this.newsList = await res.json();
-                },
-                editNews(item) {
-                    this.newsForm = { id: item.id, category: item.category, title: item.title };
-                    if (newsQuill) newsQuill.root.innerHTML = item.content;
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                },
-                resetNewsForm() {
-                    this.newsForm = { id: null, category: 'H&L News', title: '' };
-                    if (newsQuill) newsQuill.setContents([]);
-                },
+                async fetchUsers() { const res = await fetch('/api/admin/users'); this.userList = await res.json(); },
+                async updateUserStatus(userId, payload) { await fetch('/api/admin/users/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId, ...payload }) }); this.fetchUsers(); },
+                async deleteUser(id) { if(confirm('삭제?')) { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); this.fetchUsers(); } },
+                async fetchNews() { const res = await fetch('/api/public/news'); this.newsList = await res.json(); },
+                editNews(item) { this.newsForm = { id: item.id, category: item.category, title: item.title }; if(newsQuill) newsQuill.root.innerHTML = item.content; window.scrollTo({top:0, behavior:'smooth'}); },
+                resetNewsForm() { this.newsForm = { id: null, category: 'H&L News', title: '' }; if(newsQuill) newsQuill.setContents([]); },
                 async saveNews() {
-                    if(!this.newsForm.title) return alert('제목 필수');
                     const formData = new FormData();
                     if(this.newsForm.id) formData.append('id', this.newsForm.id);
                     formData.append('category', this.newsForm.category);
@@ -303,41 +246,24 @@
                     const files = this.$refs.newsFiles.files;
                     for (let i = 0; i < files.length; i++) formData.append('attachments', files[i]);
                     const res = await fetch('/api/news', { method: 'POST', body: formData });
-                    if(res.ok) { alert('성공적으로 처리되었습니다.'); this.resetNewsForm(); this.fetchNews(); }
+                    if(res.ok) { alert('완료'); this.resetNewsForm(); this.fetchNews(); }
                 },
-                async deleteNews(id) {
-                    if(!confirm('삭제하시겠습니까?')) return;
-                    await fetch(`/api/news/${id}`, { method: 'DELETE' });
-                    this.fetchNews();
-                },
-                async fetchInquiries() {
-                    const res = await fetch('/api/admin/inquiries');
-                    this.inquiries = await res.json();
-                },
-                async fetchPartners() {
-                    const res = await fetch('/api/public/partners');
-                    this.partners = await res.json();
-                },
+                async deleteNews(id) { if(confirm('삭제?')) { await fetch(`/api/news/${id}`, { method: 'DELETE' }); this.fetchNews(); } },
+                async fetchInquiries() { const res = await fetch('/api/admin/inquiries'); this.inquiries = await res.json(); },
+                async fetchPartners() { const res = await fetch('/api/public/partners'); this.partners = await res.json(); },
                 async savePartner() {
                     const formData = new FormData();
                     if(this.partnerForm.id) formData.append('id', this.partnerForm.id);
-                    formData.append('name', this.partnerForm.name);
-                    formData.append('engName', this.partnerForm.engName);
-                    formData.append('title', this.partnerForm.title);
-                    formData.append('edu', this.partnerForm.edu);
-                    formData.append('exp', this.partnerForm.exp);
+                    formData.append('name', this.partnerForm.name); formData.append('engName', this.partnerForm.engName);
+                    formData.append('title', this.partnerForm.title); formData.append('edu', this.partnerForm.edu); formData.append('exp', this.partnerForm.exp);
                     if(this.$refs.partnerPhoto.files[0]) formData.append('photo', this.$refs.partnerPhoto.files[0]);
                     const res = await fetch('/api/admin/partners', { method: 'POST', body: formData });
-                    if(res.ok) { alert('저장됨'); this.fetchPartners(); this.resetPartnerForm(); }
+                    if(res.ok) { alert('완료'); this.resetPartnerForm(); this.fetchPartners(); }
                 },
-                editPartner(p) {
-                    this.partnerForm = { id: p.id, name: p.name, engName: p.engName, title: p.title, edu: p.edu.join('\n'), exp: p.exp.join('\n') };
-                },
+                editPartner(p) { this.partnerForm = { id: p.id, name: p.name, engName: p.engName, title: p.title, edu: p.edu.join('\n'), exp: p.exp.join('\n') }; },
                 resetPartnerForm() { this.partnerForm = { id: null, name: '', engName: '', title: '', edu: '', exp: '' }; }
             },
-            mounted() {
-                this.fetchInquiries(); this.fetchNews(); this.fetchPartners();
-            }
+            mounted() { this.fetchInquiries(); this.fetchNews(); this.fetchPartners(); }
         }).mount('#app')
     </script>
 </body>
