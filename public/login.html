@@ -4,191 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin Login | 법무법인 하이로</title>
-
-<!-- 파비콘 설정 -->
-<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-<link rel="icon" href="/favicon.ico" type="image/x-icon">
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- 공통 CSS 연결 -->
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/css/main.css">
-
     <style>
-        /* 로그인 페이지 전용 스타일 */
-        body {
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(to bottom right, #fdfdfd, #f4eee0);
-            margin: 0;
-        }
-
-        .login-card {
-            background: var(--white);
-            width: 100%;
-            max-width: 400px;
-            padding: 60px 40px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 40px 80px rgba(0,0,0,0.06);
-            text-align: center;
-        }
-
-        .login-header {
-            margin-bottom: 50px;
-        }
-
-        .login-header h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 28px;
-            letter-spacing: 4px;
-            color: var(--text-primary);
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-
-        .login-header p {
-            font-size: 11px;
-            color: var(--gold-primary);
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .input-group {
-            margin-bottom: 25px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 10px;
-            font-weight: 700;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 12px 0;
-            border: none;
-            border-bottom: 1px solid var(--border-color);
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
-            transition: 0.3s;
-            outline: none;
-            background: transparent;
-        }
-
-        .input-group input:focus {
-            border-bottom-color: var(--gold-primary);
-        }
-
-        .login-btn {
-            width: 100%;
-            background: #1a1a1a;
-            color: var(--white);
-            border: 1px solid var(--gold-primary);
-            padding: 18px;
-            font-size: 12px;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 20px;
-        }
-
-        .login-btn:hover {
-            background: var(--gold-primary);
-            color: #1a1a1a;
-        }
-
-        .back-to-home {
-            display: block;
-            margin-top: 30px;
-            font-size: 11px;
-            color: #bbb;
-            text-decoration: none;
-            transition: 0.3s;
-        }
-
-        .back-to-home:hover {
-            color: var(--gold-primary);
-        }
+        body { height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(to bottom right, #fdfdfd, #f4eee0); margin: 0; }
+        .login-card { background: var(--white); width: 100%; max-width: 400px; padding: 60px 40px; border: 1px solid var(--border-color); box-shadow: 0 40px 80px rgba(0,0,0,0.06); text-align: center; }
+        .login-header { margin-bottom: 50px; }
+        .login-logo { max-height: 70px; margin: 0 auto 15px; display: block; }
+        .login-header p { font-size: 11px; color: var(--gold-primary); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+        .input-group { margin-bottom: 25px; text-align: left; }
+        .input-group label { display: block; font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .input-group input { width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid var(--border-color); font-size: 15px; outline: none; background: transparent; }
+        .login-btn { width: 100%; background: #1a1a1a; color: var(--white); border: 1px solid var(--gold-primary); padding: 18px; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
-
     <div class="login-card">
         <div class="login-header">
-            <h1>High & Law</h1>
+            <img src="/logo.png" alt="High & Law" class="login-logo">
             <p>Admin Control Panel</p>
         </div>
-
         <div class="input-group">
             <label>Administrator ID</label>
-            <input type="text" id="adminId" placeholder="아이디를 입력하세요" spellcheck="false">
+            <input type="text" id="adminId" placeholder="아이디를 입력하세요">
         </div>
-
         <div class="input-group">
             <label>Password</label>
             <input type="password" id="adminPw" placeholder="비밀번호를 입력하세요">
         </div>
-
         <button onclick="login()" class="login-btn">Secure Login</button>
-
-        <a href="/" class="back-to-home">← Return to Homepage</a>
+        <a href="/" style="display:block; margin-top:30px; font-size:11px; color:#bbb; text-decoration:none;">← Return to Homepage</a>
     </div>
-
     <script>
         async function login() {
             const id = document.getElementById('adminId').value;
             const pw = document.getElementById('adminPw').value;
-
-            if(!id || !pw) {
-                alert('정보를 모두 입력해 주세요.');
-                return;
-            }
-
             try {
-                const res = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({id, pw})
-                });
-
+                const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id, pw}) });
                 if (res.ok) {
                     const userData = await res.json();
-                    
-                    // 사용자 정보를 로컬 스토리지에 저장 (타임트래커 등에서 사용)
                     localStorage.setItem('user', JSON.stringify(userData));
-
-                    // 권한에 따른 분기 처리
-                    if (userData.isAdmin) {
-                        location.href = '/admin.html';
-                    } else {
-                        location.href = '/timetracker.html';
-                    }
-                } else {
-                    const msg = await res.text();
-                    alert(msg || '인증 정보가 올바르지 않습니다.');
-                }
-            } catch (err) {
-                alert('서버와 통신할 수 없습니다.');
-            }
+                    location.href = userData.isAdmin ? '/admin.html' : '/timetracker.html';
+                } else { alert('인증 정보가 올바르지 않습니다.'); }
+            } catch (err) { alert('서버 오류'); }
         }
-
-        // 엔터키 지원
-        document.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                login();
-            }
-        });
     </script>
 </body>
 </html>
