@@ -67,6 +67,7 @@
             </div>
             <nav class="flex-1 mt-6">
                 <button @click="setTab('inquiry')" :class="{active: tab==='inquiry'}" class="nav-btn">상담 신청 관리</button>
+                <button @click="setTab('users')" :class="{active: tab==='users'}" class="nav-btn">구성원 승인 관리</button>
                 <button @click="setTab('hero')" :class="{active: tab==='hero'}" class="nav-btn">메인 비주얼 관리</button>
                 <button @click="setTab('news')" :class="{active: tab==='news'}" class="nav-btn">뉴스/성공사례 관리</button>
                 <button @click="setTab('partner')" :class="{active: tab==='partner'}" class="nav-btn">구성원 관리</button>
@@ -80,6 +81,42 @@
         <!-- Main Content -->
         <main class="ml-64 flex-1 p-12">
             
+            <!-- 0. 구성원 승인 관리 (신규 추가) -->
+            <div v-show="tab === 'users'">
+                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Member Approval</h2>
+                <div class="admin-card overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-[11px] uppercase tracking-widest text-[#c5a059] border-b-2 border-[#f4eee0]">
+                                <th class="pb-4">아이디</th><th class="pb-4">이름</th><th class="pb-4">직책</th><th class="pb-4">상태</th><th class="pb-4">관리자여부</th><th class="pb-4 text-center">동작</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr v-for="user in userList" :key="user.id" class="hover:bg-gray-50 transition text-sm">
+                                <td class="py-4">{{ user.loginId }}</td>
+                                <td class="py-4 font-bold">{{ user.name }}</td>
+                                <td class="py-4">{{ user.position }}</td>
+                                <td class="py-4">
+                                    <span :class="user.status === 'active' ? 'text-green-600' : 'text-orange-500'" class="font-bold">
+                                        {{ user.status === 'active' ? '승인완료' : '승인대기' }}
+                                    </span>
+                                </td>
+                                <td class="py-4">
+                                    <select @change="updateUserStatus(user.id, {isAdmin: $event.target.value === 'true'})" class="text-xs">
+                                        <option :selected="user.isAdmin" value="true">관리자</option>
+                                        <option :selected="!user.isAdmin" value="false">일반유저</option>
+                                    </select>
+                                </td>
+                                <td class="py-4 text-center space-x-2">
+                                    <button v-if="user.status !== 'active'" @click="updateUserStatus(user.id, {status: 'active'})" class="text-blue-500 hover:underline font-bold">승인</button>
+                                    <button @click="deleteUser(user.id)" class="text-red-400 hover:text-red-700 font-bold text-xs">삭제</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- 1. 상담 신청 관리 -->
             <div v-show="tab === 'inquiry'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Inquiry Management</h2>
@@ -242,7 +279,7 @@
                 </div>
             </div>
 
-            <!-- 4. 채용 관리 (수정됨) -->
+            <!-- 4. 채용 관리 -->
             <div v-show="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment Management</h2>
                 
@@ -354,6 +391,7 @@
                     partners: [],
                     partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '', existingPhoto: '' },
                     heroMediaList: [],
+                    userList: [], // 구성원 리스트
                     dragStates: { news: false, partner: false, job: false, hero: false }
                 }
             },
@@ -381,6 +419,7 @@
                 setTab(name) {
                     this.tab = name;
                     this.initQuill();
+                    if(name === 'users') this.fetchUsers();
                 },
                 initQuill() {
                     setTimeout(() => {
@@ -392,6 +431,25 @@
                         }
                     }, 100);
                 },
+                /* --- 구성원 관리 로직 --- */
+                async fetchUsers() {
+                    const res = await fetch('/api/admin/users');
+                    this.userList = await res.json();
+                },
+                async updateUserStatus(userId, payload) {
+                    await fetch('/api/admin/users/status', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ userId, ...payload })
+                    });
+                    this.fetchUsers();
+                },
+                async deleteUser(id) {
+                    if(!confirm('해당 구성원 계정을 삭제하시겠습니까? 관련 업무 기록에 영향을 줄 수 있습니다.')) return;
+                    await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+                    this.fetchUsers();
+                },
+                /* --- 기존 로직 --- */
                 async fetchInquiries() {
                     const res = await fetch('/api/admin/inquiries');
                     this.inquiries = await res.json();

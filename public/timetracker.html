@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Time Tracker | 법무법인 하이로</title>
+
+    <!-- 파비콘 설정 -->
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 공통 CSS 및 Vue 3 -->
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body { background-color: #fcfcfc; }
+        .tracker-header { background: #fff; border-bottom: 1px solid var(--border-color); padding: 20px 0; }
+        .logo-box img { height: 45px; }
+
+        .sub-hero-mini { background: #1a1a1a; color: white; padding: 60px 0; text-align: center; border-bottom: 1px solid var(--gold-primary); }
+        .sub-hero-mini h2 { font-family: 'Playfair Display', serif; font-size: 32px; letter-spacing: 2px; }
+        .sub-hero-mini p { font-size: 11px; color: var(--gold-primary); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px; font-weight: 700; }
+
+        .tracker-card { background: white; border: 1px solid var(--border-color); padding: 40px; }
+        
+        .form-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold-primary); margin-bottom: 10px; }
+        input, select, textarea {
+            width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid var(--border-color);
+            font-size: 15px; outline: none; transition: 0.3s; background: transparent; border-radius: 0;
+        }
+        input:focus, select:focus, textarea:focus { border-bottom-color: var(--gold-primary); }
+
+        .btn-black { background: #1a1a1a; color: white; border: 1px solid var(--gold-primary); padding: 15px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
+        .btn-black:hover { background: var(--gold-primary); color: #1a1a1a; }
+
+        .summary-badge { border-left: 2px solid var(--gold-primary); padding-left: 20px; }
+        .total-time { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--text-primary); line-height: 1; }
+
+        .table-custom th { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold-primary); border-bottom: 2px solid #f4eee0; padding: 15px 10px; }
+        .table-custom td { padding: 18px 10px; font-size: 14px; border-bottom: 1px solid #f9f9f9; }
+
+        /* 모달 스타일 */
+        .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="min-h-screen flex flex-col">
+        <!-- 상단 네비게이션 -->
+        <header class="tracker-header">
+            <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+                <a href="/" class="logo-box">
+                    <img src="logo.png" alt="High & Law">
+                </a>
+                <div class="flex items-center gap-6">
+                    <span class="text-xs font-medium text-gray-500">{{userName}} <span class="text-gray-300 mx-2">|</span> {{position}}</span>
+                    <button @click="logout" class="text-[10px] uppercase tracking-widest font-bold text-red-400 hover:text-red-600">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 미니 히어로 -->
+        <div class="sub-hero-mini">
+            <p>Internal Operations</p>
+            <h2>Time Tracking System</h2>
+        </div>
+
+        <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                
+                <!-- 왼쪽: 업무 기록 입력 -->
+                <div class="lg:col-span-4">
+                    <div class="tracker-card sticky top-10">
+                        <h3 class="font-serif text-xl mb-8 border-b pb-4">Record Daily Work</h3>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <label class="form-label">Select Case / Project</label>
+                                <select v-model="logForm.projectId">
+                                    <option value="" disabled selected>사건을 선택하세요</option>
+                                    <option v-for="p in projects" :key="p.id" :value="p.id">[{{p.client}}] {{p.name}}</option>
+                                </select>
+                                <button @click="showProjectModal = true" class="text-[10px] text-blue-500 font-bold mt-2 hover:underline">+ REGISTER NEW CASE</button>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="form-label">Date</label>
+                                    <input type="date" v-model="logForm.date">
+                                </div>
+                                <div>
+                                    <label class="form-label">Duration (Min)</label>
+                                    <input type="number" v-model="logForm.duration" placeholder="분 단위 입력">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Description of Task</label>
+                                <textarea v-model="logForm.description" rows="4" placeholder="수행한 업무를 상세히 기록하세요"></textarea>
+                            </div>
+
+                            <button @click="saveLog" class="btn-black w-full mt-4">Save To Record</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽: 로그 목록 및 통계 -->
+                <div class="lg:col-span-8">
+                    <!-- 상단 요약 -->
+                    <div class="tracker-card mb-8 flex justify-between items-center py-8">
+                        <div class="summary-badge">
+                            <span class="form-label">Monthly Productivity</span>
+                            <div class="total-time">
+                                {{Math.floor(totalMinutes / 60)}}<span class="text-lg font-sans ml-1 mr-3">HR</span>
+                                {{totalMinutes % 60}}<span class="text-lg font-sans ml-1">MIN</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Total Active Logs</span>
+                            <p class="text-2xl font-serif">{{logs.length}} <span class="text-sm font-sans text-gray-400">Cases</span></p>
+                        </div>
+                    </div>
+
+                    <!-- 로그 테이블 -->
+                    <div class="tracker-card">
+                        <h3 class="font-serif text-xl mb-6">Work History</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-custom">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">Date</th>
+                                        <th class="text-left">Case / Client</th>
+                                        <th class="text-left">Description</th>
+                                        <th class="text-right">Time</th>
+                                        <th class="text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="log in logs" :key="log.id" class="group">
+                                        <td class="text-gray-400 text-xs">{{log.date}}</td>
+                                        <td class="font-bold text-gray-800">{{getProjectName(log.projectId)}}</td>
+                                        <td class="text-gray-600 leading-relaxed">{{log.description}}</td>
+                                        <td class="text-right font-medium text-gold-primary">{{log.duration}}m</td>
+                                        <td class="text-right">
+                                            <button @click="deleteLog(log.id)" class="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition text-xs">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="logs.length === 0">
+                                        <td colspan="5" class="py-20 text-center text-gray-300 text-sm">등록된 업무 기록이 없습니다.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 새 사건 등록 모달 -->
+        <div v-if="showProjectModal" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-6">
+            <div class="bg-white w-full max-w-md p-10 shadow-2xl border border-gold-primary">
+                <h3 class="font-serif text-2xl mb-8">Register New Case</h3>
+                <div class="space-y-6">
+                    <div>
+                        <label class="form-label">Client Name</label>
+                        <input v-model="projForm.client" placeholder="의뢰인명을 입력하세요">
+                    </div>
+                    <div>
+                        <label class="form-label">Case Name / Title</label>
+                        <input v-model="projForm.name" placeholder="사건명을 입력하세요">
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button @click="addProject" class="btn-black flex-1">Register</button>
+                        <button @click="showProjectModal = false" class="flex-1 border border-gray-200 text-xs uppercase font-bold hover:bg-gray-50">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="py-10 border-t border-gray-100 text-center">
+            <p class="text-[10px] text-gray-400 font-serif tracking-widest">&copy; 2026 HIGH & LAW FIRM. DIGNITY IN EVERY SECOND.</p>
+        </footer>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    userName: '',
+                    position: '',
+                    projects: [],
+                    logs: [],
+                    showProjectModal: false,
+                    logForm: { projectId: '', date: new Date().toISOString().split('T')[0], duration: '', description: '' },
+                    projForm: { name: '', client: '' }
+                }
+            },
+            computed: {
+                totalMinutes() { return this.logs.reduce((acc, log) => acc + log.duration, 0); }
+            },
+            methods: {
+                async fetchData() {
+                    try {
+                        const [pRes, lRes] = await Promise.all([fetch('/api/projects'), fetch('/api/timelogs')]);
+                        if(pRes.ok) this.projects = await pRes.json();
+                        if(lRes.ok) this.logs = (await lRes.json()).reverse();
+                    } catch (e) { console.error("Data fetch error"); }
+                },
+                getProjectName(id) {
+                    const p = this.projects.find(p => p.id === id);
+                    return p ? `${p.client} : ${p.name}` : 'Unknown Case';
+                },
+                async saveLog() {
+                    if(!this.logForm.projectId || !this.logForm.duration || !this.logForm.description) return alert("모든 항목을 입력해 주세요.");
+                    const res = await fetch('/api/timelogs', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(this.logForm)
+                    });
+                    if(res.ok) {
+                        this.logForm.description = ''; this.logForm.duration = '';
+                        this.fetchData();
+                    } else { alert("저장 중 오류가 발생했습니다."); }
+                },
+                async deleteLog(id) {
+                    if(!confirm("기록을 삭제하시겠습니까?")) return;
+                    const res = await fetch(`/api/timelogs/${id}`, { method: 'DELETE' });
+                    if(res.ok) this.fetchData();
+                },
+                async addProject() {
+                    if(!this.projForm.name || !this.projForm.client) return alert("의뢰인과 사건명을 입력하세요.");
+                    const res = await fetch('/api/projects', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(this.projForm)
+                    });
+                    if(res.ok) {
+                        this.projForm = { name: '', client: '' };
+                        this.showProjectModal = false;
+                        this.fetchData();
+                    }
+                },
+                logout() { 
+                    fetch('/api/logout', {method:'POST'}).then(() => {
+                        localStorage.removeItem('user');
+                        location.href = '/login.html';
+                    });
+                }
+            },
+            mounted() {
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                if(!userData.name) location.href = '/login.html';
+                this.userName = userData.name;
+                this.position = userData.position || 'Professional';
+                this.fetchData();
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>

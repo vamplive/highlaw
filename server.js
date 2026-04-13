@@ -2,6 +2,8 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs-extra');
 const multer = require('multer');
+const bcrypt = require('bcryptjs'); // 추가
+const session = require('express-session'); // 추가
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,7 +13,7 @@ const DB_FILE = path.join(__dirname, 'db.json');
 const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
 
 /**
- * [기능] 채용 공고 자동 삭제 로직
+ * [기능] 채용 공고 자동 삭제 로직 (기존 유지)
  */
 async function cleanExpiredJobs() {
     try {
@@ -35,7 +37,7 @@ async function cleanExpiredJobs() {
     }
 }
 
-// 초기화: 폴더 및 DB 파일 생성
+// 초기화: 폴더 및 DB 파일 생성 (신규 필드 추가)
 async function initDB() {
     try {
         await fs.ensureDir(UPLOAD_DIR);
@@ -52,20 +54,20 @@ async function initDB() {
                 ],
                 jobs: [],
                 inquiries: [],
-                heroMedia: [] 
+                heroMedia: [],
+                users: [],      // 회원가입 정보용 추가
+                projects: [],   // 사건/프로젝트용 추가
+                timelogs: []    // 업무 기록용 추가
             };
             await fs.writeJson(DB_FILE, initialData);
         } else {
             const db = await fs.readJson(DB_FILE);
             let updated = false;
-            if (!db.partners) {
-                db.partners = [];
-                updated = true;
-            }
-            if (!db.heroMedia) {
-                db.heroMedia = [];
-                updated = true;
-            }
+            if (!db.partners) { db.partners = []; updated = true; }
+            if (!db.heroMedia) { db.heroMedia = []; updated = true; }
+            if (!db.users) { db.users = []; updated = true; } // 필드 보강
+            if (!db.projects) { db.projects = []; updated = true; }
+            if (!db.timelogs) { db.timelogs = []; updated = true; }
             if (updated) await fs.writeJson(DB_FILE, db);
         }
         await cleanExpiredJobs();
@@ -80,6 +82,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
+// 세션 설정 (로그인 상태 유지용)
+app.use(session({
+    secret: 'highlaw-secret-key-999',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 1000 * 60 * 60 * 24 } // 24시간
+}));
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOAD_DIR),
     filename: (req, file, cb) => {
@@ -90,7 +100,18 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-/* --- 네이버 SEO: RSS Feed API --- */
+/* --- 권한 체크 미들웨어 --- */
+const authRequired = (req, res, next) => {
+    if (req.session.user) next();
+    else res.status(401).send("로그인이 필요합니다.");
+};
+
+const adminRequired = (req, res, next) => {
+    if (req.session.user && req.session.user.isAdmin) next();
+    else res.status(403).send("관리자 권한이 없습니다.");
+};
+
+/* --- 네이버 SEO: RSS Feed API (기존 유지) --- */
 app.get('/rss.xml', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -100,298 +121,244 @@ app.get('/rss.xml', async (req, res) => {
             const d = new Date(date);
             return d.toUTCString();
         };
-        
         const items = newsItems.slice(-50).reverse().map(item => {
             const plainContent = (item.content || '').replace(/<[^>]*>?/gm, '').substring(0, 500);
-            return `
-        <item>
-            <title><![CDATA[${item.title}]]></title>
-            <link>${siteUrl}/news-detail.html?id=${item.id}</link>
-            <description><![CDATA[${plainContent}]]></description>
-            <author>법무법인 하이로</author>
-            <pubDate>${toRFC822(item.id)}</pubDate>
-            <guid>${siteUrl}/news-detail.html?id=${item.id}</guid>
-        </item>`;
+            return `<item><title><![CDATA[${item.title}]]></title><link>${siteUrl}/news-detail.html?id=${item.id}</link><description><![CDATA[${plainContent}]]></description><author>법무법인 하이로</author><pubDate>${toRFC822(item.id)}</pubDate><guid>${siteUrl}/news-detail.html?id=${item.id}</guid></item>`;
         }).join('');
-
-        const rss = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-    <channel>
-        <title>법무법인 하이로</title>
-        <link>${siteUrl}</link>
-        <description>법무법인 하이로 공식 뉴스 및 성공사례</description>
-        <language>ko-kr</language>
-        <pubDate>${toRFC822(new Date())}</pubDate>
-        <lastBuildDate>${toRFC822(new Date())}</lastBuildDate>
-        <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml" />
-        ${items}
-    </channel>
-</rss>`;
+        const rss = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>법무법인 하이로</title><link>${siteUrl}</link><description>법무법인 하이로 공식 뉴스 및 성공사례</description><language>ko-kr</language><pubDate>${toRFC822(new Date())}</pubDate><lastBuildDate>${toRFC822(new Date())}</lastBuildDate><atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml" />${items}</channel></rss>`;
         res.set('Content-Type', 'application/rss+xml; charset=utf-8');
         res.send(rss);
     } catch (e) { res.status(500).send("RSS error"); }
 });
 
-/* --- 공용 API --- */
-
+/* --- 공용 API (기존 유지) --- */
 app.get('/api/public/hero', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        res.json(db.heroMedia || []);
-    } catch (e) { res.status(500).json([]); }
+    try { const db = await fs.readJson(DB_FILE); res.json(db.heroMedia || []); } catch (e) { res.status(500).json([]); }
 });
-
 app.get('/api/public/news', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        res.json((db.news || []).slice().reverse());
-    } catch (e) { res.status(500).json([]); }
+    try { const db = await fs.readJson(DB_FILE); res.json((db.news || []).slice().reverse()); } catch (e) { res.status(500).json([]); }
 });
-
 app.get('/api/public/news/:id', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        const item = (db.news || []).find(n => n.id == req.params.id);
-        if (item) res.json(item);
-        else res.status(404).send("Not Found");
-    } catch (e) { res.status(500).json(null); }
+    try { const db = await fs.readJson(DB_FILE); const item = (db.news || []).find(n => n.id == req.params.id); if (item) res.json(item); else res.status(404).send("Not Found"); } catch (e) { res.status(500).json(null); }
 });
-
 app.get('/api/public/partners', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        res.json(db.partners || []);
-    } catch (e) { res.status(500).json([]); }
+    try { const db = await fs.readJson(DB_FILE); res.json(db.partners || []); } catch (e) { res.status(500).json([]); }
 });
-
 app.get('/api/public/recruit', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        res.json(db.recruit || []);
-    } catch (e) { res.status(500).json([]); }
+    try { const db = await fs.readJson(DB_FILE); res.json(db.recruit || []); } catch (e) { res.status(500).json([]); }
 });
-
 app.get('/api/public/jobs', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        res.json(db.jobs || []);
-    } catch (e) { res.status(500).json([]); }
+    try { const db = await fs.readJson(DB_FILE); res.json(db.jobs || []); } catch (e) { res.status(500).json([]); }
 });
-
 app.get('/api/public/jobs/:id', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        const item = (db.jobs || []).find(j => j.id == req.params.id);
-        if (item) res.json(item);
-        else res.status(404).send("Not Found");
-    } catch (e) { res.status(500).json(null); }
+    try { const db = await fs.readJson(DB_FILE); const item = (db.jobs || []).find(j => j.id == req.params.id); if (item) res.json(item); else res.status(404).send("Not Found"); } catch (e) { res.status(500).json(null); }
+});
+app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
+    try { const db = await fs.readJson(DB_FILE); const newInquiry = { id: Date.now(), name: req.body.userName, phone: req.body.userPhone, summary: req.body.summary, created_at: new Date().toISOString().split('T')[0], files: req.files ? req.files.map(f => f.filename) : [] }; db.inquiries.push(newInquiry); await fs.writeJson(DB_FILE, db); res.status(200).send("OK"); } catch (e) { res.status(500).send("Error"); }
 });
 
-app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
+/* --- 로그인 및 회원관리 API (수정 및 추가) --- */
+
+app.post('/api/login', async (req, res) => {
+    const { id, pw } = req.body;
+    // 1. 마스터 관리자 체크
+    if (id === 'admin' && pw === 'highlaw123!') {
+        req.session.user = { id: 'master', name: '최고관리자', isAdmin: true };
+        return res.status(200).json({ name: '관리자', isAdmin: true });
+    }
+    // 2. DB 사용자 체크
     try {
         const db = await fs.readJson(DB_FILE);
-        const newInquiry = {
-            id: Date.now(),
-            name: req.body.userName,
-            phone: req.body.userPhone,
-            summary: req.body.summary,
-            created_at: new Date().toISOString().split('T')[0],
-            files: req.files ? req.files.map(f => f.filename) : []
-        };
-        db.inquiries.push(newInquiry);
+        const user = db.users.find(u => u.loginId === id);
+        if (user && await bcrypt.compare(pw, user.password)) {
+            if (user.status !== 'active') return res.status(403).send("승인 대기 중인 계정입니다.");
+            req.session.user = { id: user.id, name: user.name, isAdmin: user.isAdmin };
+            res.status(200).json({ name: user.name, isAdmin: user.isAdmin });
+        } else {
+            res.status(401).send("아이디 또는 비밀번호가 틀립니다.");
+        }
+    } catch (e) { res.status(500).send("Login Error"); }
+});
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy();
+    res.send("Logged Out");
+});
+
+app.post('/api/register', async (req, res) => {
+    try {
+        const { loginId, password, name, position } = req.body;
+        const db = await fs.readJson(DB_FILE);
+        if (db.users.find(u => u.loginId === loginId)) return res.status(400).send("이미 존재하는 ID입니다.");
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = { id: Date.now(), loginId, password: hashedPassword, name, position, status: 'pending', isAdmin: false };
+        db.users.push(newUser);
         await fs.writeJson(DB_FILE, db);
-        res.status(200).send("OK");
+        res.send("가입 신청 완료. 관리자 승인 후 이용 가능합니다.");
+    } catch (e) { res.status(500).send("Register Error"); }
+});
+
+app.get('/api/admin/users', adminRequired, async (req, res) => {
+    try { const db = await fs.readJson(DB_FILE); res.json(db.users); } catch (e) { res.status(500).json([]); }
+});
+
+app.post('/api/admin/users/status', adminRequired, async (req, res) => {
+    try {
+        const { userId, status, isAdmin } = req.body;
+        const db = await fs.readJson(DB_FILE);
+        const user = db.users.find(u => u.id == userId);
+        if (user) {
+            if (status) user.status = status;
+            if (isAdmin !== undefined) user.isAdmin = isAdmin;
+            await fs.writeJson(DB_FILE, db);
+            res.send("Updated");
+        } else res.status(404).send("Not Found");
     } catch (e) { res.status(500).send("Error"); }
 });
 
-app.post('/api/login', (req, res) => {
-    const { id, pw } = req.body;
-    if (id === 'admin' && pw === 'highlaw123!') res.status(200).send("OK");
-    else res.status(401).send("Fail");
-});
-
-/* --- 관리자 전용: 뉴스 관리 --- */
-
-app.post('/api/news', upload.array('attachments'), async (req, res) => {
+app.delete('/api/admin/users/:id', adminRequired, async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        const attachments = req.files ? req.files.map(f => ({
-            filename: f.filename, originalname: f.originalname, mimetype: f.mimetype
-        })) : [];
-        const newNews = { 
-            id: Date.now(), category: req.body.category, title: req.body.title,
-            content: req.body.content, attachments: attachments,
-            created_at: new Date().toISOString().split('T')[0] 
+        db.users = db.users.filter(u => u.id != req.params.id);
+        await fs.writeJson(DB_FILE, db);
+        res.send("Deleted");
+    } catch (e) { res.status(500).send("Error"); }
+});
+
+/* --- 타임트랙(사건 및 업무기록) API --- */
+
+app.get('/api/projects', authRequired, async (req, res) => {
+    try { const db = await fs.readJson(DB_FILE); res.json(db.projects || []); } catch (e) { res.status(500).json([]); }
+});
+
+app.post('/api/projects', authRequired, async (req, res) => {
+    try {
+        const { name, client } = req.body;
+        const db = await fs.readJson(DB_FILE);
+        const newProject = { id: Date.now(), name, client, created_by: req.session.user.name };
+        db.projects.push(newProject);
+        await fs.writeJson(DB_FILE, db);
+        res.json(newProject);
+    } catch (e) { res.status(500).send("Error"); }
+});
+
+app.get('/api/timelogs', authRequired, async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        let logs = db.timelogs || [];
+        // 관리자가 아니면 본인 기록만 필터링
+        if (!req.session.user.isAdmin) {
+            logs = logs.filter(l => l.userId == req.session.user.id);
+        }
+        res.json(logs);
+    } catch (e) { res.status(500).json([]); }
+});
+
+app.post('/api/timelogs', authRequired, async (req, res) => {
+    try {
+        const { projectId, date, duration, description } = req.body;
+        const db = await fs.readJson(DB_FILE);
+        const newLog = {
+            id: Date.now(),
+            userId: req.session.user.id,
+            userName: req.session.user.name,
+            projectId: parseInt(projectId),
+            date,
+            duration: parseInt(duration), // 분 단위
+            description
         };
+        db.timelogs.push(newLog);
+        await fs.writeJson(DB_FILE, db);
+        res.json(newLog);
+    } catch (e) { res.status(500).send("Error"); }
+});
+
+app.delete('/api/timelogs/:id', authRequired, async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        const log = db.timelogs.find(l => l.id == req.params.id);
+        if (!log) return res.status(404).send("Not Found");
+        // 본인 기록이거나 관리자여야 삭제 가능
+        if (log.userId != req.session.user.id && !req.session.user.isAdmin) return res.status(403).send("Forbidden");
+        db.timelogs = db.timelogs.filter(l => l.id != req.params.id);
+        await fs.writeJson(DB_FILE, db);
+        res.send("Deleted");
+    } catch (e) { res.status(500).send("Error"); }
+});
+
+/* --- 기존 관리자 전용 API (모두 유지) --- */
+
+app.post('/api/news', adminRequired, upload.array('attachments'), async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        const attachments = req.files ? req.files.map(f => ({ filename: f.filename, originalname: f.originalname, mimetype: f.mimetype })) : [];
+        const newNews = { id: Date.now(), category: req.body.category, title: req.body.title, content: req.body.content, attachments: attachments, created_at: new Date().toISOString().split('T')[0] };
         db.news.push(newNews);
         await fs.writeJson(DB_FILE, db);
         res.json(newNews);
     } catch (e) { res.status(500).send("Error"); }
 });
 
-app.delete('/api/news/:id', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        db.news = db.news.filter(n => n.id != req.params.id);
-        await fs.writeJson(DB_FILE, db);
-        res.send("Deleted");
-    } catch (e) { res.status(500).send("Error"); }
+app.delete('/api/news/:id', adminRequired, async (req, res) => {
+    try { const db = await fs.readJson(DB_FILE); db.news = db.news.filter(n => n.id != req.params.id); await fs.writeJson(DB_FILE, db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 관리자 전용: 파트너 관리 --- */
-
-app.post('/api/admin/partners', upload.single('photo'), async (req, res) => {
+app.post('/api/admin/partners', adminRequired, upload.single('photo'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
         const idBody = req.body.id;
         const isNew = (!idBody || idBody === "null" || idBody === "undefined");
         const id = isNew ? Date.now() : parseInt(idBody);
-        
-        const partnerData = {
-            id: id,
-            name: req.body.name || "",
-            engName: req.body.engName || "",
-            title: req.body.title || "",
-            edu: req.body.edu ? req.body.edu.split('\n').filter(l => l.trim() !== "") : [],
-            exp: req.body.exp ? req.body.exp.split('\n').filter(l => l.trim() !== "") : [],
-            photo: (req.body.existingPhoto && req.body.existingPhoto !== "null") ? req.body.existingPhoto : null
-        };
-
-        if (req.file) {
-            partnerData.photo = req.file.filename;
-        }
-
+        const partnerData = { id, name: req.body.name || "", engName: req.body.engName || "", title: req.body.title || "", edu: req.body.edu ? req.body.edu.split('\n').filter(l => l.trim() !== "") : [], exp: req.body.exp ? req.body.exp.split('\n').filter(l => l.trim() !== "") : [], photo: (req.body.existingPhoto && req.body.existingPhoto !== "null") ? req.body.existingPhoto : null };
+        if (req.file) { partnerData.photo = req.file.filename; }
         const index = db.partners.findIndex(p => p.id === id);
-        if (index > -1) {
-            db.partners[index] = partnerData; 
-        } else {
-            db.partners.push(partnerData);
-        }
-
-        await fs.writeJson(DB_FILE, db);
-        res.json(partnerData);
-    } catch (e) { 
-        console.error("Partner Save Error:", e);
-        res.status(500).send("Error"); 
-    }
-});
-
-app.delete('/api/admin/partners/:id', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        db.partners = db.partners.filter(p => p.id != req.params.id);
-        await fs.writeJson(DB_FILE, db);
-        res.send("Deleted");
+        if (index > -1) { db.partners[index] = partnerData; } else { db.partners.push(partnerData); }
+        await fs.writeJson(DB_FILE, db); res.json(partnerData);
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 관리자 전용: 메인 히어로 관리 --- */
-
-app.post('/api/admin/hero', upload.single('heroFile'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).send("No file uploaded");
-        const db = await fs.readJson(DB_FILE);
-        const newMedia = {
-            id: Date.now(),
-            filename: req.file.filename,
-            mimetype: req.file.mimetype,
-            created_at: new Date().toISOString()
-        };
-        db.heroMedia.push(newMedia);
-        await fs.writeJson(DB_FILE, db);
-        res.json(newMedia);
-    } catch (e) { res.status(500).send("Error"); }
+app.delete('/api/admin/partners/:id', adminRequired, async (req, res) => {
+    try { const db = await fs.readJson(DB_FILE); db.partners = db.partners.filter(p => p.id != req.params.id); await fs.writeJson(DB_FILE, db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
 });
 
-app.delete('/api/admin/hero/:id', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        db.heroMedia = db.heroMedia.filter(m => m.id != req.params.id);
-        await fs.writeJson(DB_FILE, db);
-        res.send("Deleted");
-    } catch (e) { res.status(500).send("Error"); }
+app.post('/api/admin/hero', adminRequired, upload.single('heroFile'), async (req, res) => {
+    try { if (!req.file) return res.status(400).send("No file"); const db = await fs.readJson(DB_FILE); const newMedia = { id: Date.now(), filename: req.file.filename, mimetype: req.file.mimetype, created_at: new Date().toISOString() }; db.heroMedia.push(newMedia); await fs.writeJson(DB_FILE, db); res.json(newMedia); } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 관리자 전용: 채용 관리 (수정됨) --- */
-
-app.post('/api/recruit/status', async (req, res) => {
-    try {
-        const { id, status } = req.body;
-        const db = await fs.readJson(DB_FILE);
-        const target = db.recruit.find(r => r.role_id === id);
-        if (target) {
-            target.status = status;
-            await fs.writeJson(DB_FILE, db);
-            res.send("Updated");
-        } else { res.status(404).send("Not Found"); }
-    } catch (e) { res.status(500).send("Error"); }
+app.delete('/api/admin/hero/:id', adminRequired, async (req, res) => {
+    try { const db = await fs.readJson(DB_FILE); db.heroMedia = db.heroMedia.filter(m => m.id != req.params.id); await fs.writeJson(DB_FILE, db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
 });
 
-app.post('/api/admin/jobs', upload.array('jobAttachments'), async (req, res) => {
+app.post('/api/recruit/status', adminRequired, async (req, res) => {
+    try { const { id, status } = req.body; const db = await fs.readJson(DB_FILE); const target = db.recruit.find(r => r.role_id === id); if (target) { target.status = status; await fs.writeJson(DB_FILE, db); res.send("Updated"); } else { res.status(404).send("Not Found"); } } catch (e) { res.status(500).send("Error"); }
+});
+
+app.post('/api/admin/jobs', adminRequired, upload.array('jobAttachments'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
         const idBody = req.body.id;
         const isNew = (!idBody || idBody === "null" || idBody === "undefined");
         const id = isNew ? Date.now() : parseInt(idBody);
-
-        const attachments = req.files && req.files.length > 0 
-            ? req.files.map(f => ({ filename: f.filename, originalname: f.originalname, mimetype: f.mimetype }))
-            : null;
-
-        const jobData = { 
-            id: id, 
-            category: req.body.category,
-            title: req.body.title,
-            deadline: req.body.deadline,
-            content: req.body.content, 
-            created_at: req.body.created_at || new Date().toISOString().split('T')[0] 
-        };
-
+        const attachments = req.files && req.files.length > 0 ? req.files.map(f => ({ filename: f.filename, originalname: f.originalname, mimetype: f.mimetype })) : null;
+        const jobData = { id, category: req.body.category, title: req.body.title, deadline: req.body.deadline, content: req.body.content, created_at: req.body.created_at || new Date().toISOString().split('T')[0] };
         const index = db.jobs.findIndex(j => j.id === id);
-
-        if (index > -1) {
-            // 수정 모드: 파일 업로드가 있으면 교체, 없으면 기존 파일 유지
-            jobData.attachments = attachments ? attachments : db.jobs[index].attachments;
-            db.jobs[index] = jobData;
-        } else {
-            // 신규 등록 모드
-            jobData.attachments = attachments || [];
-            db.jobs.push(jobData);
-        }
-
-        await fs.writeJson(DB_FILE, db);
-        res.json(jobData);
-    } catch (e) { 
-        console.error("Job Save Error:", e);
-        res.status(500).send("Error"); 
-    }
-});
-
-app.delete('/api/admin/jobs/:id', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        db.jobs = db.jobs.filter(j => j.id != req.params.id);
-        await fs.writeJson(DB_FILE, db);
-        res.send("Deleted");
+        if (index > -1) { jobData.attachments = attachments ? attachments : db.jobs[index].attachments; db.jobs[index] = jobData; } else { jobData.attachments = attachments || []; db.jobs.push(jobData); }
+        await fs.writeJson(DB_FILE, db); res.json(jobData);
     } catch (e) { res.status(500).send("Error"); }
 });
 
-app.get('/api/admin/inquiries', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        res.json((db.inquiries || []).slice().reverse());
-    } catch (e) { res.status(500).json([]); }
+app.delete('/api/admin/jobs/:id', adminRequired, async (req, res) => {
+    try { const db = await fs.readJson(DB_FILE); db.jobs = db.jobs.filter(j => j.id != req.params.id); await fs.writeJson(DB_FILE, db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
 });
 
-app.delete('/api/admin/inquiries/:id', async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        db.inquiries = db.inquiries.filter(i => i.id != req.params.id);
-        await fs.writeJson(DB_FILE, db);
-        res.send("Deleted");
-    } catch (e) { res.status(500).send("Error"); }
+app.get('/api/admin/inquiries', adminRequired, async (req, res) => {
+    try { const db = await fs.readJson(DB_FILE); res.json((db.inquiries || []).slice().reverse()); } catch (e) { res.status(500).json([]); }
+});
+
+app.delete('/api/admin/inquiries/:id', adminRequired, async (req, res) => {
+    try { const db = await fs.readJson(DB_FILE); db.inquiries = db.inquiries.filter(i => i.id != req.params.id); await fs.writeJson(DB_FILE, db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`High & Law Server Running on port ${PORT}`);
+    console.log(`High & Law Integrated Server Running on port ${PORT}`);
 });
