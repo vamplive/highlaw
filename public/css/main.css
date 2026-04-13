@@ -20,7 +20,7 @@ body {
     line-height: 1.8;
     -webkit-font-smoothing: antialiased;
     word-break: keep-all;
-    overflow-x: hidden; /* 가로 스크롤 방지 */
+    overflow-x: hidden;
 }
 
 /* Header & Navigation */
@@ -41,12 +41,10 @@ nav a:hover { color: var(--gold-primary); }
 .menu-toggle div { width: 25px; height: 2px; background-color: var(--text-primary); margin: 5px 0; transition: 0.3s; }
 
 /* --- [수정 부분] Main Hero Section: Edge-to-Edge Luxury Layout --- */
-
-/* 화면 전체를 꽉 채우는 히어로 섹션 컨테이너 */
 .hero-main {
     width: 100vw;
-    height: 100vh;
-    margin-left: calc(-50vw + 50%); /* 중앙 정렬 유지하며 부모 너비 무시하고 꽉 채움 */
+    height: 100vh; /* 세로 화면을 100% 채우도록 수정 */
+    margin-left: calc(-50vw + 50%);
     margin-right: calc(-50vw + 50%);
     position: relative;
     overflow: hidden;
@@ -54,33 +52,30 @@ nav a:hover { color: var(--gold-primary); }
     align-items: center;
     justify-content: center;
     background: #000;
-    margin-top: -80px; /* 헤더 위치 고려 */
+    margin-top: -80px; 
 }
 
-/* 이미지/영상 배경이 빈틈없이 꽉 차도록 설정 */
 .hero-bg-item {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100% !important; /* 배경 이미지/영상이 세로를 꽉 채우도록 강제 */
     object-fit: cover;
     z-index: 1;
 }
 
-/* 세련된 영문 타이포그래피 */
 .luxury-eng {
     display: block;
     font-family: 'Playfair Display', serif;
     font-weight: 400;
     line-height: 1.2;
-    letter-spacing: -0.01em;
+    letter-spacing: 0.02em; /* 고급스러움을 위해 자간을 약간 넓힘 */
     color: #ffffff;
-    font-size: clamp(38px, 5.5vw, 68px);
-    margin-bottom: 5px;
+    font-size: clamp(28px, 3.8vw, 48px); /* 크기를 더 작고 정교하게 조정 */
+    margin-bottom: 8px;
 }
 
-/* High & Law 단어 전용 금색 광택 포인트 */
 .gold-point {
     color: var(--gold-primary);
     background: var(--gold-gradient);
@@ -93,14 +88,15 @@ nav a:hover { color: var(--gold-primary); }
 }
 
 .hero-divider {
-    width: 50px;
+    width: 40px; /* 더 미니멀하게 조정 */
     height: 1px;
     background: var(--gold-primary);
     margin: 35px auto;
     opacity: 0.6;
 }
+/* ------------------------------------------------------------------ */
 
-/* 서브 히어로 (일반 서브페이지용) */
+/* Sub-hero & Labels (기존 유지) */
 .sub-hero {
     padding-top: 180px; padding-bottom: 80px;
     background: linear-gradient(to bottom, #fdfdfd, #f4eee0);
@@ -108,7 +104,6 @@ nav a:hover { color: var(--gold-primary); }
 }
 .sub-hero h2 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 5vw, 56px); font-weight: 400; color: var(--text-primary); margin-bottom: 15px; }
 
-/* 공통 영문 라벨 */
 .label { 
     display: block; 
     text-align: center; 
@@ -132,7 +127,6 @@ nav a:hover { color: var(--gold-primary); }
     letter-spacing: 0.5em;
     text-transform: uppercase;
 }
-/* ------------------------------------------------------------------ */
 
 /* Content Section Common */
 section { padding: 100px 20px; max-width: 1400px; margin: 0 auto; }

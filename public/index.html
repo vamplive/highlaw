@@ -60,7 +60,7 @@
             top: 0; 
             left: 0; 
             width: 100%; 
-            height: 100%;
+            height: 100%; /* [수정] 세로를 꽉 채우도록 100% 고정 */
             object-fit: cover; 
             opacity: 0; 
             transition: opacity 2.5s ease-in-out;
@@ -85,15 +85,15 @@
             width: 100%;
         }
 
-        /* [수정] 세련된 명품 스타일 영문 타이포그래피 */
+        /* [수정] 더욱 절제되고 고급스러운 영문 타이포그래피 (크기 축소 및 자간 조정) */
         .luxury-eng {
             display: block;
             font-family: 'Playfair Display', serif;
-            font-size: clamp(38px, 5.5vw, 70px);
+            font-size: clamp(26px, 3.5vw, 46px); /* [수정] 기존보다 크기를 줄여 명품 스타일 구현 */
             font-weight: 400;
-            line-height: 1.15;
+            line-height: 1.3;
             color: #ffffff;
-            letter-spacing: -0.01em;
+            letter-spacing: 0.05em; /* [수정] 자간을 넓혀 시각적 여유와 고급스러움 부여 */
             margin-bottom: 5px;
         }
 
@@ -108,16 +108,16 @@
         }
 
         .hero-divider {
-            width: 50px;
+            width: 40px; /* [수정] 더 얇고 짧게 조정 */
             height: 1px;
             background: rgba(197, 160, 89, 0.6);
-            margin: 35px auto;
+            margin: 30px auto;
         }
 
         .hero-main .label {
             color: #c5a059; 
-            font-size: 11px;
-            letter-spacing: 0.7em;
+            font-size: 10px; /* [수정] 폰트 크기 미세 축소 */
+            letter-spacing: 0.8em; /* [수정] 자간 확대 */
             margin-bottom: 25px;
             text-transform: uppercase;
             font-weight: 600;
@@ -126,7 +126,7 @@
 
         .hero-main p { 
             font-family: 'Inter', sans-serif;
-            font-size: 16px; 
+            font-size: 15px; /* [수정] 폰트 크기 미세 축소 */
             color: rgba(255,255,255,0.7); 
             max-width: 800px; 
             margin: 0 auto; 
@@ -311,9 +311,9 @@
     // 스크롤 시 헤더 투명도 조절
     window.addEventListener('scroll', () => {
         const header = document.querySelector('header');
-        if (window.scrollY > 50) {
+        if (header && window.scrollY > 50) {
             header.classList.add('scrolled');
-        } else {
+        } else if (header) {
             header.classList.remove('scrolled');
         }
     });
@@ -321,7 +321,12 @@
     // 모바일 메뉴 토글
     const toggle = document.getElementById('mobile-toggle');
     const nav = document.getElementById('nav-menu');
-    toggle.addEventListener('click', () => { toggle.classList.toggle('active'); nav.classList.toggle('active'); });
+    if (toggle && nav) {
+        toggle.addEventListener('click', () => { 
+            toggle.classList.toggle('active'); 
+            nav.classList.toggle('active'); 
+        });
+    }
 
     // 데이터 동기화 함수
     async function syncData() {
@@ -331,7 +336,7 @@
             const hData = await hRes.json();
             const slider = document.getElementById('hero-slider');
             
-            if (hData && hData.length > 0) {
+            if (slider && hData && hData.length > 0) {
                 slider.innerHTML = hData.map((m, idx) => {
                     if (m.mimetype.startsWith('image')) {
                         return `<img src="/uploads/${m.filename}" class="hero-bg-item ${idx === 0 ? 'active' : ''}">`;
@@ -349,7 +354,7 @@
                         items[current].classList.add('active');
                     }, 6000);
                 }
-            } else {
+            } else if (slider) {
                 slider.style.background = "#1a1a1a";
             }
         } catch (e) { console.error("히어로 배경 로드 실패"); }
@@ -359,7 +364,7 @@
             const pRes = await fetch('/api/public/partners');
             const pData = await pRes.json();
             const partnerGrid = document.getElementById('main-partner-grid');
-            if(pData.length > 0) {
+            if(partnerGrid && pData.length > 0) {
                 partnerGrid.innerHTML = pData.map(p => `
                     <div class="partner-card" onclick="location.href='partners.html'" style="cursor:pointer">
                         ${p.photo ? `<img src="/uploads/${p.photo}" class="partner-img-main">` : `<div class="partner-img-main" style="display:flex; align-items:center; justify-content:center; background:#f4eee0; font-family:'Playfair Display'; font-size:40px; color:#c5a059;">${p.name[0]}</div>`}
@@ -377,7 +382,7 @@
             const nRes = await fetch('/api/public/news');
             const nData = await nRes.json();
             const newsGrid = document.getElementById('sync-news-grid');
-            if(nData.length > 0) {
+            if(newsGrid && nData.length > 0) {
                 newsGrid.innerHTML = nData.slice(0, 3).map(item => `
                     <div class="news-card-small">
                         <span class="date">${item.created_at}</span>
@@ -392,15 +397,17 @@
         try {
             const rRes = await fetch('/api/public/recruit');
             const rData = await rRes.json();
-            rData.forEach(item => {
-                const li = document.querySelector(`li[data-id="${item.role_id}"]`);
-                if(li) {
-                    const tag = li.querySelector('.status-tag');
-                    const isOpen = item.status === 'status-open';
-                    tag.textContent = isOpen ? '[모집 중]' : '[마감]';
-                    tag.style.color = isOpen ? '#166534' : '#dc2626';
-                }
-            });
+            if (rData) {
+                rData.forEach(item => {
+                    const li = document.querySelector(`li[data-id="${item.role_id}"]`);
+                    if(li) {
+                        const tag = li.querySelector('.status-tag');
+                        const isOpen = item.status === 'status-open';
+                        tag.textContent = isOpen ? '[모집 중]' : '[마감]';
+                        tag.style.color = isOpen ? '#166534' : '#dc2626';
+                    }
+                });
+            }
         } catch (e) { console.error("채용 상태 로드 실패"); }
     }
 
