@@ -10,137 +10,79 @@
     <style>
         :root { --gold: #c5a059; --dark: #111; }
         body { background-color: #f8f8f8; font-family: 'Inter', sans-serif; color: var(--dark); }
-        
-        /* Top Navigation */
         .top-nav { background: white; border-bottom: 1px solid #eee; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; }
-        .nav-link { font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #888; text-transform: uppercase; transition: 0.3s; }
-        .nav-link:hover { color: var(--gold); }
-
-        /* Subheader with Center Logo */
         .sub-header { background: var(--dark); padding: 60px 0; text-align: center; border-bottom: 2px solid var(--gold); }
-        .center-logo { max-height: 80px; margin: 0 auto; filter: brightness(0) invert(1); opacity: 0.9; }
-
-        /* Content Area */
+        .center-logo { max-height: 80px; margin: 0 auto; filter: brightness(0) invert(1); }
         .main-container { max-width: 1200px; margin: -40px auto 100px; display: grid; grid-template-columns: 350px 1fr; gap: 30px; padding: 0 20px; }
         .card { background: white; border: 1px solid #eee; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.03); }
-        
-        /* Case Selector */
-        .case-list { margin-top: 20px; }
-        .case-item { padding: 15px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
-        .case-item:hover { background: #fafafa; }
+        .case-item { padding: 15px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: 0.3s; }
         .case-item.active { border-left: 3px solid var(--gold); background: #fdfcf8; }
-
-        .form-label { font-size: 10px; font-weight: 700; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; display: block; }
-        input, select, textarea { width: 100%; padding: 10px 0; border: none; border-bottom: 1px solid #eee; font-size: 14px; outline: none; margin-bottom: 20px; }
-        input:focus { border-bottom-color: var(--gold); }
-
         .btn-gold { background: var(--dark); color: white; border: 1px solid var(--gold); padding: 15px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; width: 100%; transition: 0.3s; }
         .btn-gold:hover { background: var(--gold); color: var(--dark); }
-
-        .time-display { font-family: 'Playfair Display', serif; font-size: 48px; color: var(--gold); line-height: 1; }
-        .history-row { padding: 15px 0; border-bottom: 1px solid #f9f9f9; font-size: 13px; color: #555; }
+        input, select, textarea { width: 100%; padding: 10px 0; border: none; border-bottom: 1px solid #eee; font-size: 14px; outline: none; margin-bottom: 20px; }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- Top Navigation -->
         <nav class="top-nav">
-            <a href="/" class="nav-link">← Website Home</a>
+            <a href="/" class="text-[11px] font-bold uppercase tracking-widest">← Website Home</a>
             <div class="flex items-center gap-6">
-                <span class="text-[11px] font-bold uppercase tracking-widest">{{userName}} <span class="text-gold">/ {{position}}</span></span>
-                <button @click="logout" class="nav-link text-red-400">Logout</button>
+                <span class="text-[11px] font-bold uppercase">{{userName}} <span class="text-gold">/ {{position}}</span></span>
+                <button @click="logout" class="text-[11px] text-red-400 font-bold uppercase">Logout</button>
             </div>
         </nav>
-
-        <!-- Subheader -->
         <header class="sub-header">
             <img src="/logo.png" alt="High & Law" class="center-logo">
-            <p class="text-[10px] text-white/40 tracking-[0.5em] mt-4 uppercase">Dignity in Professionalism</p>
         </header>
 
         <main class="main-container">
-            <!-- Left: Case Selection & Entry -->
             <aside class="space-y-6">
                 <div class="card">
                     <h3 class="font-serif text-lg mb-6 border-b pb-2">Record Task</h3>
-                    <label class="form-label">Select Case</label>
                     <select v-model="logForm.projectId">
                         <option value="" disabled>사건을 선택하세요</option>
                         <option v-for="p in projects" :key="p.id" :value="p.id">[{{p.client}}] {{p.name}}</option>
                     </select>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="form-label">Date</label><input type="date" v-model="logForm.date"></div>
-                        <div><label class="form-label">Min</label><input type="number" v-model="logForm.duration"></div>
+                        <input type="date" v-model="logForm.date">
+                        <input type="number" v-model="logForm.duration" placeholder="Min">
                     </div>
-                    <label class="form-label">Description</label>
-                    <textarea v-model="logForm.description" rows="3"></textarea>
-                    <button @click="saveLog" class="btn-gold">Save to Tracker</button>
+                    <textarea v-model="logForm.description" rows="3" placeholder="Description"></textarea>
+                    <button @click="saveLog" class="btn-gold">Save Entry</button>
                     <button @click="showProjectModal = true" class="mt-4 text-[10px] text-gray-400 hover:text-gold block mx-auto">+ NEW CASE REGISTRATION</button>
                 </div>
-
                 <div class="card">
-                    <h3 class="font-serif text-lg mb-4">Select to View</h3>
-                    <div class="case-list">
-                        <div v-for="p in projects" :key="p.id" @click="selectedProjectId = p.id" 
-                             :class="['case-item', selectedProjectId === p.id ? 'active' : '']">
-                            <div>
-                                <p class="text-[10px] text-gold font-bold">{{p.client}}</p>
-                                <p class="text-sm font-semibold">{{p.name}}</p>
-                            </div>
-                            <span class="text-xs text-gray-300">→</span>
-                        </div>
+                    <h3 class="font-serif text-lg mb-4">Select Case</h3>
+                    <div class="case-item" v-for="p in projects" :key="p.id" @click="selectedProjectId = p.id" :class="{active: selectedProjectId === p.id}">
+                        <p class="text-[10px] text-gold font-bold uppercase">{{p.client}}</p>
+                        <p class="text-sm font-semibold">{{p.name}}</p>
                     </div>
                 </div>
             </aside>
 
-            <!-- Right: Case Details -->
-            <section>
-                <div class="card min-h-[600px]">
-                    <div v-if="selectedProject">
-                        <div class="flex justify-between items-end mb-12">
-                            <div>
-                                <span class="form-label">Project Intelligence</span>
-                                <h2 class="font-serif text-3xl">{{selectedProject.name}}</h2>
-                                <p class="text-gray-400 text-sm mt-1">의뢰인: {{selectedProject.client}}</p>
-                            </div>
-                            <div class="text-right">
-                                <span class="form-label">Total Time Spent</span>
-                                <div class="time-display">{{Math.floor(currentProjectTotal / 60)}}<span class="text-lg">h</span> {{currentProjectTotal % 60}}<span class="text-lg">m</span></div>
-                            </div>
-                        </div>
-
-                        <h4 class="font-bold text-xs uppercase tracking-widest text-gray-300 mb-4 border-b pb-2">Task History</h4>
-                        <div v-for="entry in filteredLogs" :key="entry.id" class="history-row flex justify-between group">
-                            <div class="flex gap-6">
-                                <span class="font-mono text-gray-300">{{entry.date}}</span>
-                                <div>
-                                    <p class="text-gray-800">{{entry.description}}</p>
-                                    <p class="text-[10px] text-gray-400 uppercase mt-1">Logged by {{entry.userName}}</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-4 items-center">
-                                <span class="font-semibold text-gold">{{entry.duration}}m</span>
-                                <button v-if="entry.userId == currentUserId" @click="deleteLog(entry.id)" class="text-red-200 opacity-0 group-hover:opacity-100 transition">×</button>
-                            </div>
-                        </div>
-                        <div v-if="filteredLogs.length === 0" class="py-20 text-center text-gray-300">기록된 업무가 없습니다.</div>
+            <section class="card min-h-[600px]">
+                <div v-if="selectedProject">
+                    <div class="flex justify-between items-end mb-12">
+                        <div><h2 class="font-serif text-3xl">{{selectedProject.name}}</h2><p class="text-gray-400 text-sm">Client: {{selectedProject.client}}</p></div>
+                        <div class="text-right text-3xl font-serif text-gold">{{Math.floor(currentProjectTotal / 60)}}h {{currentProjectTotal % 60}}m</div>
                     </div>
-                    <div v-else class="h-full flex items-center justify-center text-gray-300 italic font-serif">
-                        사건을 선택하면 세부 수행 내역이 표시됩니다.
+                    <div v-for="entry in filteredLogs" :key="entry.id" class="py-4 border-b flex justify-between text-sm">
+                        <div><span class="font-mono text-gray-300 mr-4">{{entry.date}}</span>{{entry.description}}</div>
+                        <div class="font-bold text-gold">{{entry.duration}}m</div>
                     </div>
                 </div>
+                <div v-else class="h-full flex items-center justify-center text-gray-300 italic">사건을 선택해 주세요.</div>
             </section>
         </main>
 
-        <!-- 사건 등록 모달 -->
-        <div v-if="showProjectModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
-            <div class="bg-white p-10 w-full max-w-md shadow-2xl">
+        <div v-if="showProjectModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
+            <div class="bg-white p-10 w-full max-w-md">
                 <h3 class="font-serif text-2xl mb-8">Register Case</h3>
-                <label class="form-label">Client Name</label><input v-model="projForm.client">
-                <label class="form-label">Case Title</label><input v-model="projForm.name">
-                <div class="flex gap-4 mt-4">
+                <input v-model="projForm.client" placeholder="Client Name">
+                <input v-model="projForm.name" placeholder="Case Title">
+                <div class="flex gap-4">
                     <button @click="addProject" class="btn-gold">Confirm</button>
-                    <button @click="showProjectModal = false" class="w-full text-xs uppercase tracking-widest">Cancel</button>
+                    <button @click="showProjectModal = false" class="text-xs">Cancel</button>
                 </div>
             </div>
         </div>
@@ -151,9 +93,7 @@
         createApp({
             data() {
                 return {
-                    userName: '', position: '', currentUserId: null,
-                    projects: [], logs: [], selectedProjectId: null,
-                    showProjectModal: false,
+                    userName: '', position: '', projects: [], logs: [], selectedProjectId: null, showProjectModal: false,
                     logForm: { projectId: '', date: new Date().toISOString().split('T')[0], duration: '', description: '' },
                     projForm: { name: '', client: '' }
                 }
@@ -169,24 +109,30 @@
                     this.projects = await pRes.json();
                     this.logs = (await lRes.json()).reverse();
                 },
-                async saveLog() {
-                    if(!this.logForm.projectId || !this.logForm.duration) return alert('필수 항목을 입력하세요.');
-                    await fetch('/api/timelogs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(this.logForm) });
-                    this.logForm.description = ''; this.logForm.duration = ''; this.fetchData();
-                },
                 async addProject() {
-                    if(!this.projForm.name) return;
-                    await fetch('/api/projects', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(this.projForm) });
-                    this.projForm = { name: '', client: '' }; this.showProjectModal = false; this.fetchData();
+                    if(!this.projForm.name || !this.projForm.client) return alert('모든 정보를 입력하세요.');
+                    const res = await fetch('/api/projects', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ name: this.projForm.name, client: this.projForm.client })
+                    });
+                    if(res.ok) {
+                        this.projForm = { name: '', client: '' };
+                        this.showProjectModal = false;
+                        await this.fetchData(); // 즉시 리스트 갱신
+                    }
                 },
-                async deleteLog(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/timelogs/${id}`, { method: 'DELETE' }); this.fetchData(); } },
+                async saveLog() {
+                    if(!this.logForm.projectId || !this.logForm.duration) return alert('입력 확인');
+                    await fetch('/api/timelogs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(this.logForm) });
+                    this.logForm.description = ''; this.fetchData();
+                },
                 logout() { fetch('/api/logout', {method:'POST'}).then(() => { localStorage.removeItem('user'); location.href='/login.html'; }); }
             },
             mounted() {
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 if(!user.name) location.href='/login.html';
-                this.userName = user.name; this.position = user.position; this.currentUserId = user.id;
-                this.fetchData();
+                this.userName = user.name; this.position = user.position; this.fetchData();
             }
         }).mount('#app')
     </script>
