@@ -7,13 +7,13 @@
     <title>High & Law | Admin Center</title>
     <meta name="robots" content="noindex, nofollow">
 
-    <!-- 파비콘 설정 -->
+    <!-- 파비콘 -->
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Quill 에디터 라이브러리 -->
+    <!-- Quill 에디터 -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
@@ -23,7 +23,7 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
     <style>
-        body { background-color: #f4f4f4; }
+        body { background-color: #f4f4f4; color: #1a1a1a; }
         .sidebar { background-color: #1a1a1a; color: white; border-right: 1px solid var(--gold-primary); }
         .nav-btn {
             width: 100%; text-align: left; padding: 15px 25px; font-size: 13px; font-weight: 500;
@@ -35,7 +35,7 @@
         }
         .nav-btn:hover { opacity: 1; background: rgba(255,255,255,0.05); }
 
-        .admin-card { background: white; border: 1px solid var(--border-color); padding: 30px; }
+        .admin-card { background: white; border: 1px solid var(--border-color); padding: 30px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
         
         input[type="text"], input[type="date"], select, textarea {
             width: 100%; padding: 10px 0; border: none; border-bottom: 1px solid var(--border-color);
@@ -45,28 +45,30 @@
 
         .btn-gold { 
             background: #1a1a1a; color: white; border: 1px solid var(--gold-primary); 
-            padding: 10px 20px; font-size: 12px; transition: 0.3s; cursor: pointer;
+            padding: 12px 24px; font-size: 11px; font-weight: 700; letter-spacing: 2px;
+            transition: 0.3s; cursor: pointer; text-transform: uppercase;
         }
         .btn-gold:hover { background: var(--gold-primary); color: #1a1a1a; }
 
-        .editor-wrapper { min-height: 400px; font-family: 'Inter', sans-serif; background: white; }
+        .editor-wrapper { min-height: 400px; font-family: 'Inter', sans-serif; background: white; border: 1px solid #eee; }
         .sidebar-logo { filter: brightness(0) invert(1); width: 100%; height: auto; display: block; }
         
-        .ql-snow .ql-picker.ql-font, .ql-snow .ql-picker.ql-size { width: 100px; }
-
-        /* 뉴스 파일 업로드 드롭존 스타일 */
         .drop-zone {
             border: 2px dashed #ddd; transition: 0.3s; cursor: pointer;
             text-align: center; padding: 40px 20px; background: #fff;
         }
         .drop-zone.active { border-color: var(--gold-primary); background: rgba(197, 160, 89, 0.05); }
+
+        /* 모달 스타일 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+        .modal-body { background: white; padding: 40px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
     </style>
 </head>
 <body class="min-h-screen flex">
 
     <div id="app" class="flex w-full">
         <!-- Sidebar -->
-        <aside class="sidebar w-64 fixed h-full flex flex-col">
+        <aside class="sidebar w-64 fixed h-full flex flex-col z-50">
             <div class="p-6 border-b border-white/10">
                 <img src="/logo.png" alt="High & Law" class="sidebar-logo">
                 <p class="text-[9px] uppercase tracking-widest opacity-50 mt-3 text-center">Management System</p>
@@ -84,10 +86,57 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="ml-64 flex-1 p-12">
+        <main class="ml-64 flex-1 p-12 min-h-screen">
             
-            <!-- 0. 구성원 승인 관리 (isAdmin 토글 복구) -->
-            <div v-show="tab === 'users'">
+            <!-- 1. 상담 신청 관리 -->
+            <div v-if="tab === 'inquiry'">
+                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Inquiry Management</h2>
+                <div class="admin-card overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-[11px] uppercase tracking-widest text-[#c5a059] border-b-2 border-[#f4eee0]">
+                                <th class="pb-4">접수일</th><th class="pb-4">신청자</th><th class="pb-4">연락처</th><th class="pb-4 text-center">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr v-for="item in inquiries" :key="item.id" class="hover:bg-gray-50 transition text-sm">
+                                <td class="py-4 text-xs text-gray-400">{{ item.created_at }}</td>
+                                <td class="py-4 font-bold text-gray-800">{{ item.name }}</td>
+                                <td class="py-4">{{ item.phone }}</td>
+                                <td class="py-4 text-center space-x-3">
+                                    <button @click="viewInquiryDetail(item)" class="text-blue-500 hover:underline font-bold">상세</button>
+                                    <button @click="deleteInquiry(item.id)" class="text-red-400 hover:text-red-700 font-bold">삭제</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 상담 상세 모달 -->
+                <div v-if="selectedInquiry" class="modal-overlay" @click.self="selectedInquiry = null">
+                    <div class="modal-body">
+                        <button @click="selectedInquiry = null" class="absolute top-4 right-4 text-2xl">&times;</button>
+                        <h3 class="text-xl font-bold mb-4 border-b pb-2 text-gold-primary">Inquiry Detail</h3>
+                        <div class="space-y-4 text-sm">
+                            <p><strong>이름:</strong> {{ selectedInquiry.name }}</p>
+                            <p><strong>연락처:</strong> {{ selectedInquiry.phone }}</p>
+                            <p><strong>내용:</strong></p>
+                            <div class="bg-gray-50 p-4 border whitespace-pre-wrap">{{ selectedInquiry.summary }}</div>
+                            <div v-if="selectedInquiry.files && selectedInquiry.files.length > 0">
+                                <p><strong>첨부파일:</strong></p>
+                                <ul class="list-disc pl-5">
+                                    <li v-for="file in selectedInquiry.files">
+                                        <a :href="'/uploads/'+file" target="_blank" class="text-blue-500 underline">{{ file }}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 구성원 승인 관리 -->
+            <div v-if="tab === 'users'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Member Approval</h2>
                 <div class="admin-card overflow-hidden">
                     <table class="w-full text-left">
@@ -112,9 +161,9 @@
                                         <option :selected="!user.isAdmin" value="false">NO</option>
                                     </select>
                                 </td>
-                                <td class="py-4 text-center space-x-2">
-                                    <button v-if="user.status !== 'active'" @click="updateUserStatus(user.id, {status: 'active'})" class="text-blue-500 hover:underline font-bold">승인</button>
-                                    <button @click="deleteUser(user.id)" class="text-red-400 hover:text-red-700 font-bold text-xs">삭제</button>
+                                <td class="py-4 text-center">
+                                    <button v-if="user.status !== 'active'" @click="updateUserStatus(user.id, {status: 'active'})" class="text-blue-500 font-bold mr-2">승인</button>
+                                    <button @click="deleteUser(user.id)" class="text-red-400 font-bold">삭제</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -122,36 +171,11 @@
                 </div>
             </div>
 
-            <!-- 1. 상담 신청 관리 (상세 보기 기능 복구) -->
-            <div v-show="tab === 'inquiry'">
-                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Inquiry Management</h2>
-                <div class="admin-card overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="text-[11px] uppercase tracking-widest text-[#c5a059] border-b-2 border-[#f4eee0]">
-                                <th class="pb-4">접수일</th><th class="pb-4">신청자</th><th class="pb-4">연락처</th><th class="pb-4 text-center">관리</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="item in inquiries" :key="item.id" class="hover:bg-gray-50 transition text-sm">
-                                <td class="py-4 text-xs text-gray-400">{{ item.created_at }}</td>
-                                <td class="py-4 font-bold text-gray-800">{{ item.name }}</td>
-                                <td class="py-4">{{ item.phone }}</td>
-                                <td class="py-4 text-center space-x-3">
-                                    <button @click="viewInquiryDetail(item)" class="text-blue-500 hover:underline font-bold">상세</button>
-                                    <button @click="deleteInquiry(item.id)" class="text-red-400 hover:text-red-700 font-bold">삭제</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- 2. 메인 비주얼 관리 (순서 변경 기능 복구) -->
-            <div v-show="tab === 'hero'">
+            <!-- 3. 메인 비주얼 관리 -->
+            <div v-if="tab === 'hero'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Main Visual Management</h2>
                 <div class="admin-card mb-10">
-                    <p class="text-[11px] font-bold text-gold-primary uppercase mb-4 tracking-widest">Add New Media</p>
+                    <p class="text-[11px] font-bold text-gold-primary uppercase mb-4 tracking-widest">Upload New Hero Media</p>
                     <input type="file" ref="heroFile" class="text-sm mb-4 block w-full">
                     <button @click="uploadHero" class="btn-gold w-full py-4 uppercase">SAVE POST</button>
                 </div>
@@ -165,22 +189,19 @@
                         </div>
                         <div class="mt-4 flex justify-between items-center">
                             <div class="flex gap-1">
-                                <button @click="moveHero(idx, -1)" class="p-2 bg-gray-100 hover:bg-gold-primary rounded transition" :disabled="idx === 0">▲</button>
-                                <button @click="moveHero(idx, 1)" class="p-2 bg-gray-100 hover:bg-gold-primary rounded transition" :disabled="idx === heroList.length - 1">▼</button>
+                                <button @click="moveHero(idx, -1)" class="p-2 bg-gray-100 hover:bg-gold-primary rounded" :disabled="idx === 0">▲</button>
+                                <button @click="moveHero(idx, 1)" class="p-2 bg-gray-100 hover:bg-gold-primary rounded" :disabled="idx === heroList.length - 1">▼</button>
                             </div>
-                            <button @click="deleteHero(media.id)" class="text-red-400 hover:text-red-600 text-xs font-bold">Delete</button>
+                            <button @click="deleteHero(media.id)" class="text-red-400 text-xs font-bold">Delete</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. 뉴스 관리 (D&D 통합 및 순서 제어 복구) -->
-            <div v-show="tab === 'news'">
+            <!-- 4. 뉴스/성공사례 관리 -->
+            <div v-if="tab === 'news'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News Management</h2>
                 <div class="admin-card mb-8">
-                    <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">
-                        {{ newsForm.id ? 'Edit Post' : 'New Post' }}
-                    </p>
                     <div class="space-y-6">
                         <div class="grid grid-cols-2 gap-6">
                             <select v-model="newsForm.category">
@@ -201,7 +222,7 @@
                                 <input type="file" ref="newsFiles" multiple class="hidden" @change="handleNewsFileSelect">
                             </div>
 
-                            <!-- 파일 리스트 및 순서 제어 복구 -->
+                            <!-- 파일 리스트 및 순서 제어 -->
                             <div class="space-y-2">
                                 <div v-for="(file, idx) in newsForm.attachments" :key="idx" class="flex items-center justify-between bg-white p-3 border rounded text-xs shadow-sm">
                                     <div class="flex items-center gap-3 truncate">
@@ -232,8 +253,8 @@
                 </div>
             </div>
 
-            <!-- 4. 구성원 관리 (멀티라인 복구) -->
-            <div v-show="tab === 'partner'">
+            <!-- 5. 구성원 관리 -->
+            <div v-if="tab === 'partner'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Partner Management</h2>
                 <div class="admin-card mb-8">
                     <div class="space-y-6">
@@ -248,22 +269,25 @@
                         <button @click="savePartner" class="btn-gold w-full py-4 uppercase">SAVE POST</button>
                     </div>
                 </div>
-                <div v-for="p in partners" :key="p.id" class="admin-card py-2 flex justify-between mb-2">
+                <div v-for="p in partners" :key="p.id" class="admin-card py-2 flex justify-between mb-2 items-center">
                     <span class="text-sm">{{p.name}} ({{p.title}})</span>
-                    <button @click="editPartner(p)" class="text-blue-500 text-xs">수정</button>
+                    <div class="flex gap-2">
+                        <button @click="editPartner(p)" class="text-blue-500 text-xs">수정</button>
+                        <button @click="deletePartner(p.id)" class="text-red-400 text-xs">삭제</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- 5. 채용 관리 (상시채용 상태 + 상세공고 리스트 통합 복구) -->
-            <div v-show="tab === 'recruit'">
-                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment Integration</h2>
+            <!-- 6. 채용 정보 통합 관리 -->
+            <div v-if="tab === 'recruit'">
+                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment</h2>
                 
                 <div class="admin-card mb-10">
-                    <h3 class="text-[11px] font-bold text-gold-primary uppercase mb-6 tracking-widest">상시 채용 분야 설정</h3>
+                    <h3 class="text-[11px] font-bold text-gold-primary uppercase mb-6 tracking-widest">상시 채용 오픈 설정</h3>
                     <div class="grid grid-cols-2 gap-4">
                         <div v-for="r in recruitStatus" :key="r.role_id" class="flex justify-between items-center p-4 border rounded bg-gray-50">
                             <span class="text-sm font-bold">{{ r.role_id }}</span>
-                            <select v-model="r.status" @change="updateRecruitStatus(r.role_id, r.status)" class="!w-auto text-xs">
+                            <select v-model="r.status" @change="updateRecruitStatus(r.role_id, r.status)" class="!w-auto text-xs px-2">
                                 <option value="status-open">OPEN</option>
                                 <option value="status-closed">CLOSED</option>
                             </select>
@@ -273,7 +297,7 @@
 
                 <div class="admin-card">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-[11px] font-bold text-gold-primary uppercase tracking-widest">상세 채용 공고</h3>
+                        <h3 class="text-[11px] font-bold text-gold-primary uppercase tracking-widest">상세 채용 공고 리스트</h3>
                         <button @click="openJobForm" class="btn-gold text-[10px]">NEW JOB POST</button>
                     </div>
                     <table class="w-full text-left text-sm">
@@ -287,8 +311,8 @@
                 </div>
             </div>
 
-            <!-- 채용 공고 편집 (Quill 복구) -->
-            <div v-show="tab === 'jobs_edit'">
+            <!-- 채용 공고 편집 폼 (Quill) -->
+            <div v-if="tab === 'jobs_edit'">
                 <h2 class="text-2xl font-normal mb-8">Edit Job Post</h2>
                 <div class="admin-card space-y-6">
                     <div class="grid grid-cols-2 gap-6">
@@ -303,6 +327,7 @@
                     <div id="job-editor" class="editor-wrapper"></div>
                     <input type="file" ref="jobFiles" multiple class="text-xs block w-full">
                     <button @click="saveJob" class="btn-gold w-full py-4 uppercase">SAVE POST</button>
+                    <button @click="tab = 'recruit'" class="w-full text-gray-400 text-xs mt-2">CANCEL</button>
                 </div>
             </div>
 
@@ -316,65 +341,56 @@
         createApp({
             data() {
                 return {
-                    tab: 'inquiry', inquiries: [], newsList: [], userList: [], heroList: [], partners: [], 
-                    recruitStatus: [], jobList: [], dragActive: false,
-                    newsForm: { id: null, category: 'H&L News', title: '', attachments: [] },
-                    partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '' },
-                    jobForm: { id: null, category: '변호사 채용', title: '', deadline: '', content: '' }
+                    tab: 'inquiry', 
+                    inquiries: [], selectedInquiry: null,
+                    newsList: [], newsForm: { id: null, category: 'H&L News', title: '', attachments: [] },
+                    userList: [], 
+                    heroList: [], 
+                    partners: [], partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '' },
+                    recruitStatus: [], jobList: [], jobForm: { id: null, category: '변호사 채용', title: '', deadline: '', content: '' },
+                    dragActive: false
                 }
             },
             methods: {
                 setTab(name) { 
                     this.tab = name; 
                     this.initQuill(); 
+                    if(name === 'inquiry') this.fetchInquiries();
                     if(name === 'users') this.fetchUsers();
                     if(name === 'hero') this.fetchHero();
+                    if(name === 'news') this.fetchNews();
+                    if(name === 'partner') this.fetchPartners();
                     if(name === 'recruit') this.fetchRecruitData();
                 },
                 initQuill() {
                     setTimeout(() => {
-                        const toolbar = [['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link', 'image']];
+                        const toolbar = [
+                            [{ 'header': [1, 2, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link', 'image', 'video'],
+                            ['clean']
+                        ];
                         if (this.tab === 'news' && !newsQuill) newsQuill = new Quill('#news-editor', { theme: 'snow', modules: { toolbar } });
                         if (this.tab === 'jobs_edit' && !jobQuill) jobQuill = new Quill('#job-editor', { theme: 'snow', modules: { toolbar } });
                     }, 100);
                 },
-                // 뉴스 파일 관리 (D&D 및 순서)
-                handleNewsFileSelect(e) { this.addFiles(e.target.files); },
-                handleNewsDrop(e) { this.dragActive = false; this.addFiles(e.dataTransfer.files); },
-                addFiles(files) {
-                    for (let f of files) this.newsForm.attachments.push({ originalname: f.name, isNew: true, fileObj: f });
-                },
-                moveNewsAttachment(idx, dir) {
-                    const target = idx + dir;
-                    const items = this.newsForm.attachments;
-                    [items[idx], items[target]] = [items[target], items[idx]];
-                },
-                removeNewsAttachment(idx) { this.newsForm.attachments.splice(idx, 1); },
-                
-                async saveNews() {
-                    const fd = new FormData();
-                    if(this.newsForm.id) fd.append('id', this.newsForm.id);
-                    fd.append('category', this.newsForm.category);
-                    fd.append('title', this.newsForm.title);
-                    fd.append('content', newsQuill.root.innerHTML);
-                    const existing = this.newsForm.attachments.filter(a => !a.isNew);
-                    fd.append('existingAttachments', JSON.stringify(existing));
-                    this.newsForm.attachments.filter(a => a.isNew).forEach(a => fd.append('attachments', a.fileObj));
-                    
-                    const res = await fetch('/api/news', { method: 'POST', body: fd });
-                    if(res.ok) { alert('저장 완료'); this.resetNewsForm(); this.fetchNews(); }
-                },
-                editNews(item) {
-                    this.newsForm = { id: item.id, category: item.category, title: item.title, attachments: item.attachments || [] };
-                    if(newsQuill) newsQuill.root.innerHTML = item.content;
-                    window.scrollTo({top:0, behavior:'smooth'});
-                },
-                resetNewsForm() { this.newsForm = { id: null, category: 'H&L News', title: '', attachments: [] }; if(newsQuill) newsQuill.setContents([]); },
+
+                // 상담 관리
+                async fetchInquiries() { const res = await fetch('/api/admin/inquiries'); this.inquiries = await res.json(); },
+                viewInquiryDetail(item) { this.selectedInquiry = item; },
+                async deleteInquiry(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' }); this.fetchInquiries(); } },
+
+                // 사용자 관리
+                async fetchUsers() { const res = await fetch('/api/admin/users'); this.userList = await res.json(); },
+                async updateUserStatus(userId, payload) { await fetch('/api/admin/users/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId, ...payload }) }); this.fetchUsers(); },
+                async deleteUser(id) { if(confirm('삭제?')) { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); this.fetchUsers(); } },
 
                 // 히어로 관리
+                async fetchHero() { const res = await fetch('/api/public/hero'); this.heroList = await res.json(); },
                 async uploadHero() {
                     const file = this.$refs.heroFile.files[0];
-                    if(!file) return alert('파일 선택');
+                    if(!file) return alert('파일을 선택하세요.');
                     const fd = new FormData(); fd.append('heroFile', file);
                     await fetch('/api/admin/hero', { method: 'POST', body: fd });
                     this.fetchHero();
@@ -388,13 +404,41 @@
                 },
                 async deleteHero(id) { if(confirm('삭제?')) { await fetch(`/api/admin/hero/${id}`, { method: 'DELETE' }); this.fetchHero(); } },
 
-                // 기타 기능
-                async fetchInquiries() { const res = await fetch('/api/admin/inquiries'); this.inquiries = await res.json(); },
-                viewInquiryDetail(item) { alert(`[내용]\n${item.summary}\n\n[파일]\n${item.files.join(', ')}`); },
-                async deleteInquiry(id) { if(confirm('삭제?')) { await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' }); this.fetchInquiries(); } },
-                async fetchUsers() { const res = await fetch('/api/admin/users'); this.userList = await res.json(); },
-                async updateUserStatus(userId, payload) { await fetch('/api/admin/users/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId, ...payload }) }); this.fetchUsers(); },
-                async deleteUser(id) { if(confirm('삭제?')) { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); this.fetchUsers(); } },
+                // 뉴스 관리
+                async fetchNews() { const res = await fetch('/api/public/news'); this.newsList = await res.json(); },
+                handleNewsFileSelect(e) { this.addNewsFiles(e.target.files); },
+                handleNewsDrop(e) { this.dragActive = false; this.addNewsFiles(e.dataTransfer.files); },
+                addNewsFiles(files) {
+                    for (let f of files) this.newsForm.attachments.push({ originalname: f.name, isNew: true, fileObj: f });
+                },
+                moveNewsAttachment(idx, dir) {
+                    const target = idx + dir;
+                    const items = this.newsForm.attachments;
+                    [items[idx], items[target]] = [items[target], items[idx]];
+                },
+                removeNewsAttachment(idx) { this.newsForm.attachments.splice(idx, 1); },
+                async saveNews() {
+                    const fd = new FormData();
+                    if(this.newsForm.id) fd.append('id', this.newsForm.id);
+                    fd.append('category', this.newsForm.category);
+                    fd.append('title', this.newsForm.title);
+                    fd.append('content', newsQuill.root.innerHTML);
+                    const existing = this.newsForm.attachments.filter(a => !a.isNew);
+                    fd.append('existingAttachments', JSON.stringify(existing));
+                    this.newsForm.attachments.filter(a => a.isNew).forEach(a => fd.append('attachments', a.fileObj));
+                    
+                    const res = await fetch('/api/news', { method: 'POST', body: fd });
+                    if(res.ok) { alert('SAVE POST COMPLETED'); this.resetNewsForm(); this.fetchNews(); }
+                },
+                editNews(item) {
+                    this.newsForm = { id: item.id, category: item.category, title: item.title, attachments: item.attachments || [] };
+                    if(newsQuill) newsQuill.root.innerHTML = item.content;
+                    window.scrollTo({top:0, behavior:'smooth'});
+                },
+                resetNewsForm() { this.newsForm = { id: null, category: 'H&L News', title: '', attachments: [] }; if(newsQuill) newsQuill.setContents([]); },
+                async deleteNews(id) { if(confirm('삭제?')) { await fetch(`/api/news/${id}`, { method: 'DELETE' }); this.fetchNews(); } },
+
+                // 파트너 관리
                 async fetchPartners() { const res = await fetch('/api/public/partners'); this.partners = await res.json(); },
                 async savePartner() {
                     const fd = new FormData();
@@ -402,13 +446,16 @@
                     fd.append('name', this.partnerForm.name); fd.append('engName', this.partnerForm.engName);
                     fd.append('title', this.partnerForm.title); fd.append('edu', this.partnerForm.edu); fd.append('exp', this.partnerForm.exp);
                     if(this.$refs.partnerPhoto.files[0]) fd.append('photo', this.$refs.partnerPhoto.files[0]);
-                    await fetch('/api/admin/partners', { method: 'POST', body: fd });
-                    this.fetchPartners();
+                    const res = await fetch('/api/admin/partners', { method: 'POST', body: fd });
+                    if(res.ok) { alert('SAVE POST COMPLETED'); this.partnerForm = { id: null, name: '', engName: '', title: '', edu: '', exp: '' }; this.fetchPartners(); }
                 },
                 editPartner(p) { this.partnerForm = { id: p.id, name: p.name, engName: p.engName, title: p.title, edu: p.edu.join('\n'), exp: p.exp.join('\n') }; },
+                async deletePartner(id) { if(confirm('삭제?')) { await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' }); this.fetchPartners(); } },
+
+                // 채용 관리
                 async fetchRecruitData() {
-                    const [r1, r2] = await Promise.all([fetch('/api/public/recruit'), fetch('/api/public/jobs')]);
-                    this.recruitStatus = await r1.json(); this.jobList = await r2.json();
+                    const [res1, res2] = await Promise.all([fetch('/api/public/recruit'), fetch('/api/public/jobs')]);
+                    this.recruitStatus = await res1.json(); this.jobList = await res2.json();
                 },
                 async updateRecruitStatus(id, status) { await fetch('/api/recruit/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id, status }) }); },
                 openJobForm() { this.tab = 'jobs_edit'; this.initQuill(); },
@@ -418,12 +465,12 @@
                     fd.append('deadline', this.jobForm.deadline); fd.append('content', jobQuill.root.innerHTML);
                     const files = this.$refs.jobFiles.files;
                     for (let f of files) fd.append('jobAttachments', f);
-                    await fetch('/api/admin/jobs', { method: 'POST', body: fd });
-                    this.setTab('recruit');
+                    const res = await fetch('/api/admin/jobs', { method: 'POST', body: fd });
+                    if(res.ok) { alert('SAVE POST COMPLETED'); this.setTab('recruit'); }
                 },
                 async deleteJob(id) { if(confirm('삭제?')) { await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' }); this.fetchRecruitData(); } }
             },
-            mounted() { this.fetchInquiries(); this.fetchNews(); this.fetchPartners(); }
+            mounted() { this.fetchInquiries(); }
         }).mount('#app')
     </script>
 </body>
