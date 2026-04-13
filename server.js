@@ -2,8 +2,8 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs-extra');
 const multer = require('multer');
-const bcrypt = require('bcryptjs'); // 추가
-const session = require('express-session'); // 추가
+const bcrypt = require('bcryptjs'); 
+const session = require('express-session'); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,7 +13,7 @@ const DB_FILE = path.join(__dirname, 'db.json');
 const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
 
 /**
- * [기능] 채용 공고 자동 삭제 로직 (기존 유지)
+ * [기능] 채용 공고 자동 삭제 로직
  */
 async function cleanExpiredJobs() {
     try {
@@ -37,7 +37,7 @@ async function cleanExpiredJobs() {
     }
 }
 
-// 초기화: 폴더 및 DB 파일 생성 (신규 필드 추가)
+// 초기화: 폴더 및 DB 파일 생성
 async function initDB() {
     try {
         await fs.ensureDir(UPLOAD_DIR);
@@ -55,9 +55,9 @@ async function initDB() {
                 jobs: [],
                 inquiries: [],
                 heroMedia: [],
-                users: [],      // 회원가입 정보용 추가
-                projects: [],   // 사건/프로젝트용 추가
-                timelogs: []    // 업무 기록용 추가
+                users: [],      
+                projects: [],   
+                timelogs: []    
             };
             await fs.writeJson(DB_FILE, initialData);
         } else {
@@ -65,7 +65,7 @@ async function initDB() {
             let updated = false;
             if (!db.partners) { db.partners = []; updated = true; }
             if (!db.heroMedia) { db.heroMedia = []; updated = true; }
-            if (!db.users) { db.users = []; updated = true; } // 필드 보강
+            if (!db.users) { db.users = []; updated = true; } 
             if (!db.projects) { db.projects = []; updated = true; }
             if (!db.timelogs) { db.timelogs = []; updated = true; }
             if (updated) await fs.writeJson(DB_FILE, db);
@@ -82,12 +82,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
-// 세션 설정 (로그인 상태 유지용)
+// 세션 설정
 app.use(session({
     secret: 'highlaw-secret-key-999',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 24 } // 24시간
+    cookie: { maxAge: 1000 * 60 * 60 * 24 } 
 }));
 
 const storage = multer.diskStorage({
@@ -98,7 +98,12 @@ const storage = multer.diskStorage({
         cb(null, uniqueSuffix + '-' + decodedName);
     }
 });
-const upload = multer({ storage: storage });
+
+// [수정됨] 대용량 파일(영상 등) 업로드를 위해 용량 제한을 500MB로 상향 조정
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 500 * 1024 * 1024 } 
+});
 
 /* --- 권한 체크 미들웨어 --- */
 const authRequired = (req, res, next) => {
@@ -111,7 +116,7 @@ const adminRequired = (req, res, next) => {
     else res.status(403).send("관리자 권한이 없습니다.");
 };
 
-/* --- 네이버 SEO: RSS Feed API (기존 유지) --- */
+/* --- 네이버 SEO: RSS Feed API --- */
 app.get('/rss.xml', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -131,7 +136,7 @@ app.get('/rss.xml', async (req, res) => {
     } catch (e) { res.status(500).send("RSS error"); }
 });
 
-/* --- 공용 API (기존 유지) --- */
+/* --- 공용 API --- */
 app.get('/api/public/hero', async (req, res) => {
     try { const db = await fs.readJson(DB_FILE); res.json(db.heroMedia || []); } catch (e) { res.status(500).json([]); }
 });
@@ -158,15 +163,12 @@ app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
 });
 
 /* --- 로그인 및 회원관리 API --- */
-
 app.post('/api/login', async (req, res) => {
     const { id, pw } = req.body;
-    // 1. 마스터 관리자 체크
     if (id === 'admin' && pw === 'highlaw123!') {
         req.session.user = { id: 'master', name: '최고관리자', isAdmin: true, position: '관리자' };
         return res.status(200).json({ name: '관리자', isAdmin: true, position: '관리자' });
     }
-    // 2. DB 사용자 체크
     try {
         const db = await fs.readJson(DB_FILE);
         const user = db.users.find(u => u.loginId === id);
@@ -225,8 +227,7 @@ app.delete('/api/admin/users/:id', adminRequired, async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 타임트랙(사건 및 업무기록) API --- */
-
+/* --- 타임트랙 API --- */
 app.get('/api/projects', authRequired, async (req, res) => {
     try { const db = await fs.readJson(DB_FILE); res.json(db.projects || []); } catch (e) { res.status(500).json([]); }
 });
@@ -286,7 +287,6 @@ app.delete('/api/timelogs/:id', authRequired, async (req, res) => {
 
 /* --- 관리자 전용 API --- */
 
-// 메인 비주얼 순서 재정렬 API (추가됨)
 app.post('/api/admin/hero/reorder', adminRequired, async (req, res) => {
     try {
         const { heroMedia } = req.body;
@@ -297,15 +297,62 @@ app.post('/api/admin/hero/reorder', adminRequired, async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
+// [수정됨] 뉴스 게시글 저장 로직: 드래그 앤 드롭 순서 유지 및 기존 파일 관리 지원
 app.post('/api/news', adminRequired, upload.array('attachments'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
-        const attachments = req.files ? req.files.map(f => ({ filename: f.filename, originalname: f.originalname, mimetype: f.mimetype })) : [];
-        const newNews = { id: Date.now(), category: req.body.category, title: req.body.title, content: req.body.content, attachments: attachments, created_at: new Date().toISOString().split('T')[0] };
+        const { id, category, title, content, existingAttachments } = req.body;
+        
+        // 1. 순서가 변경되거나 일부 삭제된 기존 파일 리스트 파싱
+        let finalAttachments = [];
+        if (existingAttachments) {
+            try {
+                finalAttachments = JSON.parse(existingAttachments);
+            } catch (err) {
+                finalAttachments = [];
+            }
+        }
+
+        // 2. 새로 업로드된 파일 정보 추출 및 추가
+        const newAttachments = req.files ? req.files.map(f => ({ 
+            filename: f.filename, 
+            originalname: Buffer.from(f.originalname, 'latin1').toString('utf8'), 
+            mimetype: f.mimetype 
+        })) : [];
+
+        // 기존 파일 리스트 뒤에 신규 파일들을 순차적으로 결합
+        finalAttachments = [...finalAttachments, ...newAttachments];
+
+        // 3. ID가 있는 경우: 기존 게시글 수정
+        if (id && id !== "null" && id !== "undefined") {
+            const index = db.news.findIndex(n => n.id == id);
+            if (index > -1) {
+                db.news[index].category = category;
+                db.news[index].title = title;
+                db.news[index].content = content;
+                db.news[index].attachments = finalAttachments; // 업데이트된 전체 파일 리스트 저장
+                
+                await fs.writeJson(DB_FILE, db);
+                return res.json(db.news[index]);
+            }
+        }
+
+        // 4. ID가 없는 경우: 신규 게시글 등록
+        const newNews = { 
+            id: Date.now(), 
+            category, 
+            title, 
+            content, 
+            attachments: finalAttachments, 
+            created_at: new Date().toISOString().split('T')[0] 
+        };
         db.news.push(newNews);
         await fs.writeJson(DB_FILE, db);
         res.json(newNews);
-    } catch (e) { res.status(500).send("Error"); }
+    } catch (e) { 
+        console.error(e);
+        res.status(500).send("Error"); 
+    }
 });
 
 app.delete('/api/news/:id', adminRequired, async (req, res) => {

@@ -54,6 +54,16 @@
         .ql-container.ql-snow { border: none; min-height: 350px; font-size: 16px; }
 
         .sidebar-logo { filter: brightness(0) invert(1); width: 100%; height: auto; display: block; }
+        
+        /* 에디터 내 폰트 및 크기 선택 도구 가시성 확보 */
+        .ql-snow .ql-picker.ql-font, .ql-snow .ql-picker.ql-size { width: 100px; }
+
+        /* 뉴스 파일 업로드 드롭존 스타일 */
+        .drop-zone {
+            border: 2px dashed #ddd; transition: 0.3s; cursor: pointer;
+            text-align: center; padding: 40px 20px; background: #fff;
+        }
+        .drop-zone.active { border-color: var(--gold-primary); background: rgba(197, 160, 89, 0.05); }
     </style>
 </head>
 <body class="min-h-screen flex">
@@ -142,7 +152,7 @@
                 </div>
             </div>
 
-            <!-- 2. 메인 비주얼 관리 (강화됨) -->
+            <!-- 2. 메인 비주얼 관리 -->
             <div v-show="tab === 'hero'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Main Visual Management</h2>
                 <div class="admin-card mb-10">
@@ -169,13 +179,13 @@
                 </div>
             </div>
 
-            <!-- 3. 뉴스 관리 -->
+            <!-- 3. 뉴스 관리 (드래그 앤 드롭 및 순서 변경 강화) -->
             <div v-show="tab === 'news'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News Management</h2>
                 <div class="space-y-8">
                     <div class="admin-card">
                         <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">
-                            {{ newsForm.id ? '수정하기' : '신규 등록' }}
+                            {{ newsForm.id ? '수정하기 (Editing Post)' : '신규 등록 (New Post)' }}
                         </p>
                         <div class="space-y-6">
                             <div class="grid grid-cols-2 gap-6">
@@ -187,7 +197,41 @@
                                 <input v-model="newsForm.title" type="text" placeholder="제목">
                             </div>
                             <div id="news-editor" class="editor-wrapper"></div>
-                            <input type="file" ref="newsFiles" multiple class="text-xs block w-full">
+                            
+                            <!-- 첨부파일 매니저 (드래그 앤 드롭 지원) -->
+                            <div class="bg-gray-50 p-6 border rounded">
+                                <p class="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-widest">File Management (Image, Video, Documents)</p>
+                                
+                                <div 
+                                    class="drop-zone mb-6"
+                                    :class="{ active: dragActive }"
+                                    @dragover.prevent="dragActive = true"
+                                    @dragleave.prevent="dragActive = false"
+                                    @drop.prevent="handleNewsDrop"
+                                    @click="$refs.newsFiles.click()"
+                                >
+                                    <span class="text-xs text-gray-400">파일을 이 곳에 드래그하거나 클릭하여 추가하세요.</span>
+                                    <input type="file" ref="newsFiles" multiple class="hidden" @change="handleNewsFileSelect">
+                                </div>
+
+                                <!-- 파일 리스트 및 순서 제어 -->
+                                <div class="space-y-2">
+                                    <div v-for="(file, idx) in newsForm.attachments" :key="idx" class="flex items-center justify-between bg-white p-3 border rounded text-sm shadow-sm">
+                                        <div class="flex items-center gap-3 truncate">
+                                            <span class="text-[10px] font-bold text-gold-primary">#{{ idx + 1 }}</span>
+                                            <span class="truncate">{{ file.originalname || file.filename }}</span>
+                                            <span v-if="file.isNew" class="text-[9px] bg-blue-100 text-blue-600 px-1 rounded">NEW</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <button @click="moveNewsAttachment(idx, -1)" :disabled="idx === 0" class="text-gray-400 hover:text-black disabled:opacity-10">▲</button>
+                                            <button @click="moveNewsAttachment(idx, 1)" :disabled="idx === newsForm.attachments.length - 1" class="text-gray-400 hover:text-black disabled:opacity-10">▼</button>
+                                            <button @click="removeNewsAttachment(idx)" class="text-red-400 hover:text-red-600 ml-2">✕</button>
+                                        </div>
+                                    </div>
+                                    <div v-if="newsForm.attachments.length === 0" class="text-center py-4 text-xs text-gray-300 italic">첨부된 파일이 없습니다.</div>
+                                </div>
+                            </div>
+
                             <div class="flex gap-4">
                                 <button @click="saveNews" class="btn-gold flex-1 py-4 uppercase">Save Post</button>
                                 <button v-if="newsForm.id" @click="resetNewsForm" class="bg-gray-100 px-8 text-xs uppercase">Cancel</button>
@@ -197,8 +241,8 @@
                     <div v-for="item in newsList" :key="item.id" class="admin-card flex justify-between items-center py-4">
                         <span class="text-sm">{{ item.title }}</span>
                         <div class="flex gap-3">
-                            <button @click="editNews(item)" class="text-blue-500 text-xs">수정</button>
-                            <button @click="deleteNews(item.id)" class="text-red-300 text-xs">삭제</button>
+                            <button @click="editNews(item)" class="text-blue-500 text-xs font-bold">수정</button>
+                            <button @click="deleteNews(item.id)" class="text-red-300 text-xs font-bold">삭제</button>
                         </div>
                     </div>
                 </div>
@@ -226,7 +270,7 @@
                 </div>
             </div>
 
-            <!-- 5. 채용 정보 통합 관리 (강화됨) -->
+            <!-- 5. 채용 정보 통합 관리 -->
             <div v-show="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment Integration</h2>
                 
@@ -269,7 +313,7 @@
                 </div>
             </div>
 
-            <!-- 상세 공고 폼 (채용 관리 탭 안의 서브 뷰) -->
+            <!-- 상세 공고 폼 -->
             <div v-show="tab === 'jobs_edit'">
                 <h2 class="text-2xl font-normal mb-8">Edit Job Post</h2>
                 <div class="admin-card">
@@ -303,12 +347,14 @@
             data() {
                 return {
                     tab: 'inquiry', inquiries: [], 
-                    newsList: [], newsForm: { id: null, category: 'H&L News', title: '' },
+                    newsList: [], 
+                    newsForm: { id: null, category: 'H&L News', title: '', attachments: [] },
+                    dragActive: false,
                     partners: [], partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '' },
                     userList: [],
-                    heroList: [], // 히어로 미디어 리스트
-                    recruitStatus: [], // 상시 채용 상태
-                    jobList: [], // 상세 공고 리스트
+                    heroList: [], 
+                    recruitStatus: [], 
+                    jobList: [], 
                     jobForm: { id: null, category: '변호사 채용', title: '', deadline: '', content: '' }
                 }
             },
@@ -322,7 +368,15 @@
                 },
                 initQuill() {
                     setTimeout(() => {
-                        const toolbarOptions = [[{ 'header': 1 }, { 'header': 2 }], ['bold', 'italic', 'underline'], ['link', 'image'], ['clean']];
+                        const toolbarOptions = [
+                            [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'header': 1 }, { 'header': 2 }],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link', 'image', 'video'],
+                            ['clean']
+                        ];
                         if (this.tab === 'news' && !newsQuill) {
                             newsQuill = new Quill('#news-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                         }
@@ -332,7 +386,82 @@
                     }, 100);
                 },
 
-                /* 메인 비주얼 관리 메서드 */
+                /* --- 뉴스 관리 메서드 (파일 순서 및 드래그 앤 드롭 지원) --- */
+                handleNewsFileSelect(e) {
+                    this.addNewsFiles(e.target.files);
+                },
+                handleNewsDrop(e) {
+                    this.dragActive = false;
+                    this.addNewsFiles(e.dataTransfer.files);
+                },
+                addNewsFiles(files) {
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        this.newsForm.attachments.push({
+                            originalname: file.name,
+                            mimetype: file.type,
+                            isNew: true,
+                            fileObj: file
+                        });
+                    }
+                },
+                moveNewsAttachment(idx, dir) {
+                    const targetIdx = idx + dir;
+                    const items = this.newsForm.attachments;
+                    [items[idx], items[targetIdx]] = [items[targetIdx], items[idx]];
+                },
+                removeNewsAttachment(idx) {
+                    this.newsForm.attachments.splice(idx, 1);
+                },
+                async saveNews() {
+                    const formData = new FormData();
+                    if(this.newsForm.id) formData.append('id', this.newsForm.id);
+                    formData.append('category', this.newsForm.category); 
+                    formData.append('title', this.newsForm.title);
+                    formData.append('content', newsQuill ? newsQuill.root.innerHTML : '');
+                    
+                    // 기존 파일 중 유지되는 것들 전송
+                    const existing = this.newsForm.attachments
+                        .filter(a => !a.isNew)
+                        .map(a => ({ filename: a.filename, originalname: a.originalname, mimetype: a.mimetype }));
+                    formData.append('existingAttachments', JSON.stringify(existing));
+
+                    // 새 파일들 전송 (순서대로)
+                    this.newsForm.attachments.forEach(a => {
+                        if (a.isNew && a.fileObj) {
+                            formData.append('attachments', a.fileObj);
+                        }
+                    });
+                    
+                    try {
+                        const res = await fetch('/api/news', { method: 'POST', body: formData });
+                        if(res.ok) { 
+                            alert('저장 완료'); 
+                            this.resetNewsForm(); 
+                            this.fetchNews(); 
+                        } else {
+                            alert('저장 실패. 서버 용량 제한 혹은 네트워크 상태를 확인하세요.');
+                        }
+                    } catch (e) { alert('오류가 발생했습니다.'); }
+                },
+                editNews(item) { 
+                    this.newsForm = { 
+                        id: item.id, 
+                        category: item.category, 
+                        title: item.title,
+                        attachments: item.attachments ? JSON.parse(JSON.stringify(item.attachments)) : []
+                    }; 
+                    if(newsQuill) newsQuill.root.innerHTML = item.content; 
+                    window.scrollTo({top:0, behavior:'smooth'}); 
+                },
+                resetNewsForm() { 
+                    this.newsForm = { id: null, category: 'H&L News', title: '', attachments: [] }; 
+                    if(newsQuill) newsQuill.setContents([]); 
+                },
+                async fetchNews() { const res = await fetch('/api/public/news'); this.newsList = await res.json(); },
+                async deleteNews(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/news/${id}`, { method: 'DELETE' }); this.fetchNews(); } },
+
+                /* --- 히어로 / 파트너 / 채용 등 나머지 메서드 (유지) --- */
                 async fetchHero() { const res = await fetch('/api/public/hero'); this.heroList = await res.json(); },
                 async uploadHero() {
                     const file = this.$refs.heroFile.files[0];
@@ -354,8 +483,6 @@
                     });
                     if(res.ok) this.fetchHero();
                 },
-
-                /* 채용 통합 관리 메서드 */
                 async fetchRecruitData() {
                     const [res1, res2] = await Promise.all([fetch('/api/public/recruit'), fetch('/api/public/jobs')]);
                     this.recruitStatus = await res1.json();
@@ -377,25 +504,9 @@
                     if(res.ok) { this.setTab('recruit'); }
                 },
                 async deleteJob(id) { if(confirm('공고를 삭제하시겠습니까?')) { await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' }); this.fetchRecruitData(); } },
-
-                /* 나머지 기존 메서드 */
                 async fetchUsers() { const res = await fetch('/api/admin/users'); this.userList = await res.json(); },
                 async updateUserStatus(userId, payload) { await fetch('/api/admin/users/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId, ...payload }) }); this.fetchUsers(); },
                 async deleteUser(id) { if(confirm('삭제?')) { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); this.fetchUsers(); } },
-                async fetchNews() { const res = await fetch('/api/public/news'); this.newsList = await res.json(); },
-                editNews(item) { this.newsForm = { id: item.id, category: item.category, title: item.title }; if(newsQuill) newsQuill.root.innerHTML = item.content; window.scrollTo({top:0, behavior:'smooth'}); },
-                resetNewsForm() { this.newsForm = { id: null, category: 'H&L News', title: '' }; if(newsQuill) newsQuill.setContents([]); },
-                async saveNews() {
-                    const formData = new FormData();
-                    if(this.newsForm.id) formData.append('id', this.newsForm.id);
-                    formData.append('category', this.newsForm.category); formData.append('title', this.newsForm.title);
-                    formData.append('content', newsQuill.root.innerHTML);
-                    const files = this.$refs.newsFiles.files;
-                    for (let i = 0; i < files.length; i++) formData.append('attachments', files[i]);
-                    const res = await fetch('/api/news', { method: 'POST', body: formData });
-                    if(res.ok) { alert('완료'); this.resetNewsForm(); this.fetchNews(); }
-                },
-                async deleteNews(id) { if(confirm('삭제?')) { await fetch(`/api/news/${id}`, { method: 'DELETE' }); this.fetchNews(); } },
                 async fetchInquiries() { const res = await fetch('/api/admin/inquiries'); this.inquiries = await res.json(); },
                 async fetchPartners() { const res = await fetch('/api/public/partners'); this.partners = await res.json(); },
                 async savePartner() {
