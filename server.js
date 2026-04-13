@@ -157,14 +157,14 @@ app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
     try { const db = await fs.readJson(DB_FILE); const newInquiry = { id: Date.now(), name: req.body.userName, phone: req.body.userPhone, summary: req.body.summary, created_at: new Date().toISOString().split('T')[0], files: req.files ? req.files.map(f => f.filename) : [] }; db.inquiries.push(newInquiry); await fs.writeJson(DB_FILE, db); res.status(200).send("OK"); } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 로그인 및 회원관리 API (수정 및 추가) --- */
+/* --- 로그인 및 회원관리 API (수정) --- */
 
 app.post('/api/login', async (req, res) => {
     const { id, pw } = req.body;
     // 1. 마스터 관리자 체크
     if (id === 'admin' && pw === 'highlaw123!') {
-        req.session.user = { id: 'master', name: '최고관리자', isAdmin: true };
-        return res.status(200).json({ name: '관리자', isAdmin: true });
+        req.session.user = { id: 'master', name: '최고관리자', isAdmin: true, position: '관리자' };
+        return res.status(200).json({ name: '관리자', isAdmin: true, position: '관리자' });
     }
     // 2. DB 사용자 체크
     try {
@@ -172,8 +172,8 @@ app.post('/api/login', async (req, res) => {
         const user = db.users.find(u => u.loginId === id);
         if (user && await bcrypt.compare(pw, user.password)) {
             if (user.status !== 'active') return res.status(403).send("승인 대기 중인 계정입니다.");
-            req.session.user = { id: user.id, name: user.name, isAdmin: user.isAdmin };
-            res.status(200).json({ name: user.name, isAdmin: user.isAdmin });
+            req.session.user = { id: user.id, name: user.name, isAdmin: user.isAdmin, position: user.position };
+            res.status(200).json({ name: user.name, isAdmin: user.isAdmin, position: user.position });
         } else {
             res.status(401).send("아이디 또는 비밀번호가 틀립니다.");
         }

@@ -163,10 +163,20 @@
                 });
 
                 if (res.ok) {
-                    // 로그인 성공 시 관리자 페이지로 이동
-                    location.href = '/admin.html';
+                    const userData = await res.json();
+                    
+                    // 사용자 정보를 로컬 스토리지에 저장 (타임트래커 등에서 사용)
+                    localStorage.setItem('user', JSON.stringify(userData));
+
+                    // 권한에 따른 분기 처리
+                    if (userData.isAdmin) {
+                        location.href = '/admin.html';
+                    } else {
+                        location.href = '/timetracker.html';
+                    }
                 } else {
-                    alert('인증 정보가 올바르지 않습니다.');
+                    const msg = await res.text();
+                    alert(msg || '인증 정보가 올바르지 않습니다.');
                 }
             } catch (err) {
                 alert('서버와 통신할 수 없습니다.');
