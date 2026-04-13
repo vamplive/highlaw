@@ -58,7 +58,6 @@
         }
         .drop-zone.active { border-color: var(--gold-primary); background: rgba(197, 160, 89, 0.05); }
 
-        /* 모달 스타일 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
         .modal-body { background: white; padding: 40px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
 
@@ -200,63 +199,104 @@
                 </div>
             </div>
 
-            <!-- 4. 팝업 공지 관리 [수정됨: 에디터 도입] -->
+            <!-- 4. 팝업 공지 관리 [디자인 수정됨] -->
             <div v-if="tab === 'popup'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Popup Management</h2>
-                <div class="admin-card mb-8">
-                    <div class="space-y-6">
-                        <div class="grid grid-cols-2 gap-6">
+                
+                <div class="admin-card mb-10 border-t-4 border-t-[#c5a059]">
+                    <div class="space-y-8">
+                        <!-- 설정 상단 (상태 및 링크) -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-6 rounded-lg">
                             <div>
-                                <label class="text-[10px] font-bold text-gold-primary uppercase tracking-widest block mb-2">팝업 제목 (Rich Text)</label>
-                                <div id="popup-title-editor" class="editor-wrapper" style="min-height: 120px;"></div>
-                            </div>
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="text-[10px] font-bold text-gold-primary uppercase tracking-widest block mb-2">상태 설정</label>
-                                    <select v-model="popupForm.active">
-                                        <option :value="true">활성화 (노출)</option>
-                                        <option :value="false">비활성화 (숨김)</option>
+                                <label class="text-[10px] font-bold text-gold-primary uppercase tracking-[0.2em] block mb-3">상태 설정 (Visibility)</label>
+                                <div class="relative">
+                                    <select v-model="popupForm.active" class="appearance-none w-full bg-white border border-gray-200 px-4 py-3 rounded text-sm focus:border-gold-primary outline-none transition cursor-pointer">
+                                        <option :value="true">활성화 (사이트에 즉시 노출)</option>
+                                        <option :value="false">비활성화 (관리자 대기)</option>
                                     </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 7.293 8.172 5.657 9.75l3.636 3.636z"/></svg>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="text-[10px] font-bold text-gold-primary uppercase tracking-widest block mb-2">이동 링크</label>
-                                    <input v-model="popupForm.link" type="text" placeholder="https://...">
-                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gold-primary uppercase tracking-[0.2em] block mb-3">이동 링크 (Landing URL)</label>
+                                <input v-model="popupForm.link" type="text" placeholder="https://highlaw.co.kr/..." class="w-full bg-white border border-gray-200 px-4 py-3 rounded text-sm focus:border-gold-primary outline-none transition">
                             </div>
                         </div>
 
+                        <!-- 제목 에디터 영역 -->
                         <div>
-                            <label class="text-[10px] font-bold text-gold-primary uppercase tracking-widest block mb-2">팝업 본문 내용</label>
-                            <div id="popup-content-editor" class="editor-wrapper" style="min-height: 300px;"></div>
+                            <label class="text-[10px] font-bold text-gold-primary uppercase tracking-[0.2em] block mb-3">팝업 제목 (Rich Text Title)</label>
+                            <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                                <div id="popup-title-editor" class="bg-white" style="min-height: 120px; border:none;"></div>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-2 font-medium">* 팝업 상단에 강조되어 표시될 텍스트를 입력하세요.</p>
+                        </div>
+
+                        <!-- 본문 에디터 영역 -->
+                        <div>
+                            <label class="text-[10px] font-bold text-gold-primary uppercase tracking-[0.2em] block mb-3">팝업 본문 내용 (Main Content)</label>
+                            <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                                <div id="popup-content-editor" class="bg-white" style="min-height: 350px; border:none;"></div>
+                            </div>
                         </div>
                         
-                        <div>
-                            <label class="text-[10px] font-bold text-gold-primary uppercase tracking-widest block mb-2">팝업 이미지 (선택사항)</label>
-                            <input type="file" ref="popupImage" accept="image/*" class="text-xs">
+                        <!-- 이미지 업로드 -->
+                        <div class="border-t border-dashed border-gray-200 pt-6">
+                            <label class="text-[10px] font-bold text-gold-primary uppercase tracking-[0.2em] block mb-3">이미지 첨부 (Visual Media)</label>
+                            <div class="flex items-center gap-4">
+                                <input type="file" ref="popupImage" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gold-light file:text-gold-primary hover:file:bg-gold-primary hover:file:text-white transition cursor-pointer">
+                                <div v-if="popupForm.image" class="text-[10px] text-gold-primary font-bold bg-gold-light px-2 py-1 rounded">기존 이미지 유지 중</div>
+                            </div>
                         </div>
 
-                        <div class="flex gap-4">
-                            <button @click="savePopup" class="btn-gold flex-1 py-4 uppercase">SAVE POPUP</button>
-                            <button v-if="popupForm.id" @click="resetPopupForm" class="bg-gray-100 px-8 text-xs uppercase">Cancel</button>
+                        <!-- 액션 버튼 -->
+                        <div class="flex gap-3 pt-4">
+                            <button @click="savePopup" class="flex-1 bg-black text-white border border-gold-primary py-4 text-xs font-bold tracking-[0.3em] hover:bg-gold-primary hover:text-black transition duration-300">
+                                {{ popupForm.id ? 'UPDATE POPUP' : 'SAVE NEW POPUP' }}
+                            </button>
+                            <button v-if="popupForm.id" @click="resetPopupForm" class="px-8 bg-gray-100 text-gray-500 text-[10px] font-bold tracking-[0.2em] hover:bg-red-50 hover:text-red-500 transition border border-transparent">
+                                CANCEL
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-2">
-                    <label class="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-3">Saved Popups</label>
-                    <div v-for="p in popupList" :key="p.id" class="admin-card flex justify-between items-center py-4 mb-2">
-                        <div class="flex items-center gap-4">
-                            <span :class="p.active ? 'text-green-500' : 'text-gray-300'" class="text-xl">●</span>
-                            <div class="flex flex-col">
-                                <!-- 제목이 HTML이므로 텍스트만 추출해서 표시 -->
-                                <span class="text-sm font-bold truncate max-w-xs" v-html="p.title"></span>
-                                <span class="text-[10px] text-gray-400">{{ p.active ? '노출 중' : '숨김 처리됨' }}</span>
+                <!-- 리스트 헤더 -->
+                <div class="flex items-center justify-between mb-4 px-2">
+                    <label class="text-[11px] uppercase tracking-[0.2em] font-bold text-gray-500">Registered Popups ({{ popupList.length }})</label>
+                    <span class="text-[10px] text-gray-400">최근 등록순</span>
+                </div>
+
+                <!-- 저장된 리스트 -->
+                <div class="space-y-3">
+                    <div v-for="p in popupList" :key="p.id" class="bg-white border border-gray-100 p-5 flex justify-between items-center group hover:border-gold-primary transition duration-300 shadow-sm">
+                        <div class="flex items-center gap-6 overflow-hidden">
+                            <div class="relative flex-shrink-0">
+                                <div :class="p.active ? 'bg-green-500' : 'bg-gray-300'" class="w-3 h-3 rounded-full shadow-sm"></div>
+                                <div v-if="p.active" class="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-20"></div>
+                            </div>
+                            <div class="flex flex-col overflow-hidden">
+                                <div class="text-sm font-semibold text-gray-800 truncate max-w-lg mb-1 leading-tight ql-editor !p-0" style="height: 1.25rem; overflow:hidden;">
+                                    <span v-html="p.title"></span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[10px] font-bold tracking-tighter" :class="p.active ? 'text-green-600' : 'text-gray-400'">
+                                        {{ p.active ? 'LIVE' : 'DISABLED' }}
+                                    </span>
+                                    <span class="text-[10px] text-gray-300">|</span>
+                                    <span class="text-[10px] text-gray-400 truncate max-w-[200px]">{{ p.link || 'No Link' }}</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex gap-3">
-                            <button @click="editPopup(p)" class="text-blue-500 text-xs font-bold">수정</button>
-                            <button @click="deletePopup(p.id)" class="text-red-300 text-xs font-bold">삭제</button>
+                        <div class="flex gap-4 items-center shrink-0">
+                            <button @click="editPopup(p)" class="text-[11px] font-bold text-blue-500 hover:text-blue-700 hover:underline transition">EDIT</button>
+                            <button @click="deletePopup(p.id)" class="text-[11px] font-bold text-red-300 hover:text-red-600 transition">DELETE</button>
                         </div>
+                    </div>
+                    <div v-if="popupList.length === 0" class="py-20 text-center bg-white border border-dashed border-gray-200 rounded">
+                        <p class="text-xs text-gray-400 font-medium">등록된 팝업이 없습니다. 상단에서 새로운 팝업을 작성해 주세요.</p>
                     </div>
                 </div>
             </div>
@@ -407,7 +447,7 @@
 
     <script>
         const { createApp } = Vue;
-        let newsQuill, jobQuill, popupTitleQuill, popupContentQuill; // 팝업 에디터 변수 추가
+        let newsQuill, jobQuill, popupTitleQuill, popupContentQuill;
 
         createApp({
             data() {
@@ -436,7 +476,6 @@
                 },
                 initQuill() {
                     setTimeout(() => {
-                        // 공통 에디터 속성 설정 (사이즈 등)
                         const Size = Quill.import('attributors/style/size');
                         Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px', '64px'];
                         Quill.register(Size, true);
@@ -455,36 +494,27 @@
                             ['clean']
                         ];
 
-                        // 1. 뉴스 에디터
                         if (this.tab === 'news' && !newsQuill) {
                             newsQuill = new Quill('#news-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                         }
-                        // 2. 채용 공고 에디터
                         if (this.tab === 'jobs_edit' && !jobQuill) {
                             jobQuill = new Quill('#job-editor', { theme: 'snow', modules: { toolbar: [['bold', 'italic', 'underline'], [{list:'ordered'}, {list:'bullet'}], ['link', 'clean']] } });
                         }
-                        // 3. 팝업 제목 에디터
                         if (this.tab === 'popup' && !popupTitleQuill) {
                             popupTitleQuill = new Quill('#popup-title-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                         }
-                        // 4. 팝업 본문 에디터
                         if (this.tab === 'popup' && !popupContentQuill) {
                             popupContentQuill = new Quill('#popup-content-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                         }
-
                     }, 100);
                 },
 
-                // 팝업 관리 로직 [수정됨: 에디터 데이터 처리]
                 async fetchPopups() { const res = await fetch('/api/admin/popups'); this.popupList = await res.json(); },
                 async savePopup() {
                     const fd = new FormData();
                     if(this.popupForm.id) fd.append('id', this.popupForm.id);
-                    
-                    // 에디터 HTML 내용 가져오기
                     fd.append('title', popupTitleQuill.root.innerHTML);
                     fd.append('content', popupContentQuill.root.innerHTML);
-                    
                     fd.append('link', this.popupForm.link);
                     fd.append('active', this.popupForm.active);
                     if(this.popupForm.image) fd.append('existingImage', this.popupForm.image);
@@ -498,7 +528,6 @@
                 editPopup(p) { 
                     this.popupForm = { ...p }; 
                     window.scrollTo({top: 0, behavior: 'smooth'});
-                    // 에디터에 내용 주입
                     setTimeout(() => {
                         if(popupTitleQuill) popupTitleQuill.root.innerHTML = p.title || '';
                         if(popupContentQuill) popupContentQuill.root.innerHTML = p.content || '';
@@ -512,7 +541,6 @@
                 },
                 async deletePopup(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/admin/popups/${id}`, { method: 'DELETE' }); this.fetchPopups(); } },
 
-                // 공용 API 호출
                 async fetchInquiries() { const res = await fetch('/api/admin/inquiries'); this.inquiries = await res.json(); },
                 viewInquiryDetail(item) { this.selectedInquiry = item; },
                 async deleteInquiry(id) { if(confirm('삭제?')) { await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' }); this.fetchInquiries(); } },
