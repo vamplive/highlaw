@@ -29,14 +29,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@200;300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* [수정] 메인 히어로 섹션: 화면 상하좌우 전체를 사용하는 레이아웃 */
+        /* [수정됨] 메인 히어로 섹션: 화면 상하좌우 전체를 빈틈없이 채우는 레이아웃 */
         .hero-main {
             height: 100vh !important; /* 화면 높이를 100% 채움 */
             width: 100vw !important; 
             max-width: none !important; 
+            /* 부모 컨테이너가 중앙 정렬되어 있을 경우를 대비해 가로 너비 강제 확장 */
             margin-left: calc(-50vw + 50%); 
             margin-right: calc(-50vw + 50%);
-            margin-top: -80px; /* 헤더가 80px이므로 위로 끌어올려 전체를 채움 */
+            /* 헤더가 fixed이므로 margin-top을 0으로 설정하여 최상단부터 시작 */
+            margin-top: 0 !important; 
             display: flex; 
             align-items: center; 
             justify-content: center;
@@ -61,7 +63,7 @@
             top: 0; 
             left: 0; 
             width: 100%; 
-            height: 100% !important; /* 상하를 꽉 채우도록 강제 */
+            height: 100% !important; /* 슬라이더 내부 요소 높이 강제 100% */
             object-fit: cover; 
             opacity: 0; 
             transition: opacity 2.5s ease-in-out;
@@ -164,6 +166,7 @@
             100% { transform: scaleY(0); transform-origin: bottom; }
         }
 
+        /* 헤더 배경 처리 */
         header {
             background: transparent;
             border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -200,7 +203,7 @@
         }
     </style>
 </head>
-<body style="overflow-x: hidden;">
+<body style="overflow-x: hidden; margin: 0; padding: 0;">
 
 <header>
     <a href="index.html" class="logo-group" style="display: flex; align-items: center; gap: 15px; text-decoration: none;">
@@ -225,6 +228,7 @@
     </nav>
 </header>
 
+<!-- 메인 히어로 섹션 -->
 <section class="hero-main">
     <div class="hero-bg-slider" id="hero-slider"></div>
     <div class="hero-content">
@@ -247,6 +251,7 @@
     </div>
 </section>
 
+<!-- 이하 콘텐츠 생략 (기존 코드 유지) -->
 <section id="professionals">
     <span class="label">Expertise</span>
     <h2 class="section-title">The Partners</h2>
