@@ -29,12 +29,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@200;300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* [수정] 메인 히어로 섹션: 화면 전체를 사용하는 Edge-to-Edge 레이아웃 */
+        /* [수정] 메인 히어로 섹션: 화면 상하좌우 전체를 사용하는 레이아웃 */
         .hero-main {
-            height: 100vh; 
+            height: 100vh !important; /* 화면 높이를 100% 채움 */
             width: 100vw !important; 
             max-width: none !important; 
             margin-left: calc(-50vw + 50%); 
+            margin-right: calc(-50vw + 50%);
+            margin-top: -80px; /* 헤더가 80px이므로 위로 끌어올려 전체를 채움 */
             display: flex; 
             align-items: center; 
             justify-content: center;
@@ -43,7 +45,6 @@
             text-align: center; 
             background: #000;
             padding: 0 !important;
-            /* margin-top 삭제: 헤더가 fixed이므로 100vh 설정 시 화면을 꽉 채우게 됨 */
         }
         
         .hero-bg-slider {
@@ -60,7 +61,7 @@
             top: 0; 
             left: 0; 
             width: 100%; 
-            height: 100% !important; /* [수정] 세로를 꽉 채우도록 100% 강제 */
+            height: 100% !important; /* 상하를 꽉 채우도록 강제 */
             object-fit: cover; 
             opacity: 0; 
             transition: opacity 2.5s ease-in-out;
