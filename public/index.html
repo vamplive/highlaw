@@ -26,13 +26,15 @@
     <link rel="stylesheet" href="/css/main.css">
 
     <!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@200;300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@200;300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* [수정] 메인 히어로 섹션: 화면 전체(100vh)를 사용하는 지평 스타일 레이아웃 */
+        /* [수정] 메인 히어로 섹션: 화면 전체를 사용하는 Edge-to-Edge 레이아웃 */
         .hero-main {
             height: 100vh; 
-            width: 100%;
+            width: 100vw !important; /* 브라우저 너비 전체 사용 */
+            max-width: none !important; /* 상위 section 제약 해제 */
+            margin-left: calc(-50vw + 50%); /* 중앙 정렬 유지하며 밖으로 확장 */
             display: flex; 
             align-items: center; 
             justify-content: center;
@@ -40,7 +42,8 @@
             overflow: hidden;
             text-align: center; 
             background: #000;
-            margin-top: -80px; /* 헤더 뒤로 배경이 가도록 조정 */
+            margin-top: -80px;
+            padding: 0 !important;
         }
         
         .hero-bg-slider {
@@ -64,7 +67,6 @@
         }
         .hero-bg-item.active { opacity: 1; }
         
-        /* 가독성을 위한 레이어 오버레이 */
         .hero-main::after {
             content: ''; 
             position: absolute; 
@@ -72,60 +74,67 @@
             left: 0; 
             width: 100%; 
             height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.55));
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.5));
             z-index: 2;
         }
 
-        /* [수정] 히어로 텍스트: 더 작고, 시크한 타이포그래피 */
         .hero-content { 
             position: relative; 
             z-index: 10; 
             padding: 0 20px;
-            max-width: 1000px;
+            width: 100%;
+        }
+
+        /* [수정] 세련된 명품 스타일 영문 타이포그래피 */
+        .luxury-eng {
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(38px, 5.5vw, 70px);
+            font-weight: 400;
+            line-height: 1.15;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+            margin-bottom: 5px;
+        }
+
+        /* High & Law 금색 포인트 컬러 및 빛 효과 */
+        .gold-point {
+            color: #c5a059;
+            font-weight: 500;
+            background: linear-gradient(135deg, #c5a059 0%, #f4eee0 50%, #c5a059 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(197, 160, 89, 0.3); /* 은은한 빛 효과 */
+        }
+
+        .hero-divider {
+            width: 50px;
+            height: 1px;
+            background: rgba(197, 160, 89, 0.6);
+            margin: 35px auto;
         }
 
         .hero-main .label {
             color: #c5a059; 
             font-size: 11px;
-            letter-spacing: 0.6em; /* 자간을 넓혀 시크한 느낌 강조 */
-            margin-bottom: 30px;
+            letter-spacing: 0.7em;
+            margin-bottom: 25px;
             text-transform: uppercase;
-            font-weight: 700;
+            font-weight: 600;
             display: block;
-        }
-
-        .hero-main h2 {
-            font-family: 'Playfair Display', serif; 
-            font-size: clamp(34px, 5vw, 62px); /* 둔탁함을 없애기 위해 기존보다 크기 축소 */
-            font-weight: 400; 
-            line-height: 1.2; 
-            margin-bottom: 40px;
-            color: #fff;
-            letter-spacing: -0.01em;
-        }
-        
-        .text-silver { 
-            display: block;
-            font-weight: 300;
-            font-size: 0.65em;
-            color: rgba(255,255,255,0.8);
-            margin-top: 20px;
-            letter-spacing: 0.05em;
         }
 
         .hero-main p { 
             font-family: 'Inter', sans-serif;
             font-size: 16px; 
-            color: rgba(255,255,255,0.65); 
-            max-width: 750px; 
+            color: rgba(255,255,255,0.7); 
+            max-width: 800px; 
             margin: 0 auto; 
             font-weight: 300; 
             line-height: 1.8;
-            letter-spacing: 0.05em;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            letter-spacing: 0.03em;
         }
 
-        /* 스크롤 유도 애니메이션 (라인 스타일) */
         .scroll-down {
             position: absolute;
             bottom: 50px;
@@ -156,7 +165,6 @@
             100% { transform: scaleY(0); transform-origin: bottom; }
         }
 
-        /* [추가] 헤더 스크롤 대응 스타일 */
         header {
             background: transparent;
             border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -170,7 +178,6 @@
         header.scrolled nav a { color: var(--text-primary); }
         header.scrolled .logo-group span { color: #1a1a1a !important; }
 
-        /* 기존 유지 스타일 */
         .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
         .partner-card { background: var(--white); padding: 40px 30px; border: 1px solid var(--border-color); transition: 0.4s; text-align: center; }
         .partner-card:hover { border-color: var(--gold-primary); transform: translateY(-10px); }
@@ -190,11 +197,11 @@
 
         @media (max-width: 1024px) {
             .partner-grid, .news-grid-main, .recruit-main-box { grid-template-columns: 1fr; }
-            .hero-main { height: 100vh; }
+            .hero-main { width: 100vw; margin-left: calc(-50vw + 50%); }
         }
     </style>
 </head>
-<body>
+<body style="overflow-x: hidden;">
 
 <header>
     <a href="index.html" class="logo-group" style="display: flex; align-items: center; gap: 15px; text-decoration: none;">
@@ -219,18 +226,21 @@
     </nav>
 </header>
 
-<!-- [수정] 전체 화면 히어로 영역 -->
+<!-- [수정] 화면을 꽉 채우는 프리미엄 히어로 섹션 -->
 <section class="hero-main">
     <div class="hero-bg-slider" id="hero-slider"></div>
     <div class="hero-content">
         <span class="label">Loyalty & Dignity</span>
         <h2>
-            <span class="text-silver">High Standards <span class="gold-thin">&</span> Noble Commitment</span>
-            <span class="text-silver">Fidelity <span class="gold-thin">&</span> Professionalism</span>
+            <span class="luxury-eng">Unrivaled Prestige in <span class="gold-point">High</span>-End Counsel</span>
+            <span class="luxury-eng">Where Excellence Defines the <span class="gold-point">Law</span></span>
         </h2>
+
+        <div class="hero-divider"></div>
+
         <p>
-            신뢰와 전문성, 신의와 헌신을 바탕으로 제공하는<br>
-            정교하고 세심한 맞춤 법률 솔루션
+            단순한 변론을 넘어 의뢰인의 명예와 가치를 지키는 법률 파트너<br>
+            하이로만의 정교한 전략으로 최상의 결과를 실현합니다.
         </p>
     </div>
     <div class="scroll-down">
@@ -239,7 +249,7 @@
     </div>
 </section>
 
-<!-- 전문가 소개 영역 (기존 유지) -->
+<!-- 전문가 소개 영역 -->
 <section id="professionals">
     <span class="label">Expertise</span>
     <h2 class="section-title">The Partners</h2>
@@ -248,7 +258,7 @@
     </div>
 </section>
 
-<!-- 최신 뉴스 영역 (기존 유지) -->
+<!-- 최신 뉴스 영역 -->
 <section id="news" style="background-color: #fff;">
     <span class="label">Insights</span>
     <h2 class="section-title">Latest Updates</h2>
@@ -257,7 +267,7 @@
     </div>
 </section>
 
-<!-- 채용 안내 영역 (기존 유지) -->
+<!-- 채용 안내 영역 -->
 <section id="recruit">
     <span class="label">Careers</span>
     <h2 class="section-title">Join High & Law</h2>
@@ -278,7 +288,7 @@
     </div>
 </section>
 
-<!-- 하단 CTA 박스 (기존 유지) -->
+<!-- 하단 CTA 박스 -->
 <div class="cta-box">
     <span class="label">Consultation</span>
     <h2>Commitment to Excellence</h2>
@@ -301,7 +311,6 @@
     // 스크롤 시 헤더 투명도 조절
     window.addEventListener('scroll', () => {
         const header = document.querySelector('header');
-        const logoText = document.querySelector('.logo-group span');
         if (window.scrollY > 50) {
             header.classList.add('scrolled');
         } else {
