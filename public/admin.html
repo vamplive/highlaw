@@ -1,4 +1,3 @@
-<!-- START OF FILE text/html (admin.html) -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -50,7 +49,7 @@
         }
         .btn-gold:hover { background: var(--gold-primary); color: #1a1a1a; }
 
-        .editor-wrapper { min-height: 400px; font-family: 'Inter', sans-serif; background: white; border: 1px solid #eee; }
+        .editor-wrapper { min-height: 500px; font-family: 'Inter', sans-serif; background: white; border: 1px solid #eee; }
         .sidebar-logo { filter: brightness(0) invert(1); width: 100%; height: auto; display: block; }
         
         .drop-zone {
@@ -62,6 +61,10 @@
         /* 모달 스타일 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
         .modal-body { background: white; padding: 40px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
+
+        /* Quill 픽셀 사이즈 Picker 표시용 커스텀 스타일 */
+        .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item::before { content: attr(data-value) !important; }
     </style>
 </head>
 <body class="min-h-screen flex">
@@ -112,7 +115,6 @@
                     </table>
                 </div>
 
-                <!-- 상담 상세 모달 -->
                 <div v-if="selectedInquiry" class="modal-overlay" @click.self="selectedInquiry = null">
                     <div class="modal-body">
                         <button @click="selectedInquiry = null" class="absolute top-4 right-4 text-2xl">&times;</button>
@@ -198,7 +200,7 @@
                 </div>
             </div>
 
-            <!-- 4. 뉴스/성공사례 관리 -->
+            <!-- 4. 뉴스/성공사례 관리 (강화됨) -->
             <div v-if="tab === 'news'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News Management</h2>
                 <div class="admin-card mb-8">
@@ -211,18 +213,20 @@
                             </select>
                             <input v-model="newsForm.title" type="text" placeholder="제목">
                         </div>
+                        
+                        <!-- Quill 에디터 영역 -->
                         <div id="news-editor" class="editor-wrapper"></div>
                         
-                        <!-- Drag & Drop Zone -->
+                        <!-- 파일 통합 첨부 Zone -->
                         <div class="bg-gray-50 p-6 border rounded">
+                            <label class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2 block">Media & Document Attachments</label>
                             <div class="drop-zone mb-6" :class="{ active: dragActive }"
                                 @dragover.prevent="dragActive = true" @dragleave.prevent="dragActive = false"
                                 @drop.prevent="handleNewsDrop" @click="$refs.newsFiles.click()">
-                                <span class="text-xs text-gray-400">파일을 이 곳에 드래그하거나 클릭하여 추가하세요.</span>
+                                <span class="text-xs text-gray-400">이미지, 영상, 문서를 드래그하거나 클릭하여 추가하세요.</span>
                                 <input type="file" ref="newsFiles" multiple class="hidden" @change="handleNewsFileSelect">
                             </div>
 
-                            <!-- 파일 리스트 및 순서 제어 -->
                             <div class="space-y-2">
                                 <div v-for="(file, idx) in newsForm.attachments" :key="idx" class="flex items-center justify-between bg-white p-3 border rounded text-xs shadow-sm">
                                     <div class="flex items-center gap-3 truncate">
@@ -244,11 +248,22 @@
                         </div>
                     </div>
                 </div>
-                <div v-for="item in newsList" :key="item.id" class="admin-card flex justify-between items-center py-4 mb-2">
-                    <span class="text-sm">{{ item.title }}</span>
-                    <div class="flex gap-3">
-                        <button @click="editNews(item)" class="text-blue-500 text-xs font-bold">수정</button>
-                        <button @click="deleteNews(item.id)" class="text-red-300 text-xs font-bold">삭제</button>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-3">Published List (Drag-Order Enabled)</label>
+                    <div v-for="(item, idx) in newsList" :key="item.id" class="admin-card flex justify-between items-center py-4 mb-2">
+                        <div class="flex items-center gap-4">
+                            <div class="flex flex-col gap-1 pr-4 border-r">
+                                <button @click="moveNewsInList(idx, -1)" :disabled="idx === 0" class="text-[10px] text-gray-300 hover:text-gold-primary">▲</button>
+                                <button @click="moveNewsInList(idx, 1)" :disabled="idx === newsList.length - 1" class="text-[10px] text-gray-300 hover:text-gold-primary">▼</button>
+                            </div>
+                            <span class="text-xs font-bold text-gold-primary w-24 truncate">{{ item.category }}</span>
+                            <span class="text-sm truncate max-w-md">{{ item.title }}</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <button @click="editNews(item)" class="text-blue-500 text-xs font-bold">수정</button>
+                            <button @click="deleteNews(item.id)" class="text-red-300 text-xs font-bold">삭제</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -281,7 +296,6 @@
             <!-- 6. 채용 정보 통합 관리 -->
             <div v-if="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment</h2>
-                
                 <div class="admin-card mb-10">
                     <h3 class="text-[11px] font-bold text-gold-primary uppercase mb-6 tracking-widest">상시 채용 오픈 설정</h3>
                     <div class="grid grid-cols-2 gap-4">
@@ -294,7 +308,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="admin-card">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-[11px] font-bold text-gold-primary uppercase tracking-widest">상세 채용 공고 리스트</h3>
@@ -311,7 +324,6 @@
                 </div>
             </div>
 
-            <!-- 채용 공고 편집 폼 (Quill) -->
             <div v-if="tab === 'jobs_edit'">
                 <h2 class="text-2xl font-normal mb-8">Edit Job Post</h2>
                 <div class="admin-card space-y-6">
@@ -344,8 +356,7 @@
                     tab: 'inquiry', 
                     inquiries: [], selectedInquiry: null,
                     newsList: [], newsForm: { id: null, category: 'H&L News', title: '', attachments: [] },
-                    userList: [], 
-                    heroList: [], 
+                    userList: [], heroList: [], 
                     partners: [], partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '' },
                     recruitStatus: [], jobList: [], jobForm: { id: null, category: '변호사 채용', title: '', deadline: '', content: '' },
                     dragActive: false
@@ -364,95 +375,125 @@
                 },
                 initQuill() {
                     setTimeout(() => {
-                        const toolbar = [
-                            [{ 'header': [1, 2, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                            ['link', 'image', 'video'],
-                            ['clean']
-                        ];
-                        if (this.tab === 'news' && !newsQuill) newsQuill = new Quill('#news-editor', { theme: 'snow', modules: { toolbar } });
-                        if (this.tab === 'jobs_edit' && !jobQuill) jobQuill = new Quill('#job-editor', { theme: 'snow', modules: { toolbar } });
+                        if (this.tab === 'news' && !newsQuill) {
+                            // 픽셀 단위 폰트 크기 Attributor 설정
+                            const Size = Quill.import('attributors/style/size');
+                            Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px', '64px'];
+                            Quill.register(Size, true);
+
+                            // 폰트 종류 Attributor 설정
+                            const Font = Quill.import('attributors/style/font');
+                            Font.whitelist = ['inter', 'playfair', 'serif', 'sans-serif'];
+                            Quill.register(Font, true);
+
+                            newsQuill = new Quill('#news-editor', {
+                                theme: 'snow',
+                                modules: {
+                                    toolbar: [
+                                        [{ 'font': Font.whitelist }],
+                                        [{ 'size': Size.whitelist }],
+                                        ['bold', 'italic', 'underline', 'strike'],
+                                        [{ 'color': [] }, { 'background': [] }],
+                                        [{ 'align': [] }],
+                                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                        ['link', 'image', 'video'],
+                                        ['clean']
+                                    ]
+                                }
+                            });
+                        }
+                        if (this.tab === 'jobs_edit' && !jobQuill) {
+                            jobQuill = new Quill('#job-editor', { theme: 'snow', modules: { toolbar: [['bold', 'italic', 'underline'], [{list:'ordered'}, {list:'bullet'}], ['link', 'clean']] } });
+                        }
                     }, 100);
                 },
 
-                // 상담 관리
+                // 공용 API 호출
                 async fetchInquiries() { const res = await fetch('/api/admin/inquiries'); this.inquiries = await res.json(); },
                 viewInquiryDetail(item) { this.selectedInquiry = item; },
                 async deleteInquiry(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' }); this.fetchInquiries(); } },
-
-                // 사용자 관리
                 async fetchUsers() { const res = await fetch('/api/admin/users'); this.userList = await res.json(); },
                 async updateUserStatus(userId, payload) { await fetch('/api/admin/users/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId, ...payload }) }); this.fetchUsers(); },
                 async deleteUser(id) { if(confirm('삭제?')) { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); this.fetchUsers(); } },
-
-                // 히어로 관리
                 async fetchHero() { const res = await fetch('/api/public/hero'); this.heroList = await res.json(); },
                 async uploadHero() {
-                    const file = this.$refs.heroFile.files[0];
-                    if(!file) return alert('파일을 선택하세요.');
+                    const file = this.$refs.heroFile.files[0]; if(!file) return alert('파일 선택');
                     const fd = new FormData(); fd.append('heroFile', file);
-                    await fetch('/api/admin/hero', { method: 'POST', body: fd });
-                    this.fetchHero();
+                    await fetch('/api/admin/hero', { method: 'POST', body: fd }); this.fetchHero();
                 },
                 async moveHero(idx, dir) {
-                    const newList = [...this.heroList];
-                    const target = idx + dir;
+                    const newList = [...this.heroList]; const target = idx + dir;
                     [newList[idx], newList[target]] = [newList[target], newList[idx]];
                     await fetch('/api/admin/hero/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ heroMedia: newList }) });
                     this.fetchHero();
                 },
                 async deleteHero(id) { if(confirm('삭제?')) { await fetch(`/api/admin/hero/${id}`, { method: 'DELETE' }); this.fetchHero(); } },
 
-                // 뉴스 관리
+                // [강화됨] 뉴스 관리 로직
                 async fetchNews() { const res = await fetch('/api/public/news'); this.newsList = await res.json(); },
+                async saveNews() {
+                    try {
+                        if (!this.newsForm.title) return alert('제목을 입력해주세요.');
+                        const fd = new FormData();
+                        if (this.newsForm.id) fd.append('id', this.newsForm.id);
+                        fd.append('category', this.newsForm.category);
+                        fd.append('title', this.newsForm.title);
+                        fd.append('content', newsQuill.root.innerHTML);
+
+                        const existing = this.newsForm.attachments.filter(a => !a.isNew);
+                        fd.append('existingAttachments', JSON.stringify(existing));
+
+                        const newFiles = this.newsForm.attachments.filter(a => a.isNew);
+                        newFiles.forEach(a => fd.append('attachments', a.fileObj));
+
+                        const res = await fetch('/api/news', { method: 'POST', body: fd });
+                        if (res.ok) { alert('Saved Successfully'); this.resetNewsForm(); this.fetchNews(); }
+                    } catch (e) { alert('Save Error'); }
+                },
+                editNews(item) {
+                    this.newsForm = { id: item.id, category: item.category, title: item.title, attachments: item.attachments ? JSON.parse(JSON.stringify(item.attachments)) : [] };
+                    if(newsQuill) newsQuill.root.innerHTML = item.content || '';
+                    window.scrollTo({top: 0, behavior: 'smooth'});
+                },
+                resetNewsForm() {
+                    this.newsForm = { id: null, category: 'H&L News', title: '', attachments: [] };
+                    if(newsQuill) newsQuill.setContents([]);
+                },
+                async deleteNews(id) { if(confirm('삭제?')) { await fetch(`/api/news/${id}`, { method: 'DELETE' }); this.fetchNews(); } },
+                async moveNewsInList(idx, dir) {
+                    const newList = [...this.newsList];
+                    const target = idx + dir;
+                    [newList[idx], newList[target]] = [newList[target], newList[idx]];
+                    // 서버 API 연동 (전체 리스트 상태 반영)
+                    await fetch('/api/admin/news/reorder', { 
+                        method: 'POST', 
+                        headers: {'Content-Type': 'application/json'}, 
+                        body: JSON.stringify({ newList: newList.slice().reverse() }) // DB는 최신순 저장이므로 다시 뒤집어줌
+                    });
+                    this.fetchNews();
+                },
                 handleNewsFileSelect(e) { this.addNewsFiles(e.target.files); },
                 handleNewsDrop(e) { this.dragActive = false; this.addNewsFiles(e.dataTransfer.files); },
                 addNewsFiles(files) {
                     for (let f of files) this.newsForm.attachments.push({ originalname: f.name, isNew: true, fileObj: f });
                 },
                 moveNewsAttachment(idx, dir) {
-                    const target = idx + dir;
-                    const items = this.newsForm.attachments;
+                    const items = this.newsForm.attachments; const target = idx + dir;
                     [items[idx], items[target]] = [items[target], items[idx]];
                 },
                 removeNewsAttachment(idx) { this.newsForm.attachments.splice(idx, 1); },
-                async saveNews() {
-                    const fd = new FormData();
-                    if(this.newsForm.id) fd.append('id', this.newsForm.id);
-                    fd.append('category', this.newsForm.category);
-                    fd.append('title', this.newsForm.title);
-                    fd.append('content', newsQuill.root.innerHTML);
-                    const existing = this.newsForm.attachments.filter(a => !a.isNew);
-                    fd.append('existingAttachments', JSON.stringify(existing));
-                    this.newsForm.attachments.filter(a => a.isNew).forEach(a => fd.append('attachments', a.fileObj));
-                    
-                    const res = await fetch('/api/news', { method: 'POST', body: fd });
-                    if(res.ok) { alert('SAVE POST COMPLETED'); this.resetNewsForm(); this.fetchNews(); }
-                },
-                editNews(item) {
-                    this.newsForm = { id: item.id, category: item.category, title: item.title, attachments: item.attachments || [] };
-                    if(newsQuill) newsQuill.root.innerHTML = item.content;
-                    window.scrollTo({top:0, behavior:'smooth'});
-                },
-                resetNewsForm() { this.newsForm = { id: null, category: 'H&L News', title: '', attachments: [] }; if(newsQuill) newsQuill.setContents([]); },
-                async deleteNews(id) { if(confirm('삭제?')) { await fetch(`/api/news/${id}`, { method: 'DELETE' }); this.fetchNews(); } },
 
-                // 파트너 관리
+                // 파트너 및 채용
                 async fetchPartners() { const res = await fetch('/api/public/partners'); this.partners = await res.json(); },
                 async savePartner() {
-                    const fd = new FormData();
-                    if(this.partnerForm.id) fd.append('id', this.partnerForm.id);
+                    const fd = new FormData(); if(this.partnerForm.id) fd.append('id', this.partnerForm.id);
                     fd.append('name', this.partnerForm.name); fd.append('engName', this.partnerForm.engName);
                     fd.append('title', this.partnerForm.title); fd.append('edu', this.partnerForm.edu); fd.append('exp', this.partnerForm.exp);
                     if(this.$refs.partnerPhoto.files[0]) fd.append('photo', this.$refs.partnerPhoto.files[0]);
-                    const res = await fetch('/api/admin/partners', { method: 'POST', body: fd });
-                    if(res.ok) { alert('SAVE POST COMPLETED'); this.partnerForm = { id: null, name: '', engName: '', title: '', edu: '', exp: '' }; this.fetchPartners(); }
+                    await fetch('/api/admin/partners', { method: 'POST', body: fd }); this.partnerForm = {id:null, name:'', engName:'', title:'', edu:'', exp:''}; this.fetchPartners();
                 },
                 editPartner(p) { this.partnerForm = { id: p.id, name: p.name, engName: p.engName, title: p.title, edu: p.edu.join('\n'), exp: p.exp.join('\n') }; },
                 async deletePartner(id) { if(confirm('삭제?')) { await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' }); this.fetchPartners(); } },
-
-                // 채용 관리
                 async fetchRecruitData() {
                     const [res1, res2] = await Promise.all([fetch('/api/public/recruit'), fetch('/api/public/jobs')]);
                     this.recruitStatus = await res1.json(); this.jobList = await res2.json();
@@ -460,13 +501,10 @@
                 async updateRecruitStatus(id, status) { await fetch('/api/recruit/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id, status }) }); },
                 openJobForm() { this.tab = 'jobs_edit'; this.initQuill(); },
                 async saveJob() {
-                    const fd = new FormData();
-                    fd.append('category', this.jobForm.category); fd.append('title', this.jobForm.title);
+                    const fd = new FormData(); fd.append('category', this.jobForm.category); fd.append('title', this.jobForm.title);
                     fd.append('deadline', this.jobForm.deadline); fd.append('content', jobQuill.root.innerHTML);
-                    const files = this.$refs.jobFiles.files;
-                    for (let f of files) fd.append('jobAttachments', f);
-                    const res = await fetch('/api/admin/jobs', { method: 'POST', body: fd });
-                    if(res.ok) { alert('SAVE POST COMPLETED'); this.setTab('recruit'); }
+                    const files = this.$refs.jobFiles.files; for(let f of files) fd.append('jobAttachments', f);
+                    await fetch('/api/admin/jobs', { method: 'POST', body: fd }); this.setTab('recruit');
                 },
                 async deleteJob(id) { if(confirm('삭제?')) { await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' }); this.fetchRecruitData(); } }
             },

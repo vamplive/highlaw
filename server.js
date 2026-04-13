@@ -297,17 +297,17 @@ app.post('/api/admin/hero/reorder', adminRequired, async (req, res) => {
 });
 
 /**
- * [수정됨] 뉴스 게시글 저장 로직 (SAVE POST)
- * 드래그 앤 드롭으로 인한 순서 변경 및 기존 파일 유지 완벽 지원
+ * [수정됨] 뉴스 게시글 저장 로직 (SAVE & UPDATE)
+ * 이미지, 동영상, 일반 파일 통합 관리 및 Rich Text 대응
  */
 app.post('/api/news', adminRequired, upload.array('attachments'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
         const { id, category, title, content, existingAttachments } = req.body;
         
-        // 1. 순서가 변경되거나 일부 삭제된 기존 파일 리스트 파싱
+        // 기존 파일 리스트 안전하게 파싱 (수정 시 유지될 파일들)
         let finalAttachments = [];
-        if (existingAttachments) {
+        if (existingAttachments && existingAttachments !== "null" && existingAttachments !== "undefined") {
             try {
                 finalAttachments = JSON.parse(existingAttachments);
             } catch (err) {
@@ -315,17 +315,17 @@ app.post('/api/news', adminRequired, upload.array('attachments'), async (req, re
             }
         }
 
-        // 2. 새로 업로드된 파일 정보 추출
+        // 새로 업로드된 파일 정보 추출 및 UTF-8 처리
         const newAttachments = req.files ? req.files.map(f => ({ 
             filename: f.filename, 
             originalname: Buffer.from(f.originalname, 'latin1').toString('utf8'), 
             mimetype: f.mimetype 
         })) : [];
 
-        // 기존 파일 리스트 뒤에 신규 파일들을 결합
+        // 기존 파일 + 새 파일 병합
         finalAttachments = [...finalAttachments, ...newAttachments];
 
-        // 3. ID 체크를 통한 신규 등록/수정 분기
+        // 1. 기존 게시글 수정 (Update)
         if (id && id !== "null" && id !== "undefined") {
             const index = db.news.findIndex(n => n.id == id);
             if (index > -1) {
@@ -339,7 +339,7 @@ app.post('/api/news', adminRequired, upload.array('attachments'), async (req, re
             }
         }
 
-        // 4. 신규 게시글 등록
+        // 2. 신규 게시글 등록 (Create)
         const newNews = { 
             id: Date.now(), 
             category, 
@@ -353,7 +353,23 @@ app.post('/api/news', adminRequired, upload.array('attachments'), async (req, re
         res.json(newNews);
     } catch (e) { 
         console.error("뉴스 저장 에러:", e);
-        res.status(500).send("Error"); 
+        res.status(500).send("Error saving news"); 
+    }
+});
+
+/**
+ * [추가됨] 뉴스 게시글 순서 변경 API
+ */
+app.post('/api/admin/news/reorder', adminRequired, async (req, res) => {
+    try {
+        const { newList } = req.body;
+        const db = await fs.readJson(DB_FILE);
+        // 클라이언트에서 전달받은 순서대로 저장 (전체 교체)
+        db.news = newList;
+        await fs.writeJson(DB_FILE, db);
+        res.send("Reordered");
+    } catch (e) { 
+        res.status(500).send("Error reordering news"); 
     }
 });
 
