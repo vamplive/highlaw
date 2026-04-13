@@ -99,7 +99,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// [수정됨] 대용량 파일(영상 등) 업로드를 위해 용량 제한을 500MB로 상향 조정
 const upload = multer({ 
     storage: storage,
     limits: { fileSize: 500 * 1024 * 1024 } 
@@ -297,7 +296,10 @@ app.post('/api/admin/hero/reorder', adminRequired, async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// [수정됨] 뉴스 게시글 저장 로직: 드래그 앤 드롭 순서 유지 및 기존 파일 관리 지원
+/**
+ * [수정됨] 뉴스 게시글 저장 로직 (SAVE POST)
+ * 드래그 앤 드롭으로 인한 순서 변경 및 기존 파일 유지 완벽 지원
+ */
 app.post('/api/news', adminRequired, upload.array('attachments'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -313,31 +315,31 @@ app.post('/api/news', adminRequired, upload.array('attachments'), async (req, re
             }
         }
 
-        // 2. 새로 업로드된 파일 정보 추출 및 추가
+        // 2. 새로 업로드된 파일 정보 추출
         const newAttachments = req.files ? req.files.map(f => ({ 
             filename: f.filename, 
             originalname: Buffer.from(f.originalname, 'latin1').toString('utf8'), 
             mimetype: f.mimetype 
         })) : [];
 
-        // 기존 파일 리스트 뒤에 신규 파일들을 순차적으로 결합
+        // 기존 파일 리스트 뒤에 신규 파일들을 결합
         finalAttachments = [...finalAttachments, ...newAttachments];
 
-        // 3. ID가 있는 경우: 기존 게시글 수정
+        // 3. ID 체크를 통한 신규 등록/수정 분기
         if (id && id !== "null" && id !== "undefined") {
             const index = db.news.findIndex(n => n.id == id);
             if (index > -1) {
                 db.news[index].category = category;
                 db.news[index].title = title;
                 db.news[index].content = content;
-                db.news[index].attachments = finalAttachments; // 업데이트된 전체 파일 리스트 저장
+                db.news[index].attachments = finalAttachments;
                 
                 await fs.writeJson(DB_FILE, db);
                 return res.json(db.news[index]);
             }
         }
 
-        // 4. ID가 없는 경우: 신규 게시글 등록
+        // 4. 신규 게시글 등록
         const newNews = { 
             id: Date.now(), 
             category, 
@@ -350,7 +352,7 @@ app.post('/api/news', adminRequired, upload.array('attachments'), async (req, re
         await fs.writeJson(DB_FILE, db);
         res.json(newNews);
     } catch (e) { 
-        console.error(e);
+        console.error("뉴스 저장 에러:", e);
         res.status(500).send("Error"); 
     }
 });

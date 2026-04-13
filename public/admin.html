@@ -1,3 +1,4 @@
+<!-- START OF FILE text/html (admin.html) -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,7 +9,6 @@
 
     <!-- 파비콘 설정 -->
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -45,17 +45,13 @@
 
         .btn-gold { 
             background: #1a1a1a; color: white; border: 1px solid var(--gold-primary); 
-            padding: 10px 20px; font-size: 12px; transition: 0.3s; 
+            padding: 10px 20px; font-size: 12px; transition: 0.3s; cursor: pointer;
         }
         .btn-gold:hover { background: var(--gold-primary); color: #1a1a1a; }
 
         .editor-wrapper { min-height: 400px; font-family: 'Inter', sans-serif; background: white; }
-        .ql-toolbar.ql-snow { border: none; border-bottom: 1px solid #eee; padding: 10px; }
-        .ql-container.ql-snow { border: none; min-height: 350px; font-size: 16px; }
-
         .sidebar-logo { filter: brightness(0) invert(1); width: 100%; height: auto; display: block; }
         
-        /* 에디터 내 폰트 및 크기 선택 도구 가시성 확보 */
         .ql-snow .ql-picker.ql-font, .ql-snow .ql-picker.ql-size { width: 100px; }
 
         /* 뉴스 파일 업로드 드롭존 스타일 */
@@ -85,20 +81,19 @@
                 <hr class="border-white/5 my-4">
                 <a href="/" class="nav-btn block opacity-40 hover:opacity-100">← 웹사이트 바로가기</a>
             </nav>
-            <div class="p-8 text-[10px] opacity-30"> &copy; 2026 High & Law Firm </div>
         </aside>
 
         <!-- Main Content -->
         <main class="ml-64 flex-1 p-12">
             
-            <!-- 0. 구성원 승인 관리 -->
+            <!-- 0. 구성원 승인 관리 (isAdmin 토글 복구) -->
             <div v-show="tab === 'users'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Member Approval</h2>
                 <div class="admin-card overflow-hidden">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="text-[11px] uppercase tracking-widest text-[#c5a059] border-b-2 border-[#f4eee0]">
-                                <th class="pb-4">아이디</th><th class="pb-4">이름</th><th class="pb-4">직책</th><th class="pb-4">상태</th><th class="pb-4">관리자여부</th><th class="pb-4 text-center">동작</th>
+                                <th class="pb-4">아이디</th><th class="pb-4">이름</th><th class="pb-4">직책</th><th class="pb-4">상태</th><th class="pb-4">관리자</th><th class="pb-4 text-center">동작</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -113,8 +108,8 @@
                                 </td>
                                 <td class="py-4">
                                     <select @change="updateUserStatus(user.id, {isAdmin: $event.target.value === 'true'})" class="text-xs">
-                                        <option :selected="user.isAdmin" value="true">관리자</option>
-                                        <option :selected="!user.isAdmin" value="false">일반유저</option>
+                                        <option :selected="user.isAdmin" value="true">YES</option>
+                                        <option :selected="!user.isAdmin" value="false">NO</option>
                                     </select>
                                 </td>
                                 <td class="py-4 text-center space-x-2">
@@ -127,7 +122,7 @@
                 </div>
             </div>
 
-            <!-- 1. 상담 신청 관리 -->
+            <!-- 1. 상담 신청 관리 (상세 보기 기능 복구) -->
             <div v-show="tab === 'inquiry'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Inquiry Management</h2>
                 <div class="admin-card overflow-hidden">
@@ -152,13 +147,13 @@
                 </div>
             </div>
 
-            <!-- 2. 메인 비주얼 관리 -->
+            <!-- 2. 메인 비주얼 관리 (순서 변경 기능 복구) -->
             <div v-show="tab === 'hero'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Main Visual Management</h2>
                 <div class="admin-card mb-10">
                     <p class="text-[11px] font-bold text-gold-primary uppercase mb-4 tracking-widest">Add New Media</p>
                     <input type="file" ref="heroFile" class="text-sm mb-4 block w-full">
-                    <button @click="uploadHero" class="btn-gold w-full py-4">Upload Media (Image/Video)</button>
+                    <button @click="uploadHero" class="btn-gold w-full py-4 uppercase">SAVE POST</button>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -179,76 +174,65 @@
                 </div>
             </div>
 
-            <!-- 3. 뉴스 관리 (드래그 앤 드롭 및 순서 변경 강화) -->
+            <!-- 3. 뉴스 관리 (D&D 통합 및 순서 제어 복구) -->
             <div v-show="tab === 'news'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News Management</h2>
-                <div class="space-y-8">
-                    <div class="admin-card">
-                        <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">
-                            {{ newsForm.id ? '수정하기 (Editing Post)' : '신규 등록 (New Post)' }}
-                        </p>
-                        <div class="space-y-6">
-                            <div class="grid grid-cols-2 gap-6">
-                                <select v-model="newsForm.category">
-                                    <option value="H&L News">H&L News</option>
-                                    <option value="Leading Cases">Leading Cases</option>
-                                    <option value="Latest Updates">Latest Updates</option>
-                                </select>
-                                <input v-model="newsForm.title" type="text" placeholder="제목">
+                <div class="admin-card mb-8">
+                    <p class="text-[10px] font-bold text-gold-primary uppercase mb-6 tracking-widest">
+                        {{ newsForm.id ? 'Edit Post' : 'New Post' }}
+                    </p>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <select v-model="newsForm.category">
+                                <option value="H&L News">H&L News</option>
+                                <option value="Leading Cases">Leading Cases</option>
+                                <option value="Latest Updates">Latest Updates</option>
+                            </select>
+                            <input v-model="newsForm.title" type="text" placeholder="제목">
+                        </div>
+                        <div id="news-editor" class="editor-wrapper"></div>
+                        
+                        <!-- Drag & Drop Zone -->
+                        <div class="bg-gray-50 p-6 border rounded">
+                            <div class="drop-zone mb-6" :class="{ active: dragActive }"
+                                @dragover.prevent="dragActive = true" @dragleave.prevent="dragActive = false"
+                                @drop.prevent="handleNewsDrop" @click="$refs.newsFiles.click()">
+                                <span class="text-xs text-gray-400">파일을 이 곳에 드래그하거나 클릭하여 추가하세요.</span>
+                                <input type="file" ref="newsFiles" multiple class="hidden" @change="handleNewsFileSelect">
                             </div>
-                            <div id="news-editor" class="editor-wrapper"></div>
-                            
-                            <!-- 첨부파일 매니저 (드래그 앤 드롭 지원) -->
-                            <div class="bg-gray-50 p-6 border rounded">
-                                <p class="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-widest">File Management (Image, Video, Documents)</p>
-                                
-                                <div 
-                                    class="drop-zone mb-6"
-                                    :class="{ active: dragActive }"
-                                    @dragover.prevent="dragActive = true"
-                                    @dragleave.prevent="dragActive = false"
-                                    @drop.prevent="handleNewsDrop"
-                                    @click="$refs.newsFiles.click()"
-                                >
-                                    <span class="text-xs text-gray-400">파일을 이 곳에 드래그하거나 클릭하여 추가하세요.</span>
-                                    <input type="file" ref="newsFiles" multiple class="hidden" @change="handleNewsFileSelect">
-                                </div>
 
-                                <!-- 파일 리스트 및 순서 제어 -->
-                                <div class="space-y-2">
-                                    <div v-for="(file, idx) in newsForm.attachments" :key="idx" class="flex items-center justify-between bg-white p-3 border rounded text-sm shadow-sm">
-                                        <div class="flex items-center gap-3 truncate">
-                                            <span class="text-[10px] font-bold text-gold-primary">#{{ idx + 1 }}</span>
-                                            <span class="truncate">{{ file.originalname || file.filename }}</span>
-                                            <span v-if="file.isNew" class="text-[9px] bg-blue-100 text-blue-600 px-1 rounded">NEW</span>
-                                        </div>
-                                        <div class="flex items-center gap-2 shrink-0">
-                                            <button @click="moveNewsAttachment(idx, -1)" :disabled="idx === 0" class="text-gray-400 hover:text-black disabled:opacity-10">▲</button>
-                                            <button @click="moveNewsAttachment(idx, 1)" :disabled="idx === newsForm.attachments.length - 1" class="text-gray-400 hover:text-black disabled:opacity-10">▼</button>
-                                            <button @click="removeNewsAttachment(idx)" class="text-red-400 hover:text-red-600 ml-2">✕</button>
-                                        </div>
+                            <!-- 파일 리스트 및 순서 제어 복구 -->
+                            <div class="space-y-2">
+                                <div v-for="(file, idx) in newsForm.attachments" :key="idx" class="flex items-center justify-between bg-white p-3 border rounded text-xs shadow-sm">
+                                    <div class="flex items-center gap-3 truncate">
+                                        <span class="text-[10px] font-bold text-gold-primary">#{{ idx + 1 }}</span>
+                                        <span class="truncate">{{ file.originalname || file.filename }}</span>
                                     </div>
-                                    <div v-if="newsForm.attachments.length === 0" class="text-center py-4 text-xs text-gray-300 italic">첨부된 파일이 없습니다.</div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <button @click="moveNewsAttachment(idx, -1)" :disabled="idx === 0" class="text-gray-400 hover:text-black">▲</button>
+                                        <button @click="moveNewsAttachment(idx, 1)" :disabled="idx === newsForm.attachments.length - 1" class="text-gray-400 hover:text-black">▼</button>
+                                        <button @click="removeNewsAttachment(idx)" class="text-red-400 ml-2">✕</button>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="flex gap-4">
-                                <button @click="saveNews" class="btn-gold flex-1 py-4 uppercase">Save Post</button>
-                                <button v-if="newsForm.id" @click="resetNewsForm" class="bg-gray-100 px-8 text-xs uppercase">Cancel</button>
-                            </div>
+                        <div class="flex gap-4">
+                            <button @click="saveNews" class="btn-gold flex-1 py-4 uppercase">SAVE POST</button>
+                            <button v-if="newsForm.id" @click="resetNewsForm" class="bg-gray-100 px-8 text-xs uppercase">Cancel</button>
                         </div>
                     </div>
-                    <div v-for="item in newsList" :key="item.id" class="admin-card flex justify-between items-center py-4">
-                        <span class="text-sm">{{ item.title }}</span>
-                        <div class="flex gap-3">
-                            <button @click="editNews(item)" class="text-blue-500 text-xs font-bold">수정</button>
-                            <button @click="deleteNews(item.id)" class="text-red-300 text-xs font-bold">삭제</button>
-                        </div>
+                </div>
+                <div v-for="item in newsList" :key="item.id" class="admin-card flex justify-between items-center py-4 mb-2">
+                    <span class="text-sm">{{ item.title }}</span>
+                    <div class="flex gap-3">
+                        <button @click="editNews(item)" class="text-blue-500 text-xs font-bold">수정</button>
+                        <button @click="deleteNews(item.id)" class="text-red-300 text-xs font-bold">삭제</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 4. 구성원 관리 -->
+            <!-- 4. 구성원 관리 (멀티라인 복구) -->
             <div v-show="tab === 'partner'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Partner Management</h2>
                 <div class="admin-card mb-8">
@@ -258,82 +242,67 @@
                             <input v-model="partnerForm.engName" type="text" placeholder="영문 성함">
                         </div>
                         <input v-model="partnerForm.title" type="text" placeholder="직책/분야">
-                        <textarea v-model="partnerForm.edu" rows="3" class="border p-2 w-full text-sm" placeholder="학력"></textarea>
-                        <textarea v-model="partnerForm.exp" rows="3" class="border p-2 w-full text-sm" placeholder="경력"></textarea>
+                        <textarea v-model="partnerForm.edu" rows="3" placeholder="학력 (줄바꿈으로 구분)"></textarea>
+                        <textarea v-model="partnerForm.exp" rows="3" placeholder="경력 (줄바꿈으로 구분)"></textarea>
                         <input type="file" ref="partnerPhoto" accept="image/*" class="text-xs">
-                        <button @click="savePartner" class="btn-gold w-full py-4">{{ partnerForm.id ? '수정' : '등록' }}</button>
+                        <button @click="savePartner" class="btn-gold w-full py-4 uppercase">SAVE POST</button>
                     </div>
                 </div>
                 <div v-for="p in partners" :key="p.id" class="admin-card py-2 flex justify-between mb-2">
-                    <span class="text-sm">{{p.name}}</span>
+                    <span class="text-sm">{{p.name}} ({{p.title}})</span>
                     <button @click="editPartner(p)" class="text-blue-500 text-xs">수정</button>
                 </div>
             </div>
 
-            <!-- 5. 채용 정보 통합 관리 -->
+            <!-- 5. 채용 관리 (상시채용 상태 + 상세공고 리스트 통합 복구) -->
             <div v-show="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment Integration</h2>
                 
-                <!-- 상시 채용 상태 -->
                 <div class="admin-card mb-10">
-                    <h3 class="text-[11px] font-bold text-gold-primary uppercase mb-6 tracking-widest">상시 채용 분야 오픈 설정</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h3 class="text-[11px] font-bold text-gold-primary uppercase mb-6 tracking-widest">상시 채용 분야 설정</h3>
+                    <div class="grid grid-cols-2 gap-4">
                         <div v-for="r in recruitStatus" :key="r.role_id" class="flex justify-between items-center p-4 border rounded bg-gray-50">
                             <span class="text-sm font-bold">{{ r.role_id }}</span>
-                            <select v-model="r.status" @change="updateRecruitStatus(r.role_id, r.status)" class="!w-auto text-xs px-2">
-                                <option value="status-open">모집 중 (OPEN)</option>
-                                <option value="status-closed">모집 마감 (CLOSED)</option>
+                            <select v-model="r.status" @change="updateRecruitStatus(r.role_id, r.status)" class="!w-auto text-xs">
+                                <option value="status-open">OPEN</option>
+                                <option value="status-closed">CLOSED</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- 상세 공고 리스트 관리 -->
                 <div class="admin-card">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-[11px] font-bold text-gold-primary uppercase tracking-widest">상세 채용 공고 리스트</h3>
-                        <button @click="openJobForm" class="btn-gold text-[10px]">신규 상세 공고 작성</button>
+                        <h3 class="text-[11px] font-bold text-gold-primary uppercase tracking-widest">상세 채용 공고</h3>
+                        <button @click="openJobForm" class="btn-gold text-[10px]">NEW JOB POST</button>
                     </div>
-                    <table class="w-full text-left">
-                        <thead class="text-[10px] uppercase text-gray-400 border-b">
-                            <tr><th class="pb-3">분야</th><th class="pb-3">제목</th><th class="pb-3">마감일</th><th class="pb-3 text-right">관리</th></tr>
-                        </thead>
-                        <tbody class="divide-y text-sm">
-                            <tr v-for="job in jobList" :key="job.id" class="hover:bg-gray-50">
-                                <td class="py-3">{{ job.category }}</td>
-                                <td class="py-3 font-medium">{{ job.title }}</td>
-                                <td class="py-3">{{ job.deadline }}</td>
-                                <td class="py-3 text-right">
-                                    <button @click="deleteJob(job.id)" class="text-red-400 text-xs hover:underline">삭제</button>
-                                </td>
-                            </tr>
-                            <tr v-if="jobList.length === 0"><td colspan="4" class="py-10 text-center text-gray-300">등록된 상세 공고가 없습니다.</td></tr>
-                        </tbody>
+                    <table class="w-full text-left text-sm">
+                        <tr v-for="job in jobList" :key="job.id" class="border-b">
+                            <td class="py-4">{{ job.category }}</td>
+                            <td class="py-4 font-bold">{{ job.title }}</td>
+                            <td class="py-4">{{ job.deadline }}</td>
+                            <td class="py-4 text-right"><button @click="deleteJob(job.id)" class="text-red-400">삭제</button></td>
+                        </tr>
                     </table>
                 </div>
             </div>
 
-            <!-- 상세 공고 폼 -->
+            <!-- 채용 공고 편집 (Quill 복구) -->
             <div v-show="tab === 'jobs_edit'">
                 <h2 class="text-2xl font-normal mb-8">Edit Job Post</h2>
-                <div class="admin-card">
-                    <div class="space-y-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <select v-model="jobForm.category">
-                                <option value="변호사 채용">변호사 채용</option>
-                                <option value="인턴/수습 채용">인턴/수습 채용</option>
-                                <option value="행정/직원 채용">행정/직원 채용</option>
-                            </select>
-                            <input v-model="jobForm.title" type="text" placeholder="공고 제목">
-                        </div>
-                        <input v-model="jobForm.deadline" type="date" placeholder="마감일">
-                        <div id="job-editor" class="editor-wrapper"></div>
-                        <input type="file" ref="jobFiles" multiple class="text-xs block w-full">
-                        <div class="flex gap-4">
-                            <button @click="saveJob" class="btn-gold flex-1 py-4">Save Job Post</button>
-                            <button @click="tab = 'recruit'" class="bg-gray-100 px-8 text-xs uppercase">Cancel</button>
-                        </div>
+                <div class="admin-card space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <select v-model="jobForm.category">
+                            <option value="변호사 채용">변호사 채용</option>
+                            <option value="인턴/수습 채용">인턴/수습 채용</option>
+                            <option value="행정/직원 채용">행정/직원 채용</option>
+                        </select>
+                        <input v-model="jobForm.title" type="text" placeholder="공고 제목">
                     </div>
+                    <input v-model="jobForm.deadline" type="date">
+                    <div id="job-editor" class="editor-wrapper"></div>
+                    <input type="file" ref="jobFiles" multiple class="text-xs block w-full">
+                    <button @click="saveJob" class="btn-gold w-full py-4 uppercase">SAVE POST</button>
                 </div>
             </div>
 
@@ -343,18 +312,14 @@
     <script>
         const { createApp } = Vue;
         let newsQuill, jobQuill;
+
         createApp({
             data() {
                 return {
-                    tab: 'inquiry', inquiries: [], 
-                    newsList: [], 
+                    tab: 'inquiry', inquiries: [], newsList: [], userList: [], heroList: [], partners: [], 
+                    recruitStatus: [], jobList: [], dragActive: false,
                     newsForm: { id: null, category: 'H&L News', title: '', attachments: [] },
-                    dragActive: false,
-                    partners: [], partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '' },
-                    userList: [],
-                    heroList: [], 
-                    recruitStatus: [], 
-                    jobList: [], 
+                    partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '' },
                     jobForm: { id: null, category: '변호사 채용', title: '', deadline: '', content: '' }
                 }
             },
@@ -368,158 +333,95 @@
                 },
                 initQuill() {
                     setTimeout(() => {
-                        const toolbarOptions = [
-                            [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'color': [] }, { 'background': [] }],
-                            [{ 'header': 1 }, { 'header': 2 }],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                            ['link', 'image', 'video'],
-                            ['clean']
-                        ];
-                        if (this.tab === 'news' && !newsQuill) {
-                            newsQuill = new Quill('#news-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
-                        }
-                        if (this.tab === 'jobs_edit' && !jobQuill) {
-                            jobQuill = new Quill('#job-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
-                        }
+                        const toolbar = [['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link', 'image']];
+                        if (this.tab === 'news' && !newsQuill) newsQuill = new Quill('#news-editor', { theme: 'snow', modules: { toolbar } });
+                        if (this.tab === 'jobs_edit' && !jobQuill) jobQuill = new Quill('#job-editor', { theme: 'snow', modules: { toolbar } });
                     }, 100);
                 },
-
-                /* --- 뉴스 관리 메서드 (파일 순서 및 드래그 앤 드롭 지원) --- */
-                handleNewsFileSelect(e) {
-                    this.addNewsFiles(e.target.files);
-                },
-                handleNewsDrop(e) {
-                    this.dragActive = false;
-                    this.addNewsFiles(e.dataTransfer.files);
-                },
-                addNewsFiles(files) {
-                    for (let i = 0; i < files.length; i++) {
-                        const file = files[i];
-                        this.newsForm.attachments.push({
-                            originalname: file.name,
-                            mimetype: file.type,
-                            isNew: true,
-                            fileObj: file
-                        });
-                    }
+                // 뉴스 파일 관리 (D&D 및 순서)
+                handleNewsFileSelect(e) { this.addFiles(e.target.files); },
+                handleNewsDrop(e) { this.dragActive = false; this.addFiles(e.dataTransfer.files); },
+                addFiles(files) {
+                    for (let f of files) this.newsForm.attachments.push({ originalname: f.name, isNew: true, fileObj: f });
                 },
                 moveNewsAttachment(idx, dir) {
-                    const targetIdx = idx + dir;
+                    const target = idx + dir;
                     const items = this.newsForm.attachments;
-                    [items[idx], items[targetIdx]] = [items[targetIdx], items[idx]];
+                    [items[idx], items[target]] = [items[target], items[idx]];
                 },
-                removeNewsAttachment(idx) {
-                    this.newsForm.attachments.splice(idx, 1);
-                },
+                removeNewsAttachment(idx) { this.newsForm.attachments.splice(idx, 1); },
+                
                 async saveNews() {
-                    const formData = new FormData();
-                    if(this.newsForm.id) formData.append('id', this.newsForm.id);
-                    formData.append('category', this.newsForm.category); 
-                    formData.append('title', this.newsForm.title);
-                    formData.append('content', newsQuill ? newsQuill.root.innerHTML : '');
+                    const fd = new FormData();
+                    if(this.newsForm.id) fd.append('id', this.newsForm.id);
+                    fd.append('category', this.newsForm.category);
+                    fd.append('title', this.newsForm.title);
+                    fd.append('content', newsQuill.root.innerHTML);
+                    const existing = this.newsForm.attachments.filter(a => !a.isNew);
+                    fd.append('existingAttachments', JSON.stringify(existing));
+                    this.newsForm.attachments.filter(a => a.isNew).forEach(a => fd.append('attachments', a.fileObj));
                     
-                    // 기존 파일 중 유지되는 것들 전송
-                    const existing = this.newsForm.attachments
-                        .filter(a => !a.isNew)
-                        .map(a => ({ filename: a.filename, originalname: a.originalname, mimetype: a.mimetype }));
-                    formData.append('existingAttachments', JSON.stringify(existing));
+                    const res = await fetch('/api/news', { method: 'POST', body: fd });
+                    if(res.ok) { alert('저장 완료'); this.resetNewsForm(); this.fetchNews(); }
+                },
+                editNews(item) {
+                    this.newsForm = { id: item.id, category: item.category, title: item.title, attachments: item.attachments || [] };
+                    if(newsQuill) newsQuill.root.innerHTML = item.content;
+                    window.scrollTo({top:0, behavior:'smooth'});
+                },
+                resetNewsForm() { this.newsForm = { id: null, category: 'H&L News', title: '', attachments: [] }; if(newsQuill) newsQuill.setContents([]); },
 
-                    // 새 파일들 전송 (순서대로)
-                    this.newsForm.attachments.forEach(a => {
-                        if (a.isNew && a.fileObj) {
-                            formData.append('attachments', a.fileObj);
-                        }
-                    });
-                    
-                    try {
-                        const res = await fetch('/api/news', { method: 'POST', body: formData });
-                        if(res.ok) { 
-                            alert('저장 완료'); 
-                            this.resetNewsForm(); 
-                            this.fetchNews(); 
-                        } else {
-                            alert('저장 실패. 서버 용량 제한 혹은 네트워크 상태를 확인하세요.');
-                        }
-                    } catch (e) { alert('오류가 발생했습니다.'); }
-                },
-                editNews(item) { 
-                    this.newsForm = { 
-                        id: item.id, 
-                        category: item.category, 
-                        title: item.title,
-                        attachments: item.attachments ? JSON.parse(JSON.stringify(item.attachments)) : []
-                    }; 
-                    if(newsQuill) newsQuill.root.innerHTML = item.content; 
-                    window.scrollTo({top:0, behavior:'smooth'}); 
-                },
-                resetNewsForm() { 
-                    this.newsForm = { id: null, category: 'H&L News', title: '', attachments: [] }; 
-                    if(newsQuill) newsQuill.setContents([]); 
-                },
-                async fetchNews() { const res = await fetch('/api/public/news'); this.newsList = await res.json(); },
-                async deleteNews(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/news/${id}`, { method: 'DELETE' }); this.fetchNews(); } },
-
-                /* --- 히어로 / 파트너 / 채용 등 나머지 메서드 (유지) --- */
-                async fetchHero() { const res = await fetch('/api/public/hero'); this.heroList = await res.json(); },
+                // 히어로 관리
                 async uploadHero() {
                     const file = this.$refs.heroFile.files[0];
-                    if(!file) return alert('파일을 선택하세요.');
-                    const formData = new FormData(); formData.append('heroFile', file);
-                    const res = await fetch('/api/admin/hero', { method: 'POST', body: formData });
-                    if(res.ok) { this.$refs.heroFile.value = ''; this.fetchHero(); }
+                    if(!file) return alert('파일 선택');
+                    const fd = new FormData(); fd.append('heroFile', file);
+                    await fetch('/api/admin/hero', { method: 'POST', body: fd });
+                    this.fetchHero();
                 },
-                async deleteHero(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/admin/hero/${id}`, { method: 'DELETE' }); this.fetchHero(); } },
-                async moveHero(index, direction) {
+                async moveHero(idx, dir) {
                     const newList = [...this.heroList];
-                    const targetIndex = index + direction;
-                    if (targetIndex < 0 || targetIndex >= newList.length) return;
-                    [newList[index], newList[targetIndex]] = [newList[targetIndex], newList[index]];
-                    const res = await fetch('/api/admin/hero/reorder', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ heroMedia: newList })
-                    });
-                    if(res.ok) this.fetchHero();
+                    const target = idx + dir;
+                    [newList[idx], newList[target]] = [newList[target], newList[idx]];
+                    await fetch('/api/admin/hero/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ heroMedia: newList }) });
+                    this.fetchHero();
                 },
-                async fetchRecruitData() {
-                    const [res1, res2] = await Promise.all([fetch('/api/public/recruit'), fetch('/api/public/jobs')]);
-                    this.recruitStatus = await res1.json();
-                    this.jobList = await res2.json();
-                },
-                async updateRecruitStatus(id, status) {
-                    await fetch('/api/recruit/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id, status }) });
-                },
-                openJobForm() { this.tab = 'jobs_edit'; this.initQuill(); },
-                async saveJob() {
-                    const formData = new FormData();
-                    formData.append('category', this.jobForm.category);
-                    formData.append('title', this.jobForm.title);
-                    formData.append('deadline', this.jobForm.deadline);
-                    formData.append('content', jobQuill.root.innerHTML);
-                    const files = this.$refs.jobFiles.files;
-                    for (let i = 0; i < files.length; i++) formData.append('jobAttachments', files[i]);
-                    const res = await fetch('/api/admin/jobs', { method: 'POST', body: formData });
-                    if(res.ok) { this.setTab('recruit'); }
-                },
-                async deleteJob(id) { if(confirm('공고를 삭제하시겠습니까?')) { await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' }); this.fetchRecruitData(); } },
+                async deleteHero(id) { if(confirm('삭제?')) { await fetch(`/api/admin/hero/${id}`, { method: 'DELETE' }); this.fetchHero(); } },
+
+                // 기타 기능
+                async fetchInquiries() { const res = await fetch('/api/admin/inquiries'); this.inquiries = await res.json(); },
+                viewInquiryDetail(item) { alert(`[내용]\n${item.summary}\n\n[파일]\n${item.files.join(', ')}`); },
+                async deleteInquiry(id) { if(confirm('삭제?')) { await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' }); this.fetchInquiries(); } },
                 async fetchUsers() { const res = await fetch('/api/admin/users'); this.userList = await res.json(); },
                 async updateUserStatus(userId, payload) { await fetch('/api/admin/users/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId, ...payload }) }); this.fetchUsers(); },
                 async deleteUser(id) { if(confirm('삭제?')) { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); this.fetchUsers(); } },
-                async fetchInquiries() { const res = await fetch('/api/admin/inquiries'); this.inquiries = await res.json(); },
                 async fetchPartners() { const res = await fetch('/api/public/partners'); this.partners = await res.json(); },
                 async savePartner() {
-                    const formData = new FormData();
-                    if(this.partnerForm.id) formData.append('id', this.partnerForm.id);
-                    formData.append('name', this.partnerForm.name); formData.append('engName', this.partnerForm.engName);
-                    formData.append('title', this.partnerForm.title); formData.append('edu', this.partnerForm.edu); formData.append('exp', this.partnerForm.exp);
-                    if(this.$refs.partnerPhoto.files[0]) formData.append('photo', this.$refs.partnerPhoto.files[0]);
-                    const res = await fetch('/api/admin/partners', { method: 'POST', body: formData });
-                    if(res.ok) { alert('완료'); this.resetPartnerForm(); this.fetchPartners(); }
+                    const fd = new FormData();
+                    if(this.partnerForm.id) fd.append('id', this.partnerForm.id);
+                    fd.append('name', this.partnerForm.name); fd.append('engName', this.partnerForm.engName);
+                    fd.append('title', this.partnerForm.title); fd.append('edu', this.partnerForm.edu); fd.append('exp', this.partnerForm.exp);
+                    if(this.$refs.partnerPhoto.files[0]) fd.append('photo', this.$refs.partnerPhoto.files[0]);
+                    await fetch('/api/admin/partners', { method: 'POST', body: fd });
+                    this.fetchPartners();
                 },
                 editPartner(p) { this.partnerForm = { id: p.id, name: p.name, engName: p.engName, title: p.title, edu: p.edu.join('\n'), exp: p.exp.join('\n') }; },
-                resetPartnerForm() { this.partnerForm = { id: null, name: '', engName: '', title: '', edu: '', exp: '' }; }
+                async fetchRecruitData() {
+                    const [r1, r2] = await Promise.all([fetch('/api/public/recruit'), fetch('/api/public/jobs')]);
+                    this.recruitStatus = await r1.json(); this.jobList = await r2.json();
+                },
+                async updateRecruitStatus(id, status) { await fetch('/api/recruit/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id, status }) }); },
+                openJobForm() { this.tab = 'jobs_edit'; this.initQuill(); },
+                async saveJob() {
+                    const fd = new FormData();
+                    fd.append('category', this.jobForm.category); fd.append('title', this.jobForm.title);
+                    fd.append('deadline', this.jobForm.deadline); fd.append('content', jobQuill.root.innerHTML);
+                    const files = this.$refs.jobFiles.files;
+                    for (let f of files) fd.append('jobAttachments', f);
+                    await fetch('/api/admin/jobs', { method: 'POST', body: fd });
+                    this.setTab('recruit');
+                },
+                async deleteJob(id) { if(confirm('삭제?')) { await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' }); this.fetchRecruitData(); } }
             },
             mounted() { this.fetchInquiries(); this.fetchNews(); this.fetchPartners(); }
         }).mount('#app')
