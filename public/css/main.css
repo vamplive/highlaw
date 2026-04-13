@@ -39,14 +39,40 @@ nav a:hover { color: var(--gold-primary); }
 .menu-toggle { display: none; cursor: pointer; z-index: 1100; padding: 5px; }
 .menu-toggle div { width: 25px; height: 2px; background-color: var(--text-primary); margin: 5px 0; transition: 0.3s; }
 
-/* Hero Section Style */
-.sub-hero { 
-    padding-top: 180px; padding-bottom: 80px; 
-    background: linear-gradient(to bottom, #fdfdfd, #f4eee0); 
-    text-align: center; border-bottom: 1px solid var(--border-color); 
+/* --- [수정 부분] Hero Section Style: 더욱 얇고 시크한 영문 타이포그래피 --- */
+.sub-hero {
+    padding-top: 180px; padding-bottom: 80px;
+    background: linear-gradient(to bottom, #fdfdfd, #f4eee0);
+    text-align: center; border-bottom: 1px solid var(--border-color);
 }
 .sub-hero h2 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 5vw, 56px); font-weight: 400; color: var(--text-primary); margin-bottom: 15px; }
-.label { display: block; text-align: center; font-size: 11px; letter-spacing: 4px; color: var(--gold-primary); text-transform: uppercase; margin-bottom: 15px; font-weight: 700; }
+
+/* 영문 라벨: 자간을 매우 넓히고 굵기를 200-300 수준으로 얇게 조정 */
+.label { 
+    display: block; 
+    text-align: center; 
+    font-family: 'Inter', sans-serif;
+    font-size: 10px; 
+    letter-spacing: 0.8em; /* 시크한 공간감을 위해 자간 확대 */
+    color: var(--gold-primary); 
+    text-transform: uppercase; 
+    margin-bottom: 15px; 
+    font-weight: 300; /* 기존 700에서 300으로 축소하여 얇게 변경 */
+    opacity: 0.85;
+}
+
+/* 히어로 섹션 내 영문 서브 타이틀 (index.html 내 text-silver 대응) */
+.text-silver {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 200; /* 초슬림 웨이트 적용 */
+    font-size: clamp(14px, 1.5vw, 18px);
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 15px;
+    letter-spacing: 0.5em; /* 극도로 넓은 자간으로 세련미 강조 */
+    text-transform: uppercase;
+}
+/* ------------------------------------------------------------------ */
 
 /* Content Section Common */
 section { padding: 100px 20px; max-width: 1400px; margin: 0 auto; }
@@ -70,4 +96,5 @@ footer { padding: 60px 20px; background-color: var(--white); border-top: 1px sol
     nav.active { right: 0; }
     nav ul { flex-direction: column; gap: 25px; }
     header { padding: 15px 20px; }
+    .label { letter-spacing: 0.5em; font-size: 9px; } /* 모바일 가독성 조정 */
 }
