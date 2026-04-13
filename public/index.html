@@ -37,10 +37,11 @@
     <style>
         /* 메인 페이지 전용 추가 스타일 */
         .hero-main {
-            height: 90vh; display: flex; align-items: center; justify-content: center;
+            height: 100vh; /* 화면을 꽉 채우도록 수정 */
+            display: flex; align-items: center; justify-content: center;
             position: relative; overflow: hidden;
             text-align: center; border-bottom: 1px solid var(--border-color);
-            background: #fdfdfd;
+            background: #000;
         }
         
         .hero-bg-slider {
@@ -52,29 +53,32 @@
         }
         .hero-bg-item.active { opacity: 1; }
         
-        /* [수정] 가독성 개선을 위한 오버레이 강화 */
+        /* 가독성 개선을 위한 오버레이 강화 (약간 더 어둡게 처리) */
         .hero-main::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.25)); /* 오버레이 어둡기 증가 */
+            background: linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.55));
             z-index: 2;
         }
 
-        /* [수정] 히어로 텍스트 그림자 추가로 가독성 확보 */
+        /* 히어로 텍스트 가독성 확보 */
         .hero-content { 
             position: relative; z-index: 10; 
-            text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 40px rgba(255,255,255,0.4); 
         }
         .hero-main h2 {
-            font-family: 'Playfair Display', serif; font-size: clamp(40px, 8vw, 80px);
-            font-weight: 400; line-height: 1.1; color: #111; margin-bottom: 25px;
+            font-family: 'Playfair Display', serif; font-size: clamp(45px, 8vw, 85px);
+            font-weight: 700; line-height: 1.1; margin-bottom: 25px;
         }
-        .hero-main p { font-size: clamp(16px, 3vw, 22px); color: #222; max-width: 800px; margin: 0 auto; font-weight: 400; }
+        
+        /* 골드 & 실버 텍스트 색상 */
+        .text-gold { color: #c5a059; }
+        .text-silver { color: #e5e7eb; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
+
+        .hero-main p { font-size: clamp(16px, 3vw, 22px); color: #d1d5db; max-width: 800px; margin: 0 auto; font-weight: 300; }
 
         .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
         .partner-card { background: var(--white); padding: 40px 30px; border: 1px solid var(--border-color); transition: 0.4s; text-align: center; }
         .partner-card:hover { border-color: var(--gold-primary); transform: translateY(-10px); }
         
-        /* [추가] 파트너 카드용 이미지 스타일 */
         .partner-img-main { width: 100%; height: 320px; object-fit: cover; margin-bottom: 25px; border: 1px solid var(--border-color); }
         .partner-card h3 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 15px; color: var(--text-primary); }
         
@@ -100,15 +104,19 @@
 
         @media (max-width: 1024px) {
             .partner-grid, .news-grid-main, .recruit-main-box { grid-template-columns: 1fr; }
-            .hero-main { height: 70vh; }
+            .hero-main { height: 100vh; }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <a href="index.html" class="logo-group">
-            <img src="logo.png" alt="High & Law">
+        <a href="index.html" class="logo-group" style="display: flex; align-items: center; gap: 15px; text-decoration: none;">
+            <img src="logo.png" alt="High & Law" style="height: 50px; width: auto;">
+            <div style="display: flex; flex-direction: column; justify-content: center;">
+                <span style="font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #1a1a1a; line-height: 1.1; letter-spacing: 0.5px;">법무법인 하이로</span>
+                <span style="font-size: 9px; color: #c5a059; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">High & Law</span>
+            </div>
         </a>
         <div class="menu-toggle" id="mobile-toggle"><div></div><div></div><div></div></div>
         <nav id="nav-menu">
@@ -128,13 +136,16 @@
     <section class="hero-main">
         <div class="hero-bg-slider" id="hero-slider"></div>
         <div class="hero-content">
-            <span class="label">Loyalty & Dignity</span>
-            <h2>High Dignity,<br>Law's Solution</h2>
+            <span class="label" style="color: #e5e7eb; opacity: 0.8;">Loyalty & Dignity</span>
+            <h2>
+                <span class="text-gold">High</span> Dignity,<br>
+                <span class="text-silver">Law's Solution</span>
+            </h2>
             <p>각 분야의 전문가들이 클라이언트를 위한<br>정교하고 세심한 법률 솔루션을 제공합니다.</p>
         </div>
     </section>
 
-    <!-- 전문가 소개 영역 (ID 변경 및 동적 연동 준비) -->
+    <!-- 전문가 소개 영역 -->
     <section id="professionals">
         <span class="label">Expertise</span>
         <h2 class="section-title">The Partners</h2>
@@ -230,7 +241,7 @@
                 }
             } catch (e) { console.error("히어로 배경 로드 실패"); }
 
-            // [추가] 1. 파트너 데이터 동기화 (Admin 연동)
+            // 1. 파트너 데이터 동기화
             try {
                 const pRes = await fetch('/api/public/partners');
                 const pData = await pRes.json();

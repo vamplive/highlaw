@@ -53,9 +53,6 @@
         .ql-toolbar.ql-snow { border: none; border-bottom: 1px solid #eee; padding: 10px; }
         .ql-container.ql-snow { border: none; min-height: 350px; font-size: 16px; }
 
-        .drop-zone-active { border-color: var(--gold-primary) !important; background-color: rgba(197, 160, 89, 0.05) !important; }
-        
-        /* 사이드바 로고 영역 - 사이드바 너비에 맞춰 최대화 */
         .sidebar-logo { filter: brightness(0) invert(1); width: 100%; height: auto; display: block; }
     </style>
 </head>
@@ -145,7 +142,34 @@
                 </div>
             </div>
 
-            <!-- 2. 뉴스 관리 -->
+            <!-- 2. 메인 비주얼 관리 (강화됨) -->
+            <div v-show="tab === 'hero'">
+                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Main Visual Management</h2>
+                <div class="admin-card mb-10">
+                    <p class="text-[11px] font-bold text-gold-primary uppercase mb-4 tracking-widest">Add New Media</p>
+                    <input type="file" ref="heroFile" class="text-sm mb-4 block w-full">
+                    <button @click="uploadHero" class="btn-gold w-full py-4">Upload Media (Image/Video)</button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div v-for="(media, idx) in heroList" :key="media.id" class="admin-card !p-4 flex flex-col">
+                        <div class="relative h-40 bg-black overflow-hidden rounded">
+                            <img v-if="media.mimetype.startsWith('image')" :src="'/uploads/'+media.filename" class="w-full h-full object-cover">
+                            <video v-else :src="'/uploads/'+media.filename" class="w-full h-full object-cover"></video>
+                            <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">No.{{idx + 1}}</span>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <div class="flex gap-1">
+                                <button @click="moveHero(idx, -1)" class="p-2 bg-gray-100 hover:bg-gold-primary rounded transition" :disabled="idx === 0">▲</button>
+                                <button @click="moveHero(idx, 1)" class="p-2 bg-gray-100 hover:bg-gold-primary rounded transition" :disabled="idx === heroList.length - 1">▼</button>
+                            </div>
+                            <button @click="deleteHero(media.id)" class="text-red-400 hover:text-red-600 text-xs font-bold">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 뉴스 관리 -->
             <div v-show="tab === 'news'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News Management</h2>
                 <div class="space-y-8">
@@ -180,7 +204,7 @@
                 </div>
             </div>
 
-            <!-- 3. 구성원 관리 (동일 구조 유지) -->
+            <!-- 4. 구성원 관리 -->
             <div v-show="tab === 'partner'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Partner Management</h2>
                 <div class="admin-card mb-8">
@@ -201,36 +225,160 @@
                     <button @click="editPartner(p)" class="text-blue-500 text-xs">수정</button>
                 </div>
             </div>
+
+            <!-- 5. 채용 정보 통합 관리 (강화됨) -->
+            <div v-show="tab === 'recruit'">
+                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment Integration</h2>
+                
+                <!-- 상시 채용 상태 -->
+                <div class="admin-card mb-10">
+                    <h3 class="text-[11px] font-bold text-gold-primary uppercase mb-6 tracking-widest">상시 채용 분야 오픈 설정</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div v-for="r in recruitStatus" :key="r.role_id" class="flex justify-between items-center p-4 border rounded bg-gray-50">
+                            <span class="text-sm font-bold">{{ r.role_id }}</span>
+                            <select v-model="r.status" @change="updateRecruitStatus(r.role_id, r.status)" class="!w-auto text-xs px-2">
+                                <option value="status-open">모집 중 (OPEN)</option>
+                                <option value="status-closed">모집 마감 (CLOSED)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 상세 공고 리스트 관리 -->
+                <div class="admin-card">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-[11px] font-bold text-gold-primary uppercase tracking-widest">상세 채용 공고 리스트</h3>
+                        <button @click="openJobForm" class="btn-gold text-[10px]">신규 상세 공고 작성</button>
+                    </div>
+                    <table class="w-full text-left">
+                        <thead class="text-[10px] uppercase text-gray-400 border-b">
+                            <tr><th class="pb-3">분야</th><th class="pb-3">제목</th><th class="pb-3">마감일</th><th class="pb-3 text-right">관리</th></tr>
+                        </thead>
+                        <tbody class="divide-y text-sm">
+                            <tr v-for="job in jobList" :key="job.id" class="hover:bg-gray-50">
+                                <td class="py-3">{{ job.category }}</td>
+                                <td class="py-3 font-medium">{{ job.title }}</td>
+                                <td class="py-3">{{ job.deadline }}</td>
+                                <td class="py-3 text-right">
+                                    <button @click="deleteJob(job.id)" class="text-red-400 text-xs hover:underline">삭제</button>
+                                </td>
+                            </tr>
+                            <tr v-if="jobList.length === 0"><td colspan="4" class="py-10 text-center text-gray-300">등록된 상세 공고가 없습니다.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 상세 공고 폼 (채용 관리 탭 안의 서브 뷰) -->
+            <div v-show="tab === 'jobs_edit'">
+                <h2 class="text-2xl font-normal mb-8">Edit Job Post</h2>
+                <div class="admin-card">
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <select v-model="jobForm.category">
+                                <option value="변호사 채용">변호사 채용</option>
+                                <option value="인턴/수습 채용">인턴/수습 채용</option>
+                                <option value="행정/직원 채용">행정/직원 채용</option>
+                            </select>
+                            <input v-model="jobForm.title" type="text" placeholder="공고 제목">
+                        </div>
+                        <input v-model="jobForm.deadline" type="date" placeholder="마감일">
+                        <div id="job-editor" class="editor-wrapper"></div>
+                        <input type="file" ref="jobFiles" multiple class="text-xs block w-full">
+                        <div class="flex gap-4">
+                            <button @click="saveJob" class="btn-gold flex-1 py-4">Save Job Post</button>
+                            <button @click="tab = 'recruit'" class="bg-gray-100 px-8 text-xs uppercase">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
     <script>
         const { createApp } = Vue;
-        let newsQuill;
+        let newsQuill, jobQuill;
         createApp({
             data() {
                 return {
-                    tab: 'inquiry', inquiries: [], newsList: [], newsForm: { id: null, category: 'H&L News', title: '' },
+                    tab: 'inquiry', inquiries: [], 
+                    newsList: [], newsForm: { id: null, category: 'H&L News', title: '' },
                     partners: [], partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '' },
-                    userList: [], dragStates: { news: false }
+                    userList: [],
+                    heroList: [], // 히어로 미디어 리스트
+                    recruitStatus: [], // 상시 채용 상태
+                    jobList: [], // 상세 공고 리스트
+                    jobForm: { id: null, category: '변호사 채용', title: '', deadline: '', content: '' }
                 }
             },
             methods: {
-                setTab(name) { this.tab = name; this.initQuill(); if(name === 'users') this.fetchUsers(); },
+                setTab(name) { 
+                    this.tab = name; 
+                    this.initQuill(); 
+                    if(name === 'users') this.fetchUsers();
+                    if(name === 'hero') this.fetchHero();
+                    if(name === 'recruit') this.fetchRecruitData();
+                },
                 initQuill() {
                     setTimeout(() => {
-                        const toolbarOptions = [
-                            [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'color': [] }, { 'background': [] }],
-                            [{ 'header': 1 }, { 'header': 2 }],
-                            ['link', 'image', 'video'], ['clean']
-                        ];
+                        const toolbarOptions = [[{ 'header': 1 }, { 'header': 2 }], ['bold', 'italic', 'underline'], ['link', 'image'], ['clean']];
                         if (this.tab === 'news' && !newsQuill) {
                             newsQuill = new Quill('#news-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                         }
+                        if (this.tab === 'jobs_edit' && !jobQuill) {
+                            jobQuill = new Quill('#job-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
+                        }
                     }, 100);
                 },
+
+                /* 메인 비주얼 관리 메서드 */
+                async fetchHero() { const res = await fetch('/api/public/hero'); this.heroList = await res.json(); },
+                async uploadHero() {
+                    const file = this.$refs.heroFile.files[0];
+                    if(!file) return alert('파일을 선택하세요.');
+                    const formData = new FormData(); formData.append('heroFile', file);
+                    const res = await fetch('/api/admin/hero', { method: 'POST', body: formData });
+                    if(res.ok) { this.$refs.heroFile.value = ''; this.fetchHero(); }
+                },
+                async deleteHero(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/admin/hero/${id}`, { method: 'DELETE' }); this.fetchHero(); } },
+                async moveHero(index, direction) {
+                    const newList = [...this.heroList];
+                    const targetIndex = index + direction;
+                    if (targetIndex < 0 || targetIndex >= newList.length) return;
+                    [newList[index], newList[targetIndex]] = [newList[targetIndex], newList[index]];
+                    const res = await fetch('/api/admin/hero/reorder', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ heroMedia: newList })
+                    });
+                    if(res.ok) this.fetchHero();
+                },
+
+                /* 채용 통합 관리 메서드 */
+                async fetchRecruitData() {
+                    const [res1, res2] = await Promise.all([fetch('/api/public/recruit'), fetch('/api/public/jobs')]);
+                    this.recruitStatus = await res1.json();
+                    this.jobList = await res2.json();
+                },
+                async updateRecruitStatus(id, status) {
+                    await fetch('/api/recruit/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id, status }) });
+                },
+                openJobForm() { this.tab = 'jobs_edit'; this.initQuill(); },
+                async saveJob() {
+                    const formData = new FormData();
+                    formData.append('category', this.jobForm.category);
+                    formData.append('title', this.jobForm.title);
+                    formData.append('deadline', this.jobForm.deadline);
+                    formData.append('content', jobQuill.root.innerHTML);
+                    const files = this.$refs.jobFiles.files;
+                    for (let i = 0; i < files.length; i++) formData.append('jobAttachments', files[i]);
+                    const res = await fetch('/api/admin/jobs', { method: 'POST', body: formData });
+                    if(res.ok) { this.setTab('recruit'); }
+                },
+                async deleteJob(id) { if(confirm('공고를 삭제하시겠습니까?')) { await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' }); this.fetchRecruitData(); } },
+
+                /* 나머지 기존 메서드 */
                 async fetchUsers() { const res = await fetch('/api/admin/users'); this.userList = await res.json(); },
                 async updateUserStatus(userId, payload) { await fetch('/api/admin/users/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId, ...payload }) }); this.fetchUsers(); },
                 async deleteUser(id) { if(confirm('삭제?')) { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); this.fetchUsers(); } },
@@ -240,8 +388,7 @@
                 async saveNews() {
                     const formData = new FormData();
                     if(this.newsForm.id) formData.append('id', this.newsForm.id);
-                    formData.append('category', this.newsForm.category);
-                    formData.append('title', this.newsForm.title);
+                    formData.append('category', this.newsForm.category); formData.append('title', this.newsForm.title);
                     formData.append('content', newsQuill.root.innerHTML);
                     const files = this.$refs.newsFiles.files;
                     for (let i = 0; i < files.length; i++) formData.append('attachments', files[i]);

@@ -157,7 +157,7 @@ app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
     try { const db = await fs.readJson(DB_FILE); const newInquiry = { id: Date.now(), name: req.body.userName, phone: req.body.userPhone, summary: req.body.summary, created_at: new Date().toISOString().split('T')[0], files: req.files ? req.files.map(f => f.filename) : [] }; db.inquiries.push(newInquiry); await fs.writeJson(DB_FILE, db); res.status(200).send("OK"); } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 로그인 및 회원관리 API (수정) --- */
+/* --- 로그인 및 회원관리 API --- */
 
 app.post('/api/login', async (req, res) => {
     const { id, pw } = req.body;
@@ -227,20 +227,8 @@ app.delete('/api/admin/users/:id', adminRequired, async (req, res) => {
 
 /* --- 타임트랙(사건 및 업무기록) API --- */
 
-app.get('/api/timelogs', authRequired, async (req, res) => {
-    try {
-        const db = await fs.readJson(DB_FILE);
-        let logs = db.timelogs || [];
-        
-        const user = req.session.user;
-        // 관리자이거나 대표변호사인 경우 전체 기록 조회 가능
-        const hasFullAccess = user.isAdmin || user.position === '대표변호사';
-        
-        if (!hasFullAccess) {
-            logs = logs.filter(l => l.userId == user.id);
-        }
-        res.json(logs);
-    } catch (e) { res.status(500).json([]); }
+app.get('/api/projects', authRequired, async (req, res) => {
+    try { const db = await fs.readJson(DB_FILE); res.json(db.projects || []); } catch (e) { res.status(500).json([]); }
 });
 
 app.post('/api/projects', authRequired, async (req, res) => {
@@ -258,10 +246,9 @@ app.get('/api/timelogs', authRequired, async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
         let logs = db.timelogs || [];
-        // 관리자가 아니면 본인 기록만 필터링
-        if (!req.session.user.isAdmin) {
-            logs = logs.filter(l => l.userId == req.session.user.id);
-        }
+        const user = req.session.user;
+        const hasFullAccess = user.isAdmin || user.position === '대표변호사';
+        if (!hasFullAccess) { logs = logs.filter(l => l.userId == user.id); }
         res.json(logs);
     } catch (e) { res.status(500).json([]); }
 });
@@ -276,7 +263,7 @@ app.post('/api/timelogs', authRequired, async (req, res) => {
             userName: req.session.user.name,
             projectId: parseInt(projectId),
             date,
-            duration: parseInt(duration), // 분 단위
+            duration: parseInt(duration),
             description
         };
         db.timelogs.push(newLog);
@@ -290,7 +277,6 @@ app.delete('/api/timelogs/:id', authRequired, async (req, res) => {
         const db = await fs.readJson(DB_FILE);
         const log = db.timelogs.find(l => l.id == req.params.id);
         if (!log) return res.status(404).send("Not Found");
-        // 본인 기록이거나 관리자여야 삭제 가능
         if (log.userId != req.session.user.id && !req.session.user.isAdmin) return res.status(403).send("Forbidden");
         db.timelogs = db.timelogs.filter(l => l.id != req.params.id);
         await fs.writeJson(DB_FILE, db);
@@ -298,7 +284,18 @@ app.delete('/api/timelogs/:id', authRequired, async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 기존 관리자 전용 API (모두 유지) --- */
+/* --- 관리자 전용 API --- */
+
+// 메인 비주얼 순서 재정렬 API (추가됨)
+app.post('/api/admin/hero/reorder', adminRequired, async (req, res) => {
+    try {
+        const { heroMedia } = req.body;
+        const db = await fs.readJson(DB_FILE);
+        db.heroMedia = heroMedia;
+        await fs.writeJson(DB_FILE, db);
+        res.send("Reordered");
+    } catch (e) { res.status(500).send("Error"); }
+});
 
 app.post('/api/news', adminRequired, upload.array('attachments'), async (req, res) => {
     try {
