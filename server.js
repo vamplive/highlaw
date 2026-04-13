@@ -227,8 +227,20 @@ app.delete('/api/admin/users/:id', adminRequired, async (req, res) => {
 
 /* --- 타임트랙(사건 및 업무기록) API --- */
 
-app.get('/api/projects', authRequired, async (req, res) => {
-    try { const db = await fs.readJson(DB_FILE); res.json(db.projects || []); } catch (e) { res.status(500).json([]); }
+app.get('/api/timelogs', authRequired, async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        let logs = db.timelogs || [];
+        
+        const user = req.session.user;
+        // 관리자이거나 대표변호사인 경우 전체 기록 조회 가능
+        const hasFullAccess = user.isAdmin || user.position === '대표변호사';
+        
+        if (!hasFullAccess) {
+            logs = logs.filter(l => l.userId == user.id);
+        }
+        res.json(logs);
+    } catch (e) { res.status(500).json([]); }
 });
 
 app.post('/api/projects', authRequired, async (req, res) => {

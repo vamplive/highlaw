@@ -2,103 +2,145 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Tracker | 법무법인 하이로</title>
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #fcfcfc; }
-        .sub-hero-mini { background: #1a1a1a; color: white; padding: 40px 0; text-align: center; border-bottom: 1px solid var(--gold-primary); }
-        .tracker-card { background: white; border: 1px solid var(--border-color); padding: 30px; }
-        .project-group-card { border-left: 4px solid var(--gold-primary); margin-bottom: 15px; background: white; border-right: 1px solid #eee; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
-        .btn-black { background: #1a1a1a; color: white; border: 1px solid var(--gold-primary); padding: 12px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
-        .btn-black:hover { background: var(--gold-primary); color: #1a1a1a; }
-        input, select, textarea { width: 100%; padding: 10px 0; border: none; border-bottom: 1px solid #eee; outline: none; background: transparent; font-size: 14px; }
-        input:focus, select:focus, textarea:focus { border-bottom-color: var(--gold-primary); }
-        .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+        :root { --gold: #c5a059; --dark: #111; }
+        body { background-color: #f8f8f8; font-family: 'Inter', sans-serif; color: var(--dark); }
+        
+        /* Top Navigation */
+        .top-nav { background: white; border-bottom: 1px solid #eee; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-link { font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #888; text-transform: uppercase; transition: 0.3s; }
+        .nav-link:hover { color: var(--gold); }
+
+        /* Subheader with Center Logo */
+        .sub-header { background: var(--dark); padding: 60px 0; text-align: center; border-bottom: 2px solid var(--gold); }
+        .center-logo { max-height: 80px; margin: 0 auto; filter: brightness(0) invert(1); opacity: 0.9; }
+
+        /* Content Area */
+        .main-container { max-width: 1200px; margin: -40px auto 100px; display: grid; grid-template-columns: 350px 1fr; gap: 30px; padding: 0 20px; }
+        .card { background: white; border: 1px solid #eee; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.03); }
+        
+        /* Case Selector */
+        .case-list { margin-top: 20px; }
+        .case-item { padding: 15px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
+        .case-item:hover { background: #fafafa; }
+        .case-item.active { border-left: 3px solid var(--gold); background: #fdfcf8; }
+
+        .form-label { font-size: 10px; font-weight: 700; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        input, select, textarea { width: 100%; padding: 10px 0; border: none; border-bottom: 1px solid #eee; font-size: 14px; outline: none; margin-bottom: 20px; }
+        input:focus { border-bottom-color: var(--gold); }
+
+        .btn-gold { background: var(--dark); color: white; border: 1px solid var(--gold); padding: 15px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; width: 100%; transition: 0.3s; }
+        .btn-gold:hover { background: var(--gold); color: var(--dark); }
+
+        .time-display { font-family: 'Playfair Display', serif; font-size: 48px; color: var(--gold); line-height: 1; }
+        .history-row { padding: 15px 0; border-bottom: 1px solid #f9f9f9; font-size: 13px; color: #555; }
     </style>
 </head>
 <body>
-    <div id="app" class="min-h-screen flex flex-col">
-        <header class="bg-white border-b p-4">
-            <div class="max-w-7xl mx-auto flex justify-between items-center">
-                <img src="/logo.png" alt="High & Law" class="h-10">
-                <div class="flex items-center gap-6 text-xs">
-                    <span>{{userName}} ({{position}})</span>
-                    <button @click="logout" class="text-red-500 font-bold">LOGOUT</button>
-                </div>
+    <div id="app">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <a href="/" class="nav-link">← Website Home</a>
+            <div class="flex items-center gap-6">
+                <span class="text-[11px] font-bold uppercase tracking-widest">{{userName}} <span class="text-gold">/ {{position}}</span></span>
+                <button @click="logout" class="nav-link text-red-400">Logout</button>
             </div>
+        </nav>
+
+        <!-- Subheader -->
+        <header class="sub-header">
+            <img src="/logo.png" alt="High & Law" class="center-logo">
+            <p class="text-[10px] text-white/40 tracking-[0.5em] mt-4 uppercase">Dignity in Professionalism</p>
         </header>
 
-        <div class="sub-hero-mini">
-            <h2 class="font-serif text-2xl tracking-widest">PERSONAL WORK TRACKER</h2>
-            <p class="text-[10px] text-gold-primary mt-2 uppercase tracking-[0.3em]">Integrity & Efficiency</p>
-        </div>
-
-        <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <!-- 입력 폼 및 사건 등록 -->
-            <div class="lg:col-span-4">
-                <div class="tracker-card sticky top-10">
-                    <h3 class="font-bold mb-6 border-b pb-2">Entry</h3>
-                    <div class="space-y-6">
-                        <div>
-                            <label class="text-[10px] text-gray-400 font-bold uppercase">Select Case</label>
-                            <select v-model="logForm.projectId">
-                                <option value="">사건을 선택하세요</option>
-                                <option v-for="p in projects" :key="p.id" :value="p.id">[{{p.client}}] {{p.name}}</option>
-                            </select>
-                            <button @click="showProjectModal = true" class="text-[10px] text-blue-500 font-bold mt-2 hover:underline">+ REGISTER NEW CASE</button>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="date" v-model="logForm.date">
-                            <input type="number" v-model="logForm.duration" placeholder="분(Min)">
-                        </div>
-                        <textarea v-model="logForm.description" rows="4" placeholder="업무 내용"></textarea>
-                        <button @click="saveLog" class="btn-black w-full">Save Record</button>
+        <main class="main-container">
+            <!-- Left: Case Selection & Entry -->
+            <aside class="space-y-6">
+                <div class="card">
+                    <h3 class="font-serif text-lg mb-6 border-b pb-2">Record Task</h3>
+                    <label class="form-label">Select Case</label>
+                    <select v-model="logForm.projectId">
+                        <option value="" disabled>사건을 선택하세요</option>
+                        <option v-for="p in projects" :key="p.id" :value="p.id">[{{p.client}}] {{p.name}}</option>
+                    </select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="form-label">Date</label><input type="date" v-model="logForm.date"></div>
+                        <div><label class="form-label">Min</label><input type="number" v-model="logForm.duration"></div>
                     </div>
-                </div>
-            </div>
-
-            <!-- 목록 -->
-            <div class="lg:col-span-8">
-                <div class="flex justify-between items-end mb-6">
-                    <h3 class="font-bold">Summary</h3>
-                    <div class="text-right">
-                        <p class="text-[10px] text-gray-400">TOTAL TIME</p>
-                        <p class="text-2xl font-serif text-gold-primary">{{Math.floor(totalMinutes/60)}}h {{totalMinutes%60}}m</p>
-                    </div>
+                    <label class="form-label">Description</label>
+                    <textarea v-model="logForm.description" rows="3"></textarea>
+                    <button @click="saveLog" class="btn-gold">Save to Tracker</button>
+                    <button @click="showProjectModal = true" class="mt-4 text-[10px] text-gray-400 hover:text-gold block mx-auto">+ NEW CASE REGISTRATION</button>
                 </div>
 
-                <div v-for="(group, projId) in groupedLogs" :key="projId" class="project-group-card p-5">
-                    <div class="flex justify-between border-b pb-2 mb-3">
-                        <span class="font-bold text-gray-800">[{{group.client}}] {{group.name}}</span>
-                        <span class="text-gold-primary font-serif font-bold">{{Math.floor(group.totalTime/60)}}h {{group.totalTime%60}}m</span>
-                    </div>
-                    <div v-for="entry in group.entries" :key="entry.id" class="flex justify-between text-xs py-1 border-b border-gray-50 last:border-0 group">
-                        <span class="text-gray-400 w-24">{{entry.date}}</span>
-                        <span class="flex-1 px-4 text-gray-600">{{entry.description}}</span>
-                        <div class="flex gap-4">
-                            <span class="text-gray-400 font-bold">{{entry.duration}}m</span>
-                            <button @click="deleteLog(entry.id)" class="text-red-200 opacity-0 group-hover:opacity-100 hover:text-red-500 transition">Del</button>
+                <div class="card">
+                    <h3 class="font-serif text-lg mb-4">Select to View</h3>
+                    <div class="case-list">
+                        <div v-for="p in projects" :key="p.id" @click="selectedProjectId = p.id" 
+                             :class="['case-item', selectedProjectId === p.id ? 'active' : '']">
+                            <div>
+                                <p class="text-[10px] text-gold font-bold">{{p.client}}</p>
+                                <p class="text-sm font-semibold">{{p.name}}</p>
+                            </div>
+                            <span class="text-xs text-gray-300">→</span>
                         </div>
                     </div>
                 </div>
-            </div>
+            </aside>
+
+            <!-- Right: Case Details -->
+            <section>
+                <div class="card min-h-[600px]">
+                    <div v-if="selectedProject">
+                        <div class="flex justify-between items-end mb-12">
+                            <div>
+                                <span class="form-label">Project Intelligence</span>
+                                <h2 class="font-serif text-3xl">{{selectedProject.name}}</h2>
+                                <p class="text-gray-400 text-sm mt-1">의뢰인: {{selectedProject.client}}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="form-label">Total Time Spent</span>
+                                <div class="time-display">{{Math.floor(currentProjectTotal / 60)}}<span class="text-lg">h</span> {{currentProjectTotal % 60}}<span class="text-lg">m</span></div>
+                            </div>
+                        </div>
+
+                        <h4 class="font-bold text-xs uppercase tracking-widest text-gray-300 mb-4 border-b pb-2">Task History</h4>
+                        <div v-for="entry in filteredLogs" :key="entry.id" class="history-row flex justify-between group">
+                            <div class="flex gap-6">
+                                <span class="font-mono text-gray-300">{{entry.date}}</span>
+                                <div>
+                                    <p class="text-gray-800">{{entry.description}}</p>
+                                    <p class="text-[10px] text-gray-400 uppercase mt-1">Logged by {{entry.userName}}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-center">
+                                <span class="font-semibold text-gold">{{entry.duration}}m</span>
+                                <button v-if="entry.userId == currentUserId" @click="deleteLog(entry.id)" class="text-red-200 opacity-0 group-hover:opacity-100 transition">×</button>
+                            </div>
+                        </div>
+                        <div v-if="filteredLogs.length === 0" class="py-20 text-center text-gray-300">기록된 업무가 없습니다.</div>
+                    </div>
+                    <div v-else class="h-full flex items-center justify-center text-gray-300 italic font-serif">
+                        사건을 선택하면 세부 수행 내역이 표시됩니다.
+                    </div>
+                </div>
+            </section>
         </main>
 
         <!-- 사건 등록 모달 -->
-        <div v-if="showProjectModal" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-6">
-            <div class="bg-white w-full max-w-md p-10">
-                <h3 class="font-bold text-xl mb-6">Register New Case</h3>
-                <div class="space-y-4">
-                    <input v-model="projForm.client" placeholder="의뢰인명">
-                    <input v-model="projForm.name" placeholder="사건명">
-                    <div class="flex gap-3 mt-6">
-                        <button @click="addProject" class="btn-black flex-1">Register</button>
-                        <button @click="showProjectModal = false" class="flex-1 bg-gray-100 text-xs font-bold">Cancel</button>
-                    </div>
+        <div v-if="showProjectModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+            <div class="bg-white p-10 w-full max-w-md shadow-2xl">
+                <h3 class="font-serif text-2xl mb-8">Register Case</h3>
+                <label class="form-label">Client Name</label><input v-model="projForm.client">
+                <label class="form-label">Case Title</label><input v-model="projForm.name">
+                <div class="flex gap-4 mt-4">
+                    <button @click="addProject" class="btn-gold">Confirm</button>
+                    <button @click="showProjectModal = false" class="w-full text-xs uppercase tracking-widest">Cancel</button>
                 </div>
             </div>
         </div>
@@ -109,49 +151,42 @@
         createApp({
             data() {
                 return {
-                    userName: '', position: '', projects: [], logs: [], showProjectModal: false,
+                    userName: '', position: '', currentUserId: null,
+                    projects: [], logs: [], selectedProjectId: null,
+                    showProjectModal: false,
                     logForm: { projectId: '', date: new Date().toISOString().split('T')[0], duration: '', description: '' },
                     projForm: { name: '', client: '' }
                 }
             },
             computed: {
-                totalMinutes() { return this.logs.reduce((acc, log) => acc + log.duration, 0); },
-                groupedLogs() {
-                    const groups = {};
-                    this.logs.forEach(log => {
-                        if (!groups[log.projectId]) {
-                            const p = this.projects.find(proj => proj.id === log.projectId);
-                            groups[log.projectId] = { name: p?p.name:'Unknown', client: p?p.client:'-', totalTime: 0, entries: [] };
-                        }
-                        groups[log.projectId].totalTime += log.duration;
-                        groups[log.projectId].entries.push(log);
-                    });
-                    return groups;
-                }
+                selectedProject() { return this.projects.find(p => p.id === this.selectedProjectId); },
+                filteredLogs() { return this.logs.filter(l => l.projectId === this.selectedProjectId); },
+                currentProjectTotal() { return this.filteredLogs.reduce((acc, l) => acc + l.duration, 0); }
             },
             methods: {
                 async fetchData() {
                     const [pRes, lRes] = await Promise.all([fetch('/api/projects'), fetch('/api/timelogs')]);
                     this.projects = await pRes.json();
-                    this.logs = (await lRes.json()).sort((a,b)=> new Date(b.date)-new Date(a.date));
+                    this.logs = (await lRes.json()).reverse();
                 },
                 async saveLog() {
-                    if(!this.logForm.projectId || !this.logForm.duration) return alert('필수 입력');
+                    if(!this.logForm.projectId || !this.logForm.duration) return alert('필수 항목을 입력하세요.');
                     await fetch('/api/timelogs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(this.logForm) });
-                    this.logForm.description = ''; this.fetchData();
+                    this.logForm.description = ''; this.logForm.duration = ''; this.fetchData();
                 },
                 async addProject() {
                     if(!this.projForm.name) return;
                     await fetch('/api/projects', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(this.projForm) });
                     this.projForm = { name: '', client: '' }; this.showProjectModal = false; this.fetchData();
                 },
-                async deleteLog(id) { if(confirm('삭제?')) { await fetch(`/api/timelogs/${id}`, { method: 'DELETE' }); this.fetchData(); } },
+                async deleteLog(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/timelogs/${id}`, { method: 'DELETE' }); this.fetchData(); } },
                 logout() { fetch('/api/logout', {method:'POST'}).then(() => { localStorage.removeItem('user'); location.href='/login.html'; }); }
             },
             mounted() {
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 if(!user.name) location.href='/login.html';
-                this.userName = user.name; this.position = user.position; this.fetchData();
+                this.userName = user.name; this.position = user.position; this.currentUserId = user.id;
+                this.fetchData();
             }
         }).mount('#app')
     </script>

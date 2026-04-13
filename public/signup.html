@@ -4,39 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Member Registration | 법무법인 하이로</title>
-    <link rel="stylesheet" href="/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { min-height: 100vh; display: flex; flex-direction: column; background: linear-gradient(to bottom right, #fdfdfd, #f4eee0); margin: 0; }
-        .signup-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
-        .signup-card { background: var(--white); width: 100%; max-width: 450px; padding: 60px 50px; border: 1px solid var(--border-color); box-shadow: 0 40px 80px rgba(0,0,0,0.06); text-align: center; }
-        /* 로고 크기 최대화 */
-        .signup-logo { width: 100%; height: auto; margin-bottom: 30px; display: block; }
-        .form-group { margin-bottom: 25px; text-align: left; }
-        .form-group label { display: block; font-size: 10px; font-weight: 700; color: #999; text-transform: uppercase; margin-bottom: 8px; }
-        .form-group input, .form-group select { width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid var(--border-color); font-size: 15px; outline: none; background: transparent; }
-        .signup-btn { width: 100%; background: #1a1a1a; color: var(--white); border: 1px solid var(--gold-primary); padding: 18px; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; margin-top: 20px; }
+        :root { --gold: #c5a059; --dark: #111; }
+        body { margin: 0; background: #fdfdfd; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .signup-card { background: white; width: 100%; max-width: 440px; padding: 60px 50px; border: 1px solid #eee; box-shadow: 0 30px 60px rgba(0,0,0,0.05); text-align: center; position: relative; }
+        .signup-card::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--gold); }
+        .logo { width: 100%; height: auto; margin-bottom: 40px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+        input, select { width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid #ddd; font-size: 15px; outline: none; background: transparent; transition: 0.3s; }
+        input:focus, select:focus { border-bottom-color: var(--gold); }
+        .signup-btn { width: 100%; background: var(--dark); color: white; border: none; padding: 18px; font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; transition: 0.3s; margin-top: 20px; }
+        .signup-btn:hover { background: var(--gold); }
+        .footer-link { margin-top: 30px; display: block; font-size: 11px; color: #aaa; text-decoration: none; text-transform: uppercase; }
     </style>
 </head>
 <body>
-    <div class="signup-container">
-        <div class="signup-card">
-            <img src="/logo.png" alt="High & Law" class="signup-logo">
-            <p class="text-[11px] text-[#c5a059] font-bold tracking-widest uppercase mb-10">Member Registration</p>
-            <form id="regForm">
-                <div class="form-group"><label>ID</label><input type="text" id="loginId" required></div>
-                <div class="form-group"><label>Password</label><input type="password" id="password" required></div>
-                <div class="form-group"><label>Full Name</label><input type="text" id="name" required></div>
-                <div class="form-group"><label>Position</label>
-                    <select id="position" required>
-                        <option value="변호사">변호사</option>
-                        <option value="실장/팀장">실장/팀장</option>
-                        <option value="직원">직원</option>
-                    </select>
-                </div>
-                <button type="submit" class="signup-btn">Request Access</button>
-            </form>
-            <a href="/login.html" style="display:block; margin-top:30px; font-size:11px; color:#bbb; text-decoration:none;">Login</a>
-        </div>
+    <div class="signup-card">
+        <img src="/logo.png" alt="High & Law" class="logo">
+        <p style="font-family:'Playfair Display'; font-size:11px; color:var(--gold); letter-spacing:4px; margin-bottom:40px;">MEMBER REGISTRATION</p>
+        <form id="regForm">
+            <div class="form-group"><label>Identity ID</label><input type="text" id="loginId" required></div>
+            <div class="form-group"><label>Password</label><input type="password" id="password" required></div>
+            <div class="form-group"><label>Full Name</label><input type="text" id="name" required></div>
+            <div class="form-group">
+                <label>Official Position</label>
+                <select id="position" required>
+                    <option value="" disabled selected>직책을 선택하십시오</option>
+                    <option value="대표변호사">대표변호사</option>
+                    <option value="변호사">변호사</option>
+                    <option value="직원">직원</option>
+                </select>
+            </div>
+            <button type="submit" class="signup-btn">Request Access</button>
+        </form>
+        <a href="/login.html" class="footer-link">Back to Login</a>
     </div>
     <script>
         document.getElementById('regForm').onsubmit = async (e) => {
