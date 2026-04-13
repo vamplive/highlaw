@@ -62,7 +62,6 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
         .modal-body { background: white; padding: 40px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
 
-        /* Quill 픽셀 사이즈 Picker 표시용 커스텀 스타일 */
         .ql-snow .ql-picker.ql-size .ql-picker-label::before,
         .ql-snow .ql-picker.ql-size .ql-picker-item::before { content: attr(data-value) !important; }
     </style>
@@ -80,6 +79,7 @@
                 <button @click="setTab('inquiry')" :class="{active: tab==='inquiry'}" class="nav-btn">상담 신청 관리</button>
                 <button @click="setTab('users')" :class="{active: tab==='users'}" class="nav-btn">구성원 승인 관리</button>
                 <button @click="setTab('hero')" :class="{active: tab==='hero'}" class="nav-btn">메인 비주얼 관리</button>
+                <button @click="setTab('popup')" :class="{active: tab==='popup'}" class="nav-btn">팝업 공지 관리</button>
                 <button @click="setTab('news')" :class="{active: tab==='news'}" class="nav-btn">뉴스/성공사례 관리</button>
                 <button @click="setTab('partner')" :class="{active: tab==='partner'}" class="nav-btn">구성원 관리</button>
                 <button @click="setTab('recruit')" :class="{active: tab==='recruit'}" class="nav-btn">채용 정보 통합 관리</button>
@@ -200,7 +200,68 @@
                 </div>
             </div>
 
-            <!-- 4. 뉴스/성공사례 관리 (강화됨) -->
+            <!-- 4. 팝업 공지 관리 [수정됨: 에디터 도입] -->
+            <div v-if="tab === 'popup'">
+                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Popup Management</h2>
+                <div class="admin-card mb-8">
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-[10px] font-bold text-gold-primary uppercase tracking-widest block mb-2">팝업 제목 (Rich Text)</label>
+                                <div id="popup-title-editor" class="editor-wrapper" style="min-height: 120px;"></div>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-[10px] font-bold text-gold-primary uppercase tracking-widest block mb-2">상태 설정</label>
+                                    <select v-model="popupForm.active">
+                                        <option :value="true">활성화 (노출)</option>
+                                        <option :value="false">비활성화 (숨김)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-gold-primary uppercase tracking-widest block mb-2">이동 링크</label>
+                                    <input v-model="popupForm.link" type="text" placeholder="https://...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-bold text-gold-primary uppercase tracking-widest block mb-2">팝업 본문 내용</label>
+                            <div id="popup-content-editor" class="editor-wrapper" style="min-height: 300px;"></div>
+                        </div>
+                        
+                        <div>
+                            <label class="text-[10px] font-bold text-gold-primary uppercase tracking-widest block mb-2">팝업 이미지 (선택사항)</label>
+                            <input type="file" ref="popupImage" accept="image/*" class="text-xs">
+                        </div>
+
+                        <div class="flex gap-4">
+                            <button @click="savePopup" class="btn-gold flex-1 py-4 uppercase">SAVE POPUP</button>
+                            <button v-if="popupForm.id" @click="resetPopupForm" class="bg-gray-100 px-8 text-xs uppercase">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-3">Saved Popups</label>
+                    <div v-for="p in popupList" :key="p.id" class="admin-card flex justify-between items-center py-4 mb-2">
+                        <div class="flex items-center gap-4">
+                            <span :class="p.active ? 'text-green-500' : 'text-gray-300'" class="text-xl">●</span>
+                            <div class="flex flex-col">
+                                <!-- 제목이 HTML이므로 텍스트만 추출해서 표시 -->
+                                <span class="text-sm font-bold truncate max-w-xs" v-html="p.title"></span>
+                                <span class="text-[10px] text-gray-400">{{ p.active ? '노출 중' : '숨김 처리됨' }}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button @click="editPopup(p)" class="text-blue-500 text-xs font-bold">수정</button>
+                            <button @click="deletePopup(p.id)" class="text-red-300 text-xs font-bold">삭제</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. 뉴스/성공사례 관리 -->
             <div v-if="tab === 'news'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News Management</h2>
                 <div class="admin-card mb-8">
@@ -214,10 +275,8 @@
                             <input v-model="newsForm.title" type="text" placeholder="제목">
                         </div>
                         
-                        <!-- Quill 에디터 영역 -->
                         <div id="news-editor" class="editor-wrapper"></div>
                         
-                        <!-- 파일 통합 첨부 Zone -->
                         <div class="bg-gray-50 p-6 border rounded">
                             <label class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2 block">Media & Document Attachments</label>
                             <div class="drop-zone mb-6" :class="{ active: dragActive }"
@@ -268,7 +327,7 @@
                 </div>
             </div>
 
-            <!-- 5. 구성원 관리 -->
+            <!-- 6. 구성원 관리 -->
             <div v-if="tab === 'partner'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Partner Management</h2>
                 <div class="admin-card mb-8">
@@ -293,7 +352,7 @@
                 </div>
             </div>
 
-            <!-- 6. 채용 정보 통합 관리 -->
+            <!-- 7. 채용 정보 통합 관리 -->
             <div v-if="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment</h2>
                 <div class="admin-card mb-10">
@@ -348,7 +407,7 @@
 
     <script>
         const { createApp } = Vue;
-        let newsQuill, jobQuill;
+        let newsQuill, jobQuill, popupTitleQuill, popupContentQuill; // 팝업 에디터 변수 추가
 
         createApp({
             data() {
@@ -357,6 +416,7 @@
                     inquiries: [], selectedInquiry: null,
                     newsList: [], newsForm: { id: null, category: 'H&L News', title: '', attachments: [] },
                     userList: [], heroList: [], 
+                    popupList: [], popupForm: { id: null, title: '', content: '', link: '', active: true, image: null },
                     partners: [], partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '' },
                     recruitStatus: [], jobList: [], jobForm: { id: null, category: '변호사 채용', title: '', deadline: '', content: '' },
                     dragActive: false
@@ -369,49 +429,93 @@
                     if(name === 'inquiry') this.fetchInquiries();
                     if(name === 'users') this.fetchUsers();
                     if(name === 'hero') this.fetchHero();
+                    if(name === 'popup') this.fetchPopups();
                     if(name === 'news') this.fetchNews();
                     if(name === 'partner') this.fetchPartners();
                     if(name === 'recruit') this.fetchRecruitData();
                 },
                 initQuill() {
                     setTimeout(() => {
+                        // 공통 에디터 속성 설정 (사이즈 등)
+                        const Size = Quill.import('attributors/style/size');
+                        Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px', '64px'];
+                        Quill.register(Size, true);
+                        const Font = Quill.import('attributors/style/font');
+                        Font.whitelist = ['inter', 'playfair', 'serif', 'sans-serif'];
+                        Quill.register(Font, true);
+
+                        const toolbarOptions = [
+                            [{ 'font': Font.whitelist }],
+                            [{ 'size': Size.whitelist }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'align': [] }],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link', 'image', 'video'],
+                            ['clean']
+                        ];
+
+                        // 1. 뉴스 에디터
                         if (this.tab === 'news' && !newsQuill) {
-                            // 픽셀 단위 폰트 크기 Attributor 설정
-                            const Size = Quill.import('attributors/style/size');
-                            Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px', '64px'];
-                            Quill.register(Size, true);
-
-                            // 폰트 종류 Attributor 설정
-                            const Font = Quill.import('attributors/style/font');
-                            Font.whitelist = ['inter', 'playfair', 'serif', 'sans-serif'];
-                            Quill.register(Font, true);
-
-                            newsQuill = new Quill('#news-editor', {
-                                theme: 'snow',
-                                modules: {
-                                    toolbar: [
-                                        [{ 'font': Font.whitelist }],
-                                        [{ 'size': Size.whitelist }],
-                                        ['bold', 'italic', 'underline', 'strike'],
-                                        [{ 'color': [] }, { 'background': [] }],
-                                        [{ 'align': [] }],
-                                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                                        ['link', 'image', 'video'],
-                                        ['clean']
-                                    ]
-                                }
-                            });
+                            newsQuill = new Quill('#news-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                         }
+                        // 2. 채용 공고 에디터
                         if (this.tab === 'jobs_edit' && !jobQuill) {
                             jobQuill = new Quill('#job-editor', { theme: 'snow', modules: { toolbar: [['bold', 'italic', 'underline'], [{list:'ordered'}, {list:'bullet'}], ['link', 'clean']] } });
                         }
+                        // 3. 팝업 제목 에디터
+                        if (this.tab === 'popup' && !popupTitleQuill) {
+                            popupTitleQuill = new Quill('#popup-title-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
+                        }
+                        // 4. 팝업 본문 에디터
+                        if (this.tab === 'popup' && !popupContentQuill) {
+                            popupContentQuill = new Quill('#popup-content-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
+                        }
+
                     }, 100);
                 },
+
+                // 팝업 관리 로직 [수정됨: 에디터 데이터 처리]
+                async fetchPopups() { const res = await fetch('/api/admin/popups'); this.popupList = await res.json(); },
+                async savePopup() {
+                    const fd = new FormData();
+                    if(this.popupForm.id) fd.append('id', this.popupForm.id);
+                    
+                    // 에디터 HTML 내용 가져오기
+                    fd.append('title', popupTitleQuill.root.innerHTML);
+                    fd.append('content', popupContentQuill.root.innerHTML);
+                    
+                    fd.append('link', this.popupForm.link);
+                    fd.append('active', this.popupForm.active);
+                    if(this.popupForm.image) fd.append('existingImage', this.popupForm.image);
+                    if(this.$refs.popupImage.files[0]) fd.append('popupImage', this.$refs.popupImage.files[0]);
+
+                    await fetch('/api/admin/popups', { method: 'POST', body: fd });
+                    this.resetPopupForm();
+                    this.fetchPopups();
+                    alert('저장되었습니다.');
+                },
+                editPopup(p) { 
+                    this.popupForm = { ...p }; 
+                    window.scrollTo({top: 0, behavior: 'smooth'});
+                    // 에디터에 내용 주입
+                    setTimeout(() => {
+                        if(popupTitleQuill) popupTitleQuill.root.innerHTML = p.title || '';
+                        if(popupContentQuill) popupContentQuill.root.innerHTML = p.content || '';
+                    }, 100);
+                },
+                resetPopupForm() { 
+                    this.popupForm = { id: null, title: '', content: '', link: '', active: true, image: null }; 
+                    if(popupTitleQuill) popupTitleQuill.setContents([]);
+                    if(popupContentQuill) popupContentQuill.setContents([]);
+                    if(this.$refs.popupImage) this.$refs.popupImage.value = ''; 
+                },
+                async deletePopup(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/admin/popups/${id}`, { method: 'DELETE' }); this.fetchPopups(); } },
 
                 // 공용 API 호출
                 async fetchInquiries() { const res = await fetch('/api/admin/inquiries'); this.inquiries = await res.json(); },
                 viewInquiryDetail(item) { this.selectedInquiry = item; },
-                async deleteInquiry(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' }); this.fetchInquiries(); } },
+                async deleteInquiry(id) { if(confirm('삭제?')) { await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' }); this.fetchInquiries(); } },
                 async fetchUsers() { const res = await fetch('/api/admin/users'); this.userList = await res.json(); },
                 async updateUserStatus(userId, payload) { await fetch('/api/admin/users/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId, ...payload }) }); this.fetchUsers(); },
                 async deleteUser(id) { if(confirm('삭제?')) { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); this.fetchUsers(); } },
@@ -429,7 +533,6 @@
                 },
                 async deleteHero(id) { if(confirm('삭제?')) { await fetch(`/api/admin/hero/${id}`, { method: 'DELETE' }); this.fetchHero(); } },
 
-                // [강화됨] 뉴스 관리 로직
                 async fetchNews() { const res = await fetch('/api/public/news'); this.newsList = await res.json(); },
                 async saveNews() {
                     try {
@@ -439,51 +542,33 @@
                         fd.append('category', this.newsForm.category);
                         fd.append('title', this.newsForm.title);
                         fd.append('content', newsQuill.root.innerHTML);
-
                         const existing = this.newsForm.attachments.filter(a => !a.isNew);
                         fd.append('existingAttachments', JSON.stringify(existing));
-
                         const newFiles = this.newsForm.attachments.filter(a => a.isNew);
                         newFiles.forEach(a => fd.append('attachments', a.fileObj));
-
                         const res = await fetch('/api/news', { method: 'POST', body: fd });
-                        if (res.ok) { alert('Saved Successfully'); this.resetNewsForm(); this.fetchNews(); }
-                    } catch (e) { alert('Save Error'); }
+                        if (res.ok) { alert('Saved'); this.resetNewsForm(); this.fetchNews(); }
+                    } catch (e) { alert('Error'); }
                 },
                 editNews(item) {
                     this.newsForm = { id: item.id, category: item.category, title: item.title, attachments: item.attachments ? JSON.parse(JSON.stringify(item.attachments)) : [] };
                     if(newsQuill) newsQuill.root.innerHTML = item.content || '';
                     window.scrollTo({top: 0, behavior: 'smooth'});
                 },
-                resetNewsForm() {
-                    this.newsForm = { id: null, category: 'H&L News', title: '', attachments: [] };
-                    if(newsQuill) newsQuill.setContents([]);
-                },
+                resetNewsForm() { this.newsForm = { id: null, category: 'H&L News', title: '', attachments: [] }; if(newsQuill) newsQuill.setContents([]); },
                 async deleteNews(id) { if(confirm('삭제?')) { await fetch(`/api/news/${id}`, { method: 'DELETE' }); this.fetchNews(); } },
                 async moveNewsInList(idx, dir) {
-                    const newList = [...this.newsList];
-                    const target = idx + dir;
+                    const newList = [...this.newsList]; const target = idx + dir;
                     [newList[idx], newList[target]] = [newList[target], newList[idx]];
-                    // 서버 API 연동 (전체 리스트 상태 반영)
-                    await fetch('/api/admin/news/reorder', { 
-                        method: 'POST', 
-                        headers: {'Content-Type': 'application/json'}, 
-                        body: JSON.stringify({ newList: newList.slice().reverse() }) // DB는 최신순 저장이므로 다시 뒤집어줌
-                    });
+                    await fetch('/api/admin/news/reorder', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ newList: newList.slice().reverse() }) });
                     this.fetchNews();
                 },
                 handleNewsFileSelect(e) { this.addNewsFiles(e.target.files); },
                 handleNewsDrop(e) { this.dragActive = false; this.addNewsFiles(e.dataTransfer.files); },
-                addNewsFiles(files) {
-                    for (let f of files) this.newsForm.attachments.push({ originalname: f.name, isNew: true, fileObj: f });
-                },
-                moveNewsAttachment(idx, dir) {
-                    const items = this.newsForm.attachments; const target = idx + dir;
-                    [items[idx], items[target]] = [items[target], items[idx]];
-                },
+                addNewsFiles(files) { for (let f of files) this.newsForm.attachments.push({ originalname: f.name, isNew: true, fileObj: f }); },
+                moveNewsAttachment(idx, dir) { const items = this.newsForm.attachments; const target = idx + dir; [items[idx], items[target]] = [items[target], items[idx]]; },
                 removeNewsAttachment(idx) { this.newsForm.attachments.splice(idx, 1); },
 
-                // 파트너 및 채용
                 async fetchPartners() { const res = await fetch('/api/public/partners'); this.partners = await res.json(); },
                 async savePartner() {
                     const fd = new FormData(); if(this.partnerForm.id) fd.append('id', this.partnerForm.id);

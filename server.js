@@ -57,7 +57,8 @@ async function initDB() {
                 heroMedia: [],
                 users: [],      
                 projects: [],   
-                timelogs: []    
+                timelogs: [],
+                popups: [] // [추가됨] 팝업 초기 데이터
             };
             await fs.writeJson(DB_FILE, initialData);
         } else {
@@ -68,6 +69,7 @@ async function initDB() {
             if (!db.users) { db.users = []; updated = true; } 
             if (!db.projects) { db.projects = []; updated = true; }
             if (!db.timelogs) { db.timelogs = []; updated = true; }
+            if (!db.popups) { db.popups = []; updated = true; } // [추가됨] 기존 DB에 팝업 필드 없을 시 추가
             if (updated) await fs.writeJson(DB_FILE, db);
         }
         await cleanExpiredJobs();
@@ -157,6 +159,18 @@ app.get('/api/public/jobs', async (req, res) => {
 app.get('/api/public/jobs/:id', async (req, res) => {
     try { const db = await fs.readJson(DB_FILE); const item = (db.jobs || []).find(j => j.id == req.params.id); if (item) res.json(item); else res.status(404).send("Not Found"); } catch (e) { res.status(500).json(null); }
 });
+
+/**
+ * [추가됨] 공개 팝업 조회 API (활성화된 것만)
+ */
+app.get('/api/public/popups', async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        const activePopups = (db.popups || []).filter(p => p.active === true);
+        res.json(activePopups);
+    } catch (e) { res.status(500).json([]); }
+});
+
 app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
     try { const db = await fs.readJson(DB_FILE); const newInquiry = { id: Date.now(), name: req.body.userName, phone: req.body.userPhone, summary: req.body.summary, created_at: new Date().toISOString().split('T')[0], files: req.files ? req.files.map(f => f.filename) : [] }; db.inquiries.push(newInquiry); await fs.writeJson(DB_FILE, db); res.status(200).send("OK"); } catch (e) { res.status(500).send("Error"); }
 });
@@ -431,6 +445,63 @@ app.get('/api/admin/inquiries', adminRequired, async (req, res) => {
 
 app.delete('/api/admin/inquiries/:id', adminRequired, async (req, res) => {
     try { const db = await fs.readJson(DB_FILE); db.inquiries = db.inquiries.filter(i => i.id != req.params.id); await fs.writeJson(DB_FILE, db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
+});
+
+/**
+ * [추가됨] 관리자용 팝업 전체 조회 API
+ */
+app.get('/api/admin/popups', adminRequired, async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        res.json(db.popups || []);
+    } catch (e) { res.status(500).json([]); }
+});
+
+/**
+ * [추가됨] 관리자용 팝업 저장 및 수정 API
+ */
+app.post('/api/admin/popups', adminRequired, upload.single('popupImage'), async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        const idBody = req.body.id;
+        const isNew = (!idBody || idBody === "null" || idBody === "undefined");
+        const id = isNew ? Date.now() : parseInt(idBody);
+
+        const popupData = {
+            id,
+            title: req.body.title,
+            content: req.body.content,
+            link: req.body.link || "",
+            active: req.body.active === 'true',
+            image: (req.body.existingImage && req.body.existingImage !== "null") ? req.body.existingImage : null
+        };
+
+        if (req.file) {
+            popupData.image = req.file.filename;
+        }
+
+        const index = db.popups.findIndex(p => p.id === id);
+        if (index > -1) {
+            db.popups[index] = popupData;
+        } else {
+            db.popups.push(popupData);
+        }
+
+        await fs.writeJson(DB_FILE, db);
+        res.json(popupData);
+    } catch (e) { res.status(500).send("Error saving popup"); }
+});
+
+/**
+ * [추가됨] 관리자용 팝업 삭제 API
+ */
+app.delete('/api/admin/popups/:id', adminRequired, async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        db.popups = db.popups.filter(p => p.id != req.params.id);
+        await fs.writeJson(DB_FILE, db);
+        res.send("Deleted");
+    } catch (e) { res.status(500).send("Error deleting popup"); }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
