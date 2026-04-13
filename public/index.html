@@ -32,9 +32,9 @@
         /* [수정] 메인 히어로 섹션: 화면 전체를 사용하는 Edge-to-Edge 레이아웃 */
         .hero-main {
             height: 100vh; 
-            width: 100vw !important; /* 브라우저 너비 전체 사용 */
-            max-width: none !important; /* 상위 section 제약 해제 */
-            margin-left: calc(-50vw + 50%); /* 중앙 정렬 유지하며 밖으로 확장 */
+            width: 100vw !important; 
+            max-width: none !important; 
+            margin-left: calc(-50vw + 50%); 
             display: flex; 
             align-items: center; 
             justify-content: center;
@@ -42,8 +42,8 @@
             overflow: hidden;
             text-align: center; 
             background: #000;
-            margin-top: -80px;
             padding: 0 !important;
+            /* margin-top 삭제: 헤더가 fixed이므로 100vh 설정 시 화면을 꽉 채우게 됨 */
         }
         
         .hero-bg-slider {
@@ -60,7 +60,7 @@
             top: 0; 
             left: 0; 
             width: 100%; 
-            height: 100%; /* [수정] 세로를 꽉 채우도록 100% 고정 */
+            height: 100% !important; /* [수정] 세로를 꽉 채우도록 100% 강제 */
             object-fit: cover; 
             opacity: 0; 
             transition: opacity 2.5s ease-in-out;
@@ -85,30 +85,28 @@
             width: 100%;
         }
 
-        /* [수정] 더욱 절제되고 고급스러운 영문 타이포그래피 (크기 축소 및 자간 조정) */
         .luxury-eng {
             display: block;
             font-family: 'Playfair Display', serif;
-            font-size: clamp(26px, 3.5vw, 46px); /* [수정] 기존보다 크기를 줄여 명품 스타일 구현 */
+            font-size: clamp(26px, 3.5vw, 46px); 
             font-weight: 400;
             line-height: 1.3;
             color: #ffffff;
-            letter-spacing: 0.05em; /* [수정] 자간을 넓혀 시각적 여유와 고급스러움 부여 */
+            letter-spacing: 0.05em; 
             margin-bottom: 5px;
         }
 
-        /* High & Law 금색 포인트 컬러 및 빛 효과 */
         .gold-point {
             color: #c5a059;
             font-weight: 500;
             background: linear-gradient(135deg, #c5a059 0%, #f4eee0 50%, #c5a059 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 15px rgba(197, 160, 89, 0.3); /* 은은한 빛 효과 */
+            text-shadow: 0 0 15px rgba(197, 160, 89, 0.3); 
         }
 
         .hero-divider {
-            width: 40px; /* [수정] 더 얇고 짧게 조정 */
+            width: 40px; 
             height: 1px;
             background: rgba(197, 160, 89, 0.6);
             margin: 30px auto;
@@ -116,8 +114,8 @@
 
         .hero-main .label {
             color: #c5a059; 
-            font-size: 10px; /* [수정] 폰트 크기 미세 축소 */
-            letter-spacing: 0.8em; /* [수정] 자간 확대 */
+            font-size: 10px; 
+            letter-spacing: 0.8em; 
             margin-bottom: 25px;
             text-transform: uppercase;
             font-weight: 600;
@@ -126,7 +124,7 @@
 
         .hero-main p { 
             font-family: 'Inter', sans-serif;
-            font-size: 15px; /* [수정] 폰트 크기 미세 축소 */
+            font-size: 15px; 
             color: rgba(255,255,255,0.7); 
             max-width: 800px; 
             margin: 0 auto; 
@@ -226,7 +224,6 @@
     </nav>
 </header>
 
-<!-- [수정] 화면을 꽉 채우는 프리미엄 히어로 섹션 -->
 <section class="hero-main">
     <div class="hero-bg-slider" id="hero-slider"></div>
     <div class="hero-content">
@@ -249,7 +246,6 @@
     </div>
 </section>
 
-<!-- 전문가 소개 영역 -->
 <section id="professionals">
     <span class="label">Expertise</span>
     <h2 class="section-title">The Partners</h2>
@@ -258,7 +254,6 @@
     </div>
 </section>
 
-<!-- 최신 뉴스 영역 -->
 <section id="news" style="background-color: #fff;">
     <span class="label">Insights</span>
     <h2 class="section-title">Latest Updates</h2>
@@ -267,7 +262,6 @@
     </div>
 </section>
 
-<!-- 채용 안내 영역 -->
 <section id="recruit">
     <span class="label">Careers</span>
     <h2 class="section-title">Join High & Law</h2>
@@ -288,7 +282,6 @@
     </div>
 </section>
 
-<!-- 하단 CTA 박스 -->
 <div class="cta-box">
     <span class="label">Consultation</span>
     <h2>Commitment to Excellence</h2>
@@ -308,7 +301,6 @@
 </footer>
 
 <script>
-    // 스크롤 시 헤더 투명도 조절
     window.addEventListener('scroll', () => {
         const header = document.querySelector('header');
         if (header && window.scrollY > 50) {
@@ -318,7 +310,6 @@
         }
     });
 
-    // 모바일 메뉴 토글
     const toggle = document.getElementById('mobile-toggle');
     const nav = document.getElementById('nav-menu');
     if (toggle && nav) {
@@ -328,9 +319,7 @@
         });
     }
 
-    // 데이터 동기화 함수
     async function syncData() {
-        // 0. 메인 히어로 배경 동기화
         try {
             const hRes = await fetch('/api/public/hero');
             const hData = await hRes.json();
@@ -359,7 +348,6 @@
             }
         } catch (e) { console.error("히어로 배경 로드 실패"); }
 
-        // 1. 파트너 데이터 동기화
         try {
             const pRes = await fetch('/api/public/partners');
             const pData = await pRes.json();
@@ -377,7 +365,6 @@
             }
         } catch (e) { console.error("파트너 로드 실패"); }
 
-        // 2. 뉴스 데이터 가져오기
         try {
             const nRes = await fetch('/api/public/news');
             const nData = await nRes.json();
@@ -393,7 +380,6 @@
             }
         } catch (e) { console.error("뉴스 로드 실패"); }
 
-        // 3. 채용 상태 가져오기
         try {
             const rRes = await fetch('/api/public/recruit');
             const rData = await rRes.json();
