@@ -33,6 +33,32 @@ header {
 .logo-group { display: flex; align-items: center; text-decoration: none; height: 100%; }
 .logo-group img { height: 60px; width: auto; object-fit: contain; }
 
+/* --- 로고 텍스트 색상 수정 시작 --- */
+.logo-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+    transition: 0.3s;
+    color: #fff; /* 기본 흰색 (Index 히어로 기준) */
+}
+
+.logo-subtitle {
+    font-size: 9px;
+    color: #c5a059; /* 금색 고정 */
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* 스크롤되거나 흰색 배경인 서브페이지용 색상 반전 */
+header.scrolled .logo-title,
+header.sub-page .logo-title {
+    color: #1a1a1a !important;
+}
+/* --- 로고 텍스트 색상 수정 끝 --- */
+
 nav ul { display: flex; list-style: none; gap: 25px; }
 nav a { color: var(--text-primary); text-decoration: none; font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; transition: 0.3s; }
 nav a:hover { color: var(--gold-primary); }
@@ -43,7 +69,7 @@ nav a:hover { color: var(--gold-primary); }
 /* --- [수정 부분] Main Hero Section: Edge-to-Edge Luxury Layout --- */
 .hero-main {
     width: 100vw;
-    height: 100vh; /* 세로 화면을 100% 채우도록 수정 */
+    height: 100vh; 
     margin-left: calc(-50vw + 50%);
     margin-right: calc(-50vw + 50%);
     position: relative;
@@ -60,7 +86,7 @@ nav a:hover { color: var(--gold-primary); }
     top: 0;
     left: 0;
     width: 100%;
-    height: 100% !important; /* 배경 이미지/영상이 세로를 꽉 채우도록 강제 */
+    height: 100% !important; 
     object-fit: cover;
     z-index: 1;
 }
@@ -70,9 +96,9 @@ nav a:hover { color: var(--gold-primary); }
     font-family: 'Playfair Display', serif;
     font-weight: 400;
     line-height: 1.2;
-    letter-spacing: 0.02em; /* 고급스러움을 위해 자간을 약간 넓힘 */
+    letter-spacing: 0.02em; 
     color: #ffffff;
-    font-size: clamp(28px, 3.8vw, 48px); /* 크기를 더 작고 정교하게 조정 */
+    font-size: clamp(28px, 3.8vw, 48px); 
     margin-bottom: 8px;
 }
 
@@ -88,15 +114,14 @@ nav a:hover { color: var(--gold-primary); }
 }
 
 .hero-divider {
-    width: 40px; /* 더 미니멀하게 조정 */
+    width: 40px; 
     height: 1px;
     background: var(--gold-primary);
     margin: 35px auto;
     opacity: 0.6;
 }
-/* ------------------------------------------------------------------ */
 
-/* Sub-hero & Labels (기존 유지) */
+/* Sub-hero & Labels */
 .sub-hero {
     padding-top: 180px; padding-bottom: 80px;
     background: linear-gradient(to bottom, #fdfdfd, #f4eee0);

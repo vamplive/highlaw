@@ -88,18 +88,32 @@ async function initDB() {
                 ],
                 jobs: [], inquiries: [], heroMedia: [], users: [],      
                 projects: [], timelogs: [], popups: [],
-                firm: { greeting: { content: "", image: "" }, values: [], location: [], public: [] }
+                firm: { 
+                    greeting: { content: "", image: "" }, 
+                    values: [], 
+                    location: [{label: "주소", value: ""}, {label: "전화", value: ""}], 
+                    public: [] 
+                }
             };
             await pool.query('INSERT INTO site_data (id, content) VALUES (1, $1)', [initialData]);
             console.log("DB 초기 데이터 생성 완료.");
         } else {
-            // 필드 누락 체크 (마이그레이션 대응)
+            // 필드 누락 체크 (마이그레이션 및 세부 구조 대응)
             let db = res.rows[0].content;
             let updated = false;
             const fields = ["partners", "heroMedia", "users", "projects", "timelogs", "popups", "firm"];
             fields.forEach(f => {
-                if (!db[f]) { db[f] = (f === "firm" ? { greeting: { content: "", image: "" }, values: [], location: [], public: [] } : []); updated = true; }
+                if (!db[f]) { 
+                    db[f] = (f === "firm" ? { greeting: { content: "", image: "" }, values: [], location: [], public: [] } : []); 
+                    updated = true; 
+                }
             });
+            // firm 내부 구조가 단순 객체일 경우를 대비해 상세 필드 체크
+            if (db.firm) {
+                if (!db.firm.values) { db.firm.values = []; updated = true; }
+                if (!db.firm.location) { db.firm.location = []; updated = true; }
+                if (!db.firm.public) { db.firm.public = []; updated = true; }
+            }
             if (updated) await writeDB(db);
         }
 
@@ -298,40 +312,48 @@ app.delete('/api/timelogs/:id', authRequired, async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 관리자 전용 API (오류 수정 및 기능 강화) --- */
+/* --- 관리자 전용 API: The Firm 관리 (강화됨) --- */
 app.post('/api/admin/firm', adminRequired, upload.any(), async (req, res) => {
     try {
         const db = await readDB();
         const body = req.body;
+        
+        // firm 구조 보장
         if (!db.firm) db.firm = { greeting: { content: "", image: "" }, values: [], location: [], public: [] };
+        
+        // 1. 인사말 처리
         db.firm.greeting.content = body.greetingContent;
         const greetingFile = req.files.find(f => f.fieldname === 'greetingImage');
         if (greetingFile) db.firm.greeting.image = greetingFile.filename;
+
+        // 2. 핵심가치 처리 (JSON 데이터와 전송된 파일 매칭)
         const valuesData = JSON.parse(body.valuesData || "[]");
         valuesData.forEach((val, idx) => {
             const file = req.files.find(f => f.fieldname === `valueImage_${idx}`);
             if (file) val.image = file.filename;
         });
         db.firm.values = valuesData;
+
+        // 3. 위치 정보 처리
         db.firm.location = JSON.parse(body.locationData || "[]");
+
+        // 4. 공익 활동 처리
         const publicData = JSON.parse(body.publicData || "[]");
         publicData.forEach((pub, idx) => {
             const file = req.files.find(f => f.fieldname === `publicImage_${idx}`);
             if (file) pub.image = file.filename;
         });
         db.firm.public = publicData;
-        await writeDB(db); res.send("Updated Successfully");
-    } catch (e) { res.status(500).send("Error updating firm data"); }
+
+        await writeDB(db); 
+        res.send("The Firm 데이터가 업데이트되었습니다.");
+    } catch (e) { 
+        console.error(e);
+        res.status(500).send("The Firm 업데이트 오류"); 
+    }
 });
 
-app.post('/api/admin/hero/reorder', adminRequired, async (req, res) => {
-    try {
-        const { heroMedia } = req.body;
-        const db = await readDB(); db.heroMedia = heroMedia;
-        await writeDB(db); res.send("Reordered");
-    } catch (e) { res.status(500).send("Error"); }
-});
-
+/* --- 관리자 전용 API: 뉴스/성공사례 (수정 및 삭제 포함) --- */
 app.post('/api/news', adminRequired, upload.array('attachments'), async (req, res) => {
     try {
         const db = await readDB();
@@ -370,6 +392,7 @@ app.delete('/api/news/:id', adminRequired, async (req, res) => {
     try { const db = await readDB(); db.news = db.news.filter(n => n.id != req.params.id); await writeDB(db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
 });
 
+/* --- 관리자 전용 API: 파트너 관리 --- */
 app.post('/api/admin/partners', adminRequired, upload.single('photo'), async (req, res) => {
     try {
         const db = await readDB();
@@ -400,26 +423,30 @@ app.delete('/api/admin/partners/:id', adminRequired, async (req, res) => {
     try { const db = await readDB(); db.partners = db.partners.filter(p => p.id != req.params.id); await writeDB(db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
 });
 
+/* --- 관리자 전용 API: 메인 히어로 관리 --- */
 app.post('/api/admin/hero', adminRequired, upload.single('heroFile'), async (req, res) => {
     try { if (!req.file) return res.status(400).send("No file"); const db = await readDB(); const newMedia = { id: Date.now(), filename: req.file.filename, mimetype: req.file.mimetype, created_at: new Date().toISOString() }; db.heroMedia.push(newMedia); await writeDB(db); res.json(newMedia); } catch (e) { res.status(500).send("Error"); }
+});
+
+app.post('/api/admin/hero/reorder', adminRequired, async (req, res) => {
+    try {
+        const { heroMedia } = req.body;
+        const db = await readDB(); db.heroMedia = heroMedia;
+        await writeDB(db); res.send("Reordered");
+    } catch (e) { res.status(500).send("Error"); }
 });
 
 app.delete('/api/admin/hero/:id', adminRequired, async (req, res) => {
     try { const db = await readDB(); db.heroMedia = db.heroMedia.filter(m => m.id != req.params.id); await writeDB(db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
 });
 
+/* --- 관리자 전용 API: 채용 정보 관리 --- */
 app.post('/api/recruit/status', adminRequired, async (req, res) => {
     try { 
         const { id, status } = req.body; 
         const db = await readDB(); 
         const target = db.recruit.find(r => r.role_id === id); 
-        if (target) { 
-            target.status = status; 
-            await writeDB(db); 
-            res.send("Updated"); 
-        } else { 
-            res.status(404).send("Not Found"); 
-        } 
+        if (target) { target.status = status; await writeDB(db); res.send("Updated"); } else { res.status(404).send("Not Found"); } 
     } catch (e) { res.status(500).send("Error updating recruit status"); }
 });
 
@@ -452,11 +479,7 @@ app.post('/api/admin/jobs', adminRequired, upload.array('jobAttachments'), async
         };
 
         const index = db.jobs.findIndex(j => j.id === id);
-        if (index > -1) { 
-            db.jobs[index] = jobData; 
-        } else { 
-            db.jobs.push(jobData); 
-        }
+        if (index > -1) { db.jobs[index] = jobData; } else { db.jobs.push(jobData); }
         await writeDB(db); res.json(jobData);
     } catch (e) { res.status(500).send("Error saving job"); }
 });
@@ -465,6 +488,7 @@ app.delete('/api/admin/jobs/:id', adminRequired, async (req, res) => {
     try { const db = await readDB(); db.jobs = db.jobs.filter(j => j.id != req.params.id); await writeDB(db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
 });
 
+/* --- 관리자 전용 API: 상담 및 팝업 관리 --- */
 app.get('/api/admin/inquiries', adminRequired, async (req, res) => {
     try { const db = await readDB(); res.json((db.inquiries || []).slice().reverse()); } catch (e) { res.status(500).json([]); }
 });
