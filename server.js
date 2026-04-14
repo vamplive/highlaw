@@ -108,8 +108,9 @@ async function initDB() {
                     updated = true; 
                 }
             });
-            // firm 내부 구조가 단순 객체일 경우를 대비해 상세 필드 체크
+            // firm 내부 구조 상세 필드 체크
             if (db.firm) {
+                if (!db.firm.greeting) { db.firm.greeting = { content: "", image: "" }; updated = true; }
                 if (!db.firm.values) { db.firm.values = []; updated = true; }
                 if (!db.firm.location) { db.firm.location = []; updated = true; }
                 if (!db.firm.public) { db.firm.public = []; updated = true; }
@@ -312,21 +313,23 @@ app.delete('/api/timelogs/:id', authRequired, async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 관리자 전용 API: The Firm 관리 (강화됨) --- */
+/* --- 관리자 전용 API: The Firm 관리 --- */
 app.post('/api/admin/firm', adminRequired, upload.any(), async (req, res) => {
     try {
         const db = await readDB();
         const body = req.body;
         
-        // firm 구조 보장
         if (!db.firm) db.firm = { greeting: { content: "", image: "" }, values: [], location: [], public: [] };
         
         // 1. 인사말 처리
         db.firm.greeting.content = body.greetingContent;
+        // 새로운 인사말 이미지가 업로드된 경우에만 교체
         const greetingFile = req.files.find(f => f.fieldname === 'greetingImage');
-        if (greetingFile) db.firm.greeting.image = greetingFile.filename;
+        if (greetingFile) {
+            db.firm.greeting.image = greetingFile.filename;
+        }
 
-        // 2. 핵심가치 처리 (JSON 데이터와 전송된 파일 매칭)
+        // 2. 핵심가치 처리
         const valuesData = JSON.parse(body.valuesData || "[]");
         valuesData.forEach((val, idx) => {
             const file = req.files.find(f => f.fieldname === `valueImage_${idx}`);
@@ -353,7 +356,7 @@ app.post('/api/admin/firm', adminRequired, upload.any(), async (req, res) => {
     }
 });
 
-/* --- 관리자 전용 API: 뉴스/성공사례 (수정 및 삭제 포함) --- */
+/* --- 관리자 전용 API: 뉴스/성공사례 --- */
 app.post('/api/news', adminRequired, upload.array('attachments'), async (req, res) => {
     try {
         const db = await readDB();
