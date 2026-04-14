@@ -1,4 +1,3 @@
-// --- START OF FILE server.js ---
 const express = require('express');
 const path = require('path');
 const fs = require('fs-extra');
@@ -59,7 +58,14 @@ async function initDB() {
                 users: [],      
                 projects: [],   
                 timelogs: [],
-                popups: [] 
+                popups: [],
+                // --- [추가] The Firm 초기 데이터 ---
+                firm: {
+                    greeting: { content: "", image: "" },
+                    values: [],
+                    location: [],
+                    public: []
+                }
             };
             await fs.writeJson(DB_FILE, initialData);
         } else {
@@ -71,6 +77,8 @@ async function initDB() {
             if (!db.projects) { db.projects = []; updated = true; }
             if (!db.timelogs) { db.timelogs = []; updated = true; }
             if (!db.popups) { db.popups = []; updated = true; } 
+            // --- [추가] 기존 DB에 firm 필드가 없는 경우 대응 ---
+            if (!db.firm) { db.firm = { greeting: { content: "", image: "" }, values: [], location: [], public: [] }; updated = true; }
             if (updated) await fs.writeJson(DB_FILE, db);
         }
         await cleanExpiredJobs();
@@ -171,6 +179,14 @@ app.get('/api/public/popups', async (req, res) => {
         const activePopups = (db.popups || []).filter(p => p.active === true);
         res.json(activePopups);
     } catch (e) { res.status(500).json([]); }
+});
+
+// --- [추가] The Firm 정보 조회 API ---
+app.get('/api/public/firm', async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        res.json(db.firm || { greeting: { content: "", image: "" }, values: [], location: [], public: [] });
+    } catch (e) { res.status(500).json({}); }
 });
 
 app.post('/api/inquiry', upload.array('evidence'), async (req, res) => {
@@ -301,6 +317,46 @@ app.delete('/api/timelogs/:id', authRequired, async (req, res) => {
 });
 
 /* --- 관리자 전용 API --- */
+
+// --- [추가] The Firm 정보 업데이트 API ---
+app.post('/api/admin/firm', adminRequired, upload.any(), async (req, res) => {
+    try {
+        const db = await fs.readJson(DB_FILE);
+        const body = req.body;
+        
+        if (!db.firm) db.firm = { greeting: { content: "", image: "" }, values: [], location: [], public: [] };
+
+        // 1. 인사말 업데이트
+        db.firm.greeting.content = body.greetingContent;
+        const greetingFile = req.files.find(f => f.fieldname === 'greetingImage');
+        if (greetingFile) db.firm.greeting.image = greetingFile.filename;
+
+        // 2. 핵심가치 업데이트 (JSON 파싱 및 이미지 매칭)
+        const valuesData = JSON.parse(body.valuesData || "[]");
+        valuesData.forEach((val, idx) => {
+            const file = req.files.find(f => f.fieldname === `valueImage_${idx}`);
+            if (file) val.image = file.filename;
+        });
+        db.firm.values = valuesData;
+
+        // 3. 오시는 길 업데이트
+        db.firm.location = JSON.parse(body.locationData || "[]");
+
+        // 4. 공익활동 업데이트
+        const publicData = JSON.parse(body.publicData || "[]");
+        publicData.forEach((pub, idx) => {
+            const file = req.files.find(f => f.fieldname === `publicImage_${idx}`);
+            if (file) pub.image = file.filename;
+        });
+        db.firm.public = publicData;
+
+        await fs.writeJson(DB_FILE, db);
+        res.send("Updated Successfully");
+    } catch (e) { 
+        console.error("The Firm 저장 에러:", e);
+        res.status(500).send("Error updating firm data"); 
+    }
+});
 
 app.post('/api/admin/hero/reorder', adminRequired, async (req, res) => {
     try {
