@@ -1,3 +1,4 @@
+// --- START OF FILE server.js ---
 const express = require('express');
 const path = require('path');
 const fs = require('fs-extra');
@@ -58,7 +59,7 @@ async function initDB() {
                 users: [],      
                 projects: [],   
                 timelogs: [],
-                popups: [] // [추가됨] 팝업 초기 데이터
+                popups: [] 
             };
             await fs.writeJson(DB_FILE, initialData);
         } else {
@@ -69,7 +70,7 @@ async function initDB() {
             if (!db.users) { db.users = []; updated = true; } 
             if (!db.projects) { db.projects = []; updated = true; }
             if (!db.timelogs) { db.timelogs = []; updated = true; }
-            if (!db.popups) { db.popups = []; updated = true; } // [추가됨] 기존 DB에 팝업 필드 없을 시 추가
+            if (!db.popups) { db.popups = []; updated = true; } 
             if (updated) await fs.writeJson(DB_FILE, db);
         }
         await cleanExpiredJobs();
@@ -80,8 +81,9 @@ async function initDB() {
 }
 initDB();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// 본문 이미지(Base64) 포함 게시글 전송을 위해 용량 제한 확대
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 // 세션 설정
@@ -103,7 +105,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 500 * 1024 * 1024 } 
+    limits: { 
+        fileSize: 500 * 1024 * 1024, // 파일 개별 용량
+        fieldSize: 100 * 1024 * 1024  // 본문 텍스트(이미지 포함) 용량 제한 대폭 확대
+    } 
 });
 
 /* --- 권한 체크 미들웨어 --- */
@@ -160,9 +165,6 @@ app.get('/api/public/jobs/:id', async (req, res) => {
     try { const db = await fs.readJson(DB_FILE); const item = (db.jobs || []).find(j => j.id == req.params.id); if (item) res.json(item); else res.status(404).send("Not Found"); } catch (e) { res.status(500).json(null); }
 });
 
-/**
- * [추가됨] 공개 팝업 조회 API (활성화된 것만)
- */
 app.get('/api/public/popups', async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -310,16 +312,11 @@ app.post('/api/admin/hero/reorder', adminRequired, async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/**
- * [수정됨] 뉴스 게시글 저장 로직 (SAVE & UPDATE)
- * 이미지, 동영상, 일반 파일 통합 관리 및 Rich Text 대응
- */
 app.post('/api/news', adminRequired, upload.array('attachments'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
         const { id, category, title, content, existingAttachments } = req.body;
         
-        // 기존 파일 리스트 안전하게 파싱 (수정 시 유지될 파일들)
         let finalAttachments = [];
         if (existingAttachments && existingAttachments !== "null" && existingAttachments !== "undefined") {
             try {
@@ -329,17 +326,14 @@ app.post('/api/news', adminRequired, upload.array('attachments'), async (req, re
             }
         }
 
-        // 새로 업로드된 파일 정보 추출 및 UTF-8 처리
         const newAttachments = req.files ? req.files.map(f => ({ 
             filename: f.filename, 
             originalname: Buffer.from(f.originalname, 'latin1').toString('utf8'), 
             mimetype: f.mimetype 
         })) : [];
 
-        // 기존 파일 + 새 파일 병합
         finalAttachments = [...finalAttachments, ...newAttachments];
 
-        // 1. 기존 게시글 수정 (Update)
         if (id && id !== "null" && id !== "undefined") {
             const index = db.news.findIndex(n => n.id == id);
             if (index > -1) {
@@ -353,7 +347,6 @@ app.post('/api/news', adminRequired, upload.array('attachments'), async (req, re
             }
         }
 
-        // 2. 신규 게시글 등록 (Create)
         const newNews = { 
             id: Date.now(), 
             category, 
@@ -371,14 +364,10 @@ app.post('/api/news', adminRequired, upload.array('attachments'), async (req, re
     }
 });
 
-/**
- * [추가됨] 뉴스 게시글 순서 변경 API
- */
 app.post('/api/admin/news/reorder', adminRequired, async (req, res) => {
     try {
         const { newList } = req.body;
         const db = await fs.readJson(DB_FILE);
-        // 클라이언트에서 전달받은 순서대로 저장 (전체 교체)
         db.news = newList;
         await fs.writeJson(DB_FILE, db);
         res.send("Reordered");
@@ -447,9 +436,6 @@ app.delete('/api/admin/inquiries/:id', adminRequired, async (req, res) => {
     try { const db = await fs.readJson(DB_FILE); db.inquiries = db.inquiries.filter(i => i.id != req.params.id); await fs.writeJson(DB_FILE, db); res.send("Deleted"); } catch (e) { res.status(500).send("Error"); }
 });
 
-/**
- * [추가됨] 관리자용 팝업 전체 조회 API
- */
 app.get('/api/admin/popups', adminRequired, async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -457,9 +443,6 @@ app.get('/api/admin/popups', adminRequired, async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-/**
- * [추가됨] 관리자용 팝업 저장 및 수정 API
- */
 app.post('/api/admin/popups', adminRequired, upload.single('popupImage'), async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);
@@ -492,9 +475,6 @@ app.post('/api/admin/popups', adminRequired, upload.single('popupImage'), async 
     } catch (e) { res.status(500).send("Error saving popup"); }
 });
 
-/**
- * [추가됨] 관리자용 팝업 삭제 API
- */
 app.delete('/api/admin/popups/:id', adminRequired, async (req, res) => {
     try {
         const db = await fs.readJson(DB_FILE);

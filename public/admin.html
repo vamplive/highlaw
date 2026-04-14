@@ -488,14 +488,26 @@
                     await fetch('/api/news', { method: 'POST', body: fd });
                     this.resetNewsForm(); this.fetchNews(); alert('저장되었습니다.');
                 },
+
                 editNews(item) {
-                    this.newsForm = { id: item.id, category: item.category, attachments: item.attachments ? JSON.parse(JSON.stringify(item.attachments)) : [] };
+                    // 수정할 데이터를 폼 모델에 로드
+                    this.newsForm = { 
+                        id: item.id, 
+                        category: item.category, 
+                        attachments: item.attachments ? JSON.parse(JSON.stringify(item.attachments)) : [] 
+                    };
+                    
+                    // 뉴스 탭으로 전환 후 에디터 초기화 및 내용 주입
                     this.setTab('news');
-                    setTimeout(() => {
-                        editors.newsTitle.root.innerHTML = item.title;
-                        editors.newsContent.root.innerHTML = item.content;
-                    }, 200);
+                    this.$nextTick(() => {
+                        this.initQuill();
+                        setTimeout(() => {
+                            if(editors.newsTitle) editors.newsTitle.root.innerHTML = item.title;
+                            if(editors.newsContent) editors.newsContent.root.innerHTML = item.content;
+                        }, 200);
+                    });
                 },
+
                 resetNewsForm() {
                     this.newsForm = { id: null, category: 'H&L News', attachments: [] };
                     if(editors.newsTitle) editors.newsTitle.setContents([]);
