@@ -298,7 +298,7 @@ app.delete('/api/timelogs/:id', authRequired, async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-/* --- 관리자 전용 API --- */
+/* --- 관리자 전용 API (오류 수정 및 기능 강화) --- */
 app.post('/api/admin/firm', adminRequired, upload.any(), async (req, res) => {
     try {
         const db = await readDB();
@@ -376,12 +376,24 @@ app.post('/api/admin/partners', adminRequired, upload.single('photo'), async (re
         const idBody = req.body.id;
         const isNew = (!idBody || idBody === "null" || idBody === "undefined");
         const id = isNew ? Date.now() : parseInt(idBody);
-        const partnerData = { id, name: req.body.name || "", engName: req.body.engName || "", title: req.body.title || "", edu: req.body.edu ? req.body.edu.split('\n').filter(l => l.trim() !== "") : [], exp: req.body.exp ? req.body.exp.split('\n').filter(l => l.trim() !== "") : [], photo: (req.body.existingPhoto && req.body.existingPhoto !== "null") ? req.body.existingPhoto : null };
+        
+        const partnerData = { 
+            id, 
+            name: req.body.name || "", 
+            engName: req.body.engName || "", 
+            title: req.body.title || "", 
+            edu: req.body.edu ? req.body.edu.split('\n').filter(l => l.trim() !== "") : [], 
+            exp: req.body.exp ? req.body.exp.split('\n').filter(l => l.trim() !== "") : [], 
+            photo: (req.body.existingPhoto && req.body.existingPhoto !== "null") ? req.body.existingPhoto : null 
+        };
+
         if (req.file) { partnerData.photo = req.file.filename; }
+        
         const index = db.partners.findIndex(p => p.id === id);
         if (index > -1) { db.partners[index] = partnerData; } else { db.partners.push(partnerData); }
+        
         await writeDB(db); res.json(partnerData);
-    } catch (e) { res.status(500).send("Error"); }
+    } catch (e) { res.status(500).send("Error saving partner"); }
 });
 
 app.delete('/api/admin/partners/:id', adminRequired, async (req, res) => {
@@ -397,7 +409,18 @@ app.delete('/api/admin/hero/:id', adminRequired, async (req, res) => {
 });
 
 app.post('/api/recruit/status', adminRequired, async (req, res) => {
-    try { const { id, status } = req.body; const db = await readDB(); const target = db.recruit.find(r => r.role_id === id); if (target) { target.status = status; await writeDB(db); res.send("Updated"); } else { res.status(404).send("Not Found"); } } catch (e) { res.status(500).send("Error"); }
+    try { 
+        const { id, status } = req.body; 
+        const db = await readDB(); 
+        const target = db.recruit.find(r => r.role_id === id); 
+        if (target) { 
+            target.status = status; 
+            await writeDB(db); 
+            res.send("Updated"); 
+        } else { 
+            res.status(404).send("Not Found"); 
+        } 
+    } catch (e) { res.status(500).send("Error updating recruit status"); }
 });
 
 app.post('/api/admin/jobs', adminRequired, upload.array('jobAttachments'), async (req, res) => {
@@ -406,12 +429,36 @@ app.post('/api/admin/jobs', adminRequired, upload.array('jobAttachments'), async
         const idBody = req.body.id;
         const isNew = (!idBody || idBody === "null" || idBody === "undefined");
         const id = isNew ? Date.now() : parseInt(idBody);
-        const attachments = req.files && req.files.length > 0 ? req.files.map(f => ({ filename: f.filename, originalname: f.originalname, mimetype: f.mimetype })) : null;
-        const jobData = { id, category: req.body.category, title: req.body.title, deadline: req.body.deadline, content: req.body.content, created_at: req.body.created_at || new Date().toISOString().split('T')[0] };
+        
+        let existingAttachments = [];
+        if (req.body.existingAttachments && req.body.existingAttachments !== "null") {
+            try { existingAttachments = JSON.parse(req.body.existingAttachments); } catch(e) { existingAttachments = []; }
+        }
+
+        const newAttachments = req.files ? req.files.map(f => ({ 
+            filename: f.filename, 
+            originalname: Buffer.from(f.originalname, 'latin1').toString('utf8'), 
+            mimetype: f.mimetype 
+        })) : [];
+
+        const jobData = { 
+            id, 
+            category: req.body.category, 
+            title: req.body.title, 
+            deadline: req.body.deadline, 
+            content: req.body.content, 
+            attachments: [...existingAttachments, ...newAttachments],
+            created_at: req.body.created_at || new Date().toISOString().split('T')[0] 
+        };
+
         const index = db.jobs.findIndex(j => j.id === id);
-        if (index > -1) { jobData.attachments = attachments ? attachments : db.jobs[index].attachments; db.jobs[index] = jobData; } else { jobData.attachments = attachments || []; db.jobs.push(jobData); }
+        if (index > -1) { 
+            db.jobs[index] = jobData; 
+        } else { 
+            db.jobs.push(jobData); 
+        }
         await writeDB(db); res.json(jobData);
-    } catch (e) { res.status(500).send("Error"); }
+    } catch (e) { res.status(500).send("Error saving job"); }
 });
 
 app.delete('/api/admin/jobs/:id', adminRequired, async (req, res) => {
@@ -436,7 +483,14 @@ app.post('/api/admin/popups', adminRequired, upload.single('popupImage'), async 
         const idBody = req.body.id;
         const isNew = (!idBody || idBody === "null" || idBody === "undefined");
         const id = isNew ? Date.now() : parseInt(idBody);
-        const popupData = { id, title: req.body.title, content: req.body.content, link: req.body.link || "", active: req.body.active === 'true', image: (req.body.existingImage && req.body.existingImage !== "null") ? req.body.existingImage : null };
+        const popupData = { 
+            id, 
+            title: req.body.title, 
+            content: req.body.content, 
+            link: req.body.link || "", 
+            active: req.body.active === 'true', 
+            image: (req.body.existingImage && req.body.existingImage !== "null") ? req.body.existingImage : null 
+        };
         if (req.file) { popupData.image = req.file.filename; }
         const index = db.popups.findIndex(p => p.id === id);
         if (index > -1) { db.popups[index] = popupData; } else { db.popups.push(popupData); }

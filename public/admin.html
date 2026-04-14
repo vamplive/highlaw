@@ -1,3 +1,4 @@
+<!-- START OF FILE text/html (admin.html 수정본) -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -40,19 +41,19 @@
         .editor-wrapper { min-height: 400px; font-family: 'Inter', sans-serif; background: white; border: 1px solid #eee; }
         .title-editor-wrapper { min-height: 80px; background: white; border: 1px solid #eee; }
         .sidebar-logo { filter: brightness(0) invert(1); width: 100%; height: auto; display: block; }
+
+        /* 드래그 앤 드롭 영역 스타일 */
         .drop-zone {
             border: 2px dashed #ddd; transition: 0.3s; cursor: pointer;
-            text-align: center; padding: 30px 20px; background: #fff; position: relative;
+            text-align: center; padding: 40px 20px; background: #fafafa; position: relative;
+            border-radius: 4px;
         }
-        .drop-zone.active { border-color: var(--gold-primary); background: rgba(197, 160, 89, 0.05); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-        .modal-body { background: white; padding: 40px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
+        .drop-zone:hover, .drop-zone.drag-over { border-color: var(--gold-primary); background: rgba(197, 160, 89, 0.05); }
+        .drop-zone p { font-size: 12px; color: #999; margin-top: 10px; }
+        .file-preview { font-size: 11px; color: var(--gold-primary); margin-top: 10px; font-weight: 600; }
         
-        /* 강화된 에디터 폰트 설정 표시용 */
         .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="serif"]::before,
         .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="serif"]::before { content: "Serif"; font-family: serif; }
-        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="monospace"]::before,
-        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="monospace"]::before { content: "Monospace"; font-family: monospace; }
         .ql-snow .ql-picker.ql-size .ql-picker-label::before,
         .ql-snow .ql-picker.ql-size .ql-picker-item::before { content: attr(data-value) !important; }
     </style>
@@ -70,10 +71,7 @@
                 <button @click="setTab('inquiry')" :class="{active: tab==='inquiry'}" class="nav-btn">상담 신청 관리</button>
                 <button @click="setTab('users')" :class="{active: tab==='users'}" class="nav-btn">구성원 승인 관리</button>
                 <button @click="setTab('hero')" :class="{active: tab==='hero'}" class="nav-btn">메인 비주얼 관리</button>
-                
-                <!-- [요구사항 반영] 위치: 메인 비주얼과 뉴스 관리 사이 -->
                 <button @click="setTab('firm')" :class="{active: tab==='firm'}" class="nav-btn">The Firm 관리</button>
-                
                 <button @click="setTab('popup')" :class="{active: tab==='popup'}" class="nav-btn">팝업 공지 관리</button>
                 <button @click="setTab('news')" :class="{active: tab==='news'}" class="nav-btn">뉴스/성공사례 관리</button>
                 <button @click="setTab('partner')" :class="{active: tab==='partner'}" class="nav-btn">구성원 관리</button>
@@ -85,83 +83,6 @@
 
         <main class="ml-64 flex-1 p-12 min-h-screen">
             
-            <!-- [요구사항 반영] The Firm 관리 섹션 -->
-            <div v-if="tab === 'firm'">
-                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">The Firm Management</h2>
-                
-                <!-- 1. 인사말 관리 -->
-                <div class="admin-card mb-10 border-t-4 border-gold-primary">
-                    <h3 class="text-xs font-bold text-gold-primary uppercase tracking-widest mb-6">1. 인사말 (CEO Greeting)</h3>
-                    <div class="space-y-6">
-                        <div>
-                            <label class="text-[10px] uppercase font-bold text-gray-400 block mb-2">인사말 대표 이미지</label>
-                            <div class="drop-zone" @click="$refs.firmGreetingImg.click()" :class="{active: dragActive}">
-                                <span v-if="!firmForm.greetingImageFile" class="text-xs text-gray-400">사진을 클릭하여 업로드 (600x800 권장)</span>
-                                <span v-else class="text-xs font-bold text-gold-primary">{{ firmForm.greetingImageFile.name }}</span>
-                                <input type="file" ref="firmGreetingImg" class="hidden" @change="e => firmForm.greetingImageFile = e.target.files[0]">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="text-[10px] uppercase font-bold text-gray-400 block mb-2">인사말 본문 내용</label>
-                            <div id="firm-greeting-editor" class="editor-wrapper"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. 핵심가치 관리 -->
-                <div class="admin-card mb-10 border-t-4 border-gold-primary">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xs font-bold text-gold-primary uppercase tracking-widest">2. 핵심가치 (Core Values)</h3>
-                        <button @click="addFirmValue" class="text-[10px] text-blue-500 font-bold">+ 항목 추가</button>
-                    </div>
-                    <div class="space-y-4">
-                        <div v-for="(v, idx) in firmForm.values" :key="idx" class="p-6 border bg-gray-50 relative">
-                            <button @click="firmForm.values.splice(idx, 1)" class="absolute top-2 right-4 text-red-400 text-lg">&times;</button>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <input v-model="v.title" type="text" placeholder="가치 제목 (예: Professionalism)">
-                                <input type="file" @change="e => v.file = e.target.files[0]" class="text-xs">
-                            </div>
-                            <textarea v-model="v.content" rows="2" placeholder="가치 설명 문구" class="mt-2 text-sm"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. 오시는 길 정보 관리 -->
-                <div class="admin-card mb-10 border-t-4 border-gold-primary">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xs font-bold text-gold-primary uppercase tracking-widest">3. 오시는 길 (Location Info)</h3>
-                        <button @click="addFirmLoc" class="text-[10px] text-blue-500 font-bold">+ 정보 추가</button>
-                    </div>
-                    <div class="space-y-2">
-                        <div v-for="(loc, idx) in firmForm.location" :key="idx" class="flex gap-4 items-center">
-                            <input v-model="loc.label" type="text" placeholder="라벨 (예: Address)" class="w-1/4 font-bold text-gold-primary">
-                            <input v-model="loc.value" type="text" placeholder="내용" class="w-3/4">
-                            <button @click="firmForm.location.splice(idx, 1)" class="text-red-300">&times;</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. 공익활동 관리 -->
-                <div class="admin-card mb-10 border-t-4 border-gold-primary">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xs font-bold text-gold-primary uppercase tracking-widest">4. 공익활동 (Public Activities)</h3>
-                        <button @click="addFirmPublic" class="text-[10px] text-blue-500 font-bold">+ 활동 추가</button>
-                    </div>
-                    <div class="space-y-4">
-                        <div v-for="(p, idx) in firmForm.public" :key="idx" class="p-6 border bg-gray-50 relative">
-                            <button @click="firmForm.public.splice(idx, 1)" class="absolute top-2 right-4 text-red-400 text-lg">&times;</button>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <input v-model="p.title" type="text" placeholder="활동 제목">
-                                <input type="file" @change="e => p.file = e.target.files[0]" class="text-xs">
-                            </div>
-                            <textarea v-model="p.content" rows="2" placeholder="활동 설명" class="mt-2 text-sm"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <button @click="saveFirmAll" class="btn-gold w-full py-5 text-sm tracking-[4px]">SAVE THE FIRM DATA</button>
-            </div>
-
             <!-- 상담 신청 관리 (기존 유지) -->
             <div v-if="tab === 'inquiry'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Inquiry Management</h2>
@@ -178,7 +99,6 @@
                                 <td class="py-4 font-bold text-gray-800">{{ item.name }}</td>
                                 <td class="py-4">{{ item.phone }}</td>
                                 <td class="py-4 text-center space-x-3">
-                                    <button @click="viewInquiryDetail(item)" class="text-blue-500 hover:underline font-bold">상세</button>
                                     <button @click="deleteInquiry(item.id)" class="text-red-400 hover:text-red-700 font-bold">삭제</button>
                                 </td>
                             </tr>
@@ -194,7 +114,7 @@
                     <table class="w-full text-left">
                         <thead>
                             <tr class="text-[11px] uppercase tracking-widest text-[#c5a059] border-b-2 border-[#f4eee0]">
-                                <th class="pb-4">아이디</th><th class="pb-4">이름</th><th class="pb-4">직책</th><th class="pb-4">상태</th><th class="pb-4">관리자</th><th class="pb-4 text-center">동작</th>
+                                <th class="pb-4">아이디</th><th class="pb-4">이름</th><th class="pb-4">직책</th><th class="pb-4 text-center">동작</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -202,17 +122,6 @@
                                 <td class="py-4">{{ user.loginId }}</td>
                                 <td class="py-4 font-bold">{{ user.name }}</td>
                                 <td class="py-4">{{ user.position }}</td>
-                                <td class="py-4">
-                                    <span :class="user.status === 'active' ? 'text-green-600' : 'text-orange-500'" class="font-bold">
-                                        {{ user.status === 'active' ? '승인완료' : '승인대기' }}
-                                    </span>
-                                </td>
-                                <td class="py-4">
-                                    <select @change="updateUserStatus(user.id, {isAdmin: $event.target.value === 'true'})" class="text-xs">
-                                        <option :selected="user.isAdmin" value="true">YES</option>
-                                        <option :selected="!user.isAdmin" value="false">NO</option>
-                                    </select>
-                                </td>
                                 <td class="py-4 text-center">
                                     <button v-if="user.status !== 'active'" @click="updateUserStatus(user.id, {status: 'active'})" class="text-blue-500 font-bold mr-2">승인</button>
                                     <button @click="deleteUser(user.id)" class="text-red-400 font-bold">삭제</button>
@@ -223,104 +132,102 @@
                 </div>
             </div>
 
-            <!-- 메인 비주얼 관리 (기존 유지) -->
+            <!-- 메인 비주얼 관리 (드래그 앤 드롭 추가) -->
             <div v-if="tab === 'hero'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Main Visual Management</h2>
                 <div class="admin-card mb-10">
-                    <p class="text-[11px] font-bold text-gold-primary uppercase mb-4 tracking-widest">Upload New Hero Media</p>
-                    <input type="file" ref="heroFile" class="text-sm mb-4 block w-full">
-                    <button @click="uploadHero" class="btn-gold w-full py-4 uppercase">SAVE POST</button>
+                    <div class="drop-zone" @dragover.prevent="onDragOver" @dragleave="onDragLeave" @drop.prevent="onDrop($event, 'heroFile')">
+                        <p>이미지나 영상을 이곳에 끌어다 놓으세요.</p>
+                        <input type="file" ref="heroFile" class="hidden" @change="onFileChange($event, 'heroFile')">
+                        <div class="file-preview" v-if="heroPreviewName">{{ heroPreviewName }}</div>
+                        <button @click="$refs.heroFile.click()" class="text-[10px] text-blue-500 underline mt-2">또는 직접 파일 선택</button>
+                    </div>
+                    <button @click="uploadHero" class="btn-gold w-full py-4 uppercase mt-4">SAVE MEDIA</button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div v-for="(media, idx) in heroList" :key="media.id" class="admin-card !p-4 flex flex-col">
-                        <div class="relative h-40 bg-black overflow-hidden rounded">
-                            <img v-if="media.mimetype.startsWith('image')" :src="'/uploads/'+media.filename" class="w-full h-full object-cover">
-                            <video v-else :src="'/uploads/'+media.filename" class="w-full h-full object-cover"></video>
-                            <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">No.{{idx + 1}}</span>
-                        </div>
-                        <div class="mt-4 flex justify-between items-center">
-                            <div class="flex gap-1">
-                                <button @click="moveHero(idx, -1)" class="p-2 bg-gray-100 hover:bg-gold-primary rounded" :disabled="idx === 0">▲</button>
-                                <button @click="moveHero(idx, 1)" class="p-2 bg-gray-100 hover:bg-gold-primary rounded" :disabled="idx === heroList.length - 1">▼</button>
-                            </div>
-                            <button @click="deleteHero(media.id)" class="text-red-400 text-xs font-bold">Delete</button>
-                        </div>
+                <div class="grid grid-cols-3 gap-6">
+                    <div v-for="(media, idx) in heroList" :key="media.id" class="admin-card !p-4">
+                        <img v-if="media.mimetype.startsWith('image')" :src="'/uploads/'+media.filename" class="w-full h-32 object-cover mb-4">
+                        <video v-else :src="'/uploads/'+media.filename" class="w-full h-32 object-cover mb-4"></video>
+                        <button @click="deleteHero(media.id)" class="text-red-400 text-xs font-bold w-full">DELETE</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 팝업 공지 관리 (기존 유지) -->
+            <!-- The Firm 관리 (드래그 앤 드롭 추가) -->
+            <div v-if="tab === 'firm'">
+                <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">The Firm Management</h2>
+                <div class="admin-card mb-10 border-t-4 border-gold-primary">
+                    <h3 class="text-xs font-bold text-gold-primary uppercase tracking-widest mb-6">CEO Greeting Image</h3>
+                    <div class="space-y-6">
+                        <div class="drop-zone" @dragover.prevent="onDragOver" @dragleave="onDragLeave" @drop.prevent="onDrop($event, 'firmGreeting')">
+                            <p>대표 인사말 사진을 끌어다 놓으세요.</p>
+                            <input type="file" ref="firmGreeting" class="hidden" @change="onFileChange($event, 'firmGreeting')">
+                            <div class="file-preview" v-if="firmGreetingName">{{ firmGreetingName }}</div>
+                        </div>
+                        <div id="firm-greeting-editor" class="editor-wrapper"></div>
+                        <button @click="saveFirmAll" class="btn-gold w-full">SAVE FIRM DATA</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 팝업 공지 관리 (드래그 앤 드롭 추가) -->
             <div v-if="tab === 'popup'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Popup Management</h2>
-                <div class="admin-card mb-10 border-t-4 border-t-[#c5a059] space-y-6">
+                <div class="admin-card mb-10 border-t-4 border-gold-primary space-y-6">
                     <div class="grid grid-cols-2 gap-4">
-                        <select v-model="popupForm.active">
-                            <option :value="true">활성화</option>
-                            <option :value="false">비활성화</option>
-                        </select>
+                        <select v-model="popupForm.active"><option :value="true">활성화</option><option :value="false">비활성화</option></select>
                         <input v-model="popupForm.link" type="text" placeholder="이동 링크 URL">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gold-primary uppercase block mb-2">팝업 제목 (Rich Text)</label>
-                        <div id="popup-title-editor" class="title-editor-wrapper"></div>
+                    <label class="text-[10px] font-bold text-gold-primary uppercase">Popup Title</label>
+                    <div id="popup-title-editor" class="title-editor-wrapper"></div>
+                    <label class="text-[10px] font-bold text-gold-primary uppercase">Popup Content</label>
+                    <div id="popup-content-editor" class="editor-wrapper"></div>
+                    
+                    <div class="drop-zone" @dragover.prevent="onDragOver" @dragleave="onDragLeave" @drop.prevent="onDrop($event, 'popupFile')">
+                        <p>팝업 이미지를 끌어다 놓으세요.</p>
+                        <input type="file" ref="popupFile" class="hidden" @change="onFileChange($event, 'popupFile')">
+                        <div class="file-preview" v-if="popupFileName">{{ popupFileName }}</div>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gold-primary uppercase block mb-2">팝업 본문 (Rich Text)</label>
-                        <div id="popup-content-editor" class="editor-wrapper"></div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gold-primary uppercase block mb-2">이미지 첨부 (Drag & Drop 지원)</label>
-                        <div class="drop-zone" @dragover.prevent="dragActive = true" @dragleave.prevent="dragActive = false" @drop.prevent="handlePopupDrop" @click="$refs.popupImage.click()" :class="{active: dragActive}">
-                            <span v-if="!popupForm.imageFile" class="text-xs text-gray-400">이미지를 드래그하거나 클릭하여 업로드하세요.</span>
-                            <span v-else class="text-xs font-bold text-gold-primary">{{ popupForm.imageFile.name }}</span>
-                            <input type="file" ref="popupImage" accept="image/*" class="hidden" @change="e => popupForm.imageFile = e.target.files[0]">
-                        </div>
-                    </div>
-                    <div class="flex gap-3">
-                        <button @click="savePopup" class="btn-gold flex-1">{{ popupForm.id ? 'UPDATE' : 'SAVE' }}</button>
-                        <button v-if="popupForm.id" @click="resetPopupForm" class="bg-gray-100 px-6 text-xs font-bold">CANCEL</button>
-                    </div>
+
+                    <button @click="savePopup" class="btn-gold w-full">{{ popupForm.id ? 'UPDATE' : 'SAVE' }} POPUP</button>
+                </div>
+                <div v-for="p in popupList" :key="p.id" class="admin-card flex justify-between items-center py-4 mb-2">
+                    <span class="text-sm" v-html="p.title"></span>
+                    <button @click="deletePopup(p.id)" class="text-red-300 text-xs font-bold">DELETE</button>
                 </div>
             </div>
 
-            <!-- 뉴스/성공사례 관리 (기존 유지) -->
+            <!-- 뉴스/성공사례 관리 (다중 드래그 앤 드롭 추가) -->
             <div v-if="tab === 'news'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">News Management</h2>
                 <div class="admin-card mb-8 space-y-6">
-                    <div class="grid grid-cols-2 gap-6">
-                        <select v-model="newsForm.category">
-                            <option value="H&L News">H&L News</option>
-                            <option value="Leading Cases">Leading Cases</option>
-                            <option value="Latest Updates">Latest Updates</option>
-                        </select>
-                        <div class="text-[10px] text-gray-400">카테고리 선택 후 내용을 작성해 주세요.</div>
+                    <select v-model="newsForm.category">
+                        <option value="H&L News">H&L News</option>
+                        <option value="Leading Cases">Leading Cases</option>
+                        <option value="Latest Updates">Latest Updates</option>
+                    </select>
+                    <label class="text-[10px] font-bold text-gold-primary uppercase">Title</label>
+                    <div id="news-title-editor" class="title-editor-wrapper"></div>
+                    <label class="text-[10px] font-bold text-gold-primary uppercase">Content</label>
+                    <div id="news-editor" class="editor-wrapper"></div>
+                    
+                    <div class="drop-zone" @dragover.prevent="onDragOver" @dragleave="onDragLeave" @drop.prevent="onDrop($event, 'newsFiles', true)">
+                        <p>첨부 파일 또는 이미지를 이곳에 여러 개 끌어다 놓으세요.</p>
+                        <input type="file" ref="newsFiles" multiple class="hidden" @change="onFileChange($event, 'newsFiles', true)">
+                        <div class="file-preview" v-if="newsFilesNames.length > 0">
+                            <div v-for="name in newsFilesNames">📎 {{ name }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gold-primary uppercase block mb-2">뉴스 제목 (Rich Text)</label>
-                        <div id="news-title-editor" class="title-editor-wrapper"></div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gold-primary uppercase block mb-2">뉴스 본문 (Rich Text & Image)</label>
-                        <div id="news-editor" class="editor-wrapper"></div>
-                    </div>
-                    <div class="flex gap-4">
-                        <button @click="saveNews" class="btn-gold flex-1 py-4">SAVE POST</button>
-                        <button v-if="newsForm.id" @click="resetNewsForm" class="bg-gray-100 px-8 text-xs">CANCEL</button>
-                    </div>
+
+                    <button @click="saveNews" class="btn-gold w-full">SAVE POST</button>
                 </div>
-                <div v-for="(item, idx) in newsList" :key="item.id" class="admin-card flex justify-between items-center py-4 mb-2">
-                    <div class="flex items-center gap-4 overflow-hidden">
-                        <span class="text-xs font-bold text-gold-primary">{{ item.category }}</span>
-                        <div class="text-sm truncate ql-editor !p-0" v-html="item.title"></div>
-                    </div>
-                    <div class="flex gap-3">
-                        <button @click="editNews(item)" class="text-blue-500 text-xs font-bold">수정</button>
-                        <button @click="deleteNews(item.id)" class="text-red-300 text-xs font-bold">삭제</button>
-                    </div>
+                <div v-for="item in newsList" :key="item.id" class="admin-card flex justify-between items-center py-4 mb-2">
+                    <div class="flex items-center gap-4"><span class="text-xs font-bold text-gold-primary">{{item.category}}</span><span class="text-sm" v-html="item.title"></span></div>
+                    <button @click="deleteNews(item.id)" class="text-red-300 text-xs font-bold">DELETE</button>
                 </div>
             </div>
 
-            <!-- 구성원 관리 (기존 유지) -->
+            <!-- 구성원 관리 (드래그 앤 드롭 추가) -->
             <div v-if="tab === 'partner'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Partner Management</h2>
                 <div class="admin-card mb-8 space-y-6">
@@ -329,28 +236,81 @@
                         <input v-model="partnerForm.engName" type="text" placeholder="영문 성함">
                     </div>
                     <input v-model="partnerForm.title" type="text" placeholder="직책/분야">
-                    <textarea v-model="partnerForm.edu" rows="3" placeholder="학력 (줄바꿈으로 구분)"></textarea>
-                    <textarea v-model="partnerForm.exp" rows="3" placeholder="경력 (줄바꿈으로 구분)"></textarea>
-                    <div>
-                        <label class="text-[10px] font-bold text-gold-primary block mb-2">사진 등록</label>
-                        <input type="file" ref="partnerPhoto" accept="image/*" @change="e => partnerForm.photoFile = e.target.files[0]">
+                    <textarea v-model="partnerForm.edu" rows="3" placeholder="학력 (줄바꿈 구분)"></textarea>
+                    <textarea v-model="partnerForm.exp" rows="3" placeholder="경력 (줄바꿈 구분)"></textarea>
+                    
+                    <div class="drop-zone" @dragover.prevent="onDragOver" @dragleave="onDragLeave" @drop.prevent="onDrop($event, 'partnerPhoto')">
+                        <p>구성원 사진을 끌어다 놓으세요.</p>
+                        <input type="file" ref="partnerPhoto" class="hidden" @change="onFileChange($event, 'partnerPhoto')">
+                        <div class="file-preview" v-if="partnerPhotoName">{{ partnerPhotoName }}</div>
                     </div>
-                    <button @click="savePartner" class="btn-gold w-full py-4">SAVE PARTNER</button>
+
+                    <button @click="savePartner" class="btn-gold w-full">SAVE PARTNER</button>
+                </div>
+                <div v-for="p in partners" :key="p.id" class="admin-card flex justify-between items-center py-4 mb-2">
+                    <span class="text-sm font-bold">{{p.name}} / {{p.title}}</span>
+                    <button @click="deletePartner(p.id)" class="text-red-300 text-xs font-bold">DELETE</button>
                 </div>
             </div>
 
-            <!-- 채용 정보 통합 관리 (기존 유지) -->
+            <!-- 채용 정보 통합 관리 (다중 드래그 앤 드롭 추가) -->
             <div v-if="tab === 'recruit'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">Recruitment</h2>
+                
                 <div class="admin-card mb-10">
                     <h3 class="text-[11px] font-bold text-gold-primary uppercase mb-6 tracking-widest">상시 채용 오픈 설정</h3>
                     <div class="grid grid-cols-2 gap-4">
                         <div v-for="r in recruitStatus" :key="r.role_id" class="flex justify-between items-center p-4 border rounded bg-gray-50">
-                            <span class="text-sm font-bold">{{ r.role_id }}</span>
+                            <span class="text-sm font-bold">{{ r.role_id === 'new-lawyer' ? '신규 변호사' : r.role_id === 'exp-lawyer' ? '경력 변호사' : r.role_id === 'mil-lawyer' ? '법무관' : '전문 직원' }}</span>
                             <select v-model="r.status" @change="updateRecruitStatus(r.role_id, r.status)" class="!w-auto text-xs px-2">
                                 <option value="status-open">OPEN</option>
                                 <option value="status-closed">CLOSED</option>
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card mb-10 border-t-4 border-gold-primary">
+                    <h3 class="text-[11px] font-bold text-gold-primary uppercase mb-6 tracking-widest">{{ jobForm.id ? '공고 수정' : '새 상세 공고 작성' }}</h3>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <select v-model="jobForm.category">
+                                <option value="변호사 채용">변호사 채용</option>
+                                <option value="직원 채용">직원 채용</option>
+                                <option value="인턴/기타">인턴/기타</option>
+                            </select>
+                            <input type="date" v-model="jobForm.deadline" placeholder="마감일">
+                        </div>
+                        <input type="text" v-model="jobForm.title" placeholder="공고 제목">
+                        <label class="text-[10px] font-bold text-gold-primary uppercase">Job Description</label>
+                        <div id="job-editor" class="editor-wrapper"></div>
+                        
+                        <div class="drop-zone" @dragover.prevent="onDragOver" @dragleave="onDragLeave" @drop.prevent="onDrop($event, 'jobFiles', true)">
+                            <p>채용 관련 첨부 서류를 여러 개 끌어다 놓으세요.</p>
+                            <input type="file" ref="jobFiles" multiple class="hidden" @change="onFileChange($event, 'jobFiles', true)">
+                            <div class="file-preview" v-if="jobFilesNames.length > 0">
+                                <div v-for="name in jobFilesNames">📎 {{ name }}</div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <button @click="saveJob" class="btn-gold flex-1 py-4">SAVE JOB POSTING</button>
+                            <button v-if="jobForm.id" @click="resetJobForm" class="bg-gray-100 px-8 text-xs font-bold">CANCEL</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h3 class="text-[11px] font-bold text-gold-primary uppercase mb-6 tracking-widest">등록된 상세 공고 목록</h3>
+                    <div v-for="job in jobList" :key="job.id" class="flex justify-between items-center py-4 border-b last:border-0">
+                        <div>
+                            <span class="text-[10px] text-gold-primary font-bold mr-2">[{{job.category}}]</span>
+                            <span class="text-sm font-medium">{{job.title}}</span>
+                            <span class="text-[10px] text-gray-400 ml-3">~ {{job.deadline}}</span>
+                        </div>
+                        <div class="flex gap-4">
+                            <button @click="editJob(job)" class="text-blue-500 text-xs font-bold">수정</button>
+                            <button @click="deleteJob(job.id)" class="text-red-300 text-xs font-bold">삭제</button>
                         </div>
                     </div>
                 </div>
@@ -362,28 +322,16 @@
     <script>
         const { createApp } = Vue;
         
-        // [요구사항 반영] 에디터 기능 대폭 강화 (폰트, 크기, 정렬 등)
         const Size = Quill.import('attributors/style/size');
-        Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px'];
+        Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '24px', '32px'];
         Quill.register(Size, true);
 
-        const Font = Quill.import('attributors/style/font');
-        Font.whitelist = [false, 'serif', 'monospace'];
-        Quill.register(Font, true);
-
         const toolbarOptions = [
-            [{ 'font': Font.whitelist }],
-            [{ 'size': Size.whitelist }],
+            [{ 'font': [false, 'serif', 'monospace'] }, { 'size': Size.whitelist }],
             ['bold', 'italic', 'underline', 'strike'],
             [{ 'color': [] }, { 'background': [] }],
-            [{ 'script': 'sub'}, { 'script': 'super' }],
-            [{ 'header': [1, 2, 3, false] }],
-            ['blockquote', 'code-block'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'indent': '-1'}, { 'indent': '+1' }],
-            [{ 'align': [] }],
-            ['link', 'image', 'video'],
-            ['clean']
+            [{ 'header': [1, 2, 3, false] }, { 'align': [] }],
+            ['link', 'image', 'video'], ['clean']
         ];
 
         let editors = {};
@@ -391,101 +339,170 @@
         createApp({
             data() {
                 return {
-                    tab: 'inquiry', 
-                    dragActive: false,
-                    inquiries: [], userList: [], heroList: [], popupList: [], newsList: [], partners: [], recruitStatus: [],
-                    
-                    // [요구사항 반영] Firm 데이터 폼
-                    firmForm: {
-                        greetingImageFile: null,
-                        values: [],
-                        location: [],
-                        public: []
-                    },
-
+                    tab: 'inquiry', inquiries: [], userList: [], heroList: [], popupList: [], newsList: [], partners: [],
+                    recruitStatus: [], jobList: [],
+                    firmForm: { greetingImageFile: null },
                     popupForm: { id: null, link: '', active: true, imageFile: null },
-                    newsForm: { id: null, category: 'H&L News', attachments: [] },
-                    partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '', photoFile: null }
+                    newsForm: { id: null, category: 'H&L News' },
+                    partnerForm: { id: null, name: '', engName: '', title: '', edu: '', exp: '', photoFile: null },
+                    jobForm: { id: null, category: '변호사 채용', title: '', deadline: '', content: '', attachments: [] },
+                    
+                    // 파일 미리보기용 변수
+                    heroPreviewName: '',
+                    firmGreetingName: '',
+                    popupFileName: '',
+                    partnerPhotoName: '',
+                    newsFilesNames: [],
+                    jobFilesNames: []
                 }
             },
             methods: {
+                // [기능 추가] 드래그 앤 드롭 핸들러
+                onDragOver(e) { e.currentTarget.classList.add('drag-over'); },
+                onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); },
+                onDrop(e, refName, isMultiple = false) {
+                    e.currentTarget.classList.remove('drag-over');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        // input element에 파일 할당 (DataTransfer 이용)
+                        const dt = new DataTransfer();
+                        if (isMultiple) {
+                            for (let i = 0; i < files.length; i++) dt.items.add(files[i]);
+                        } else {
+                            dt.items.add(files[0]);
+                        }
+                        this.$refs[refName].files = dt.files;
+                        this.updatePreviewNames(refName, dt.files, isMultiple);
+                    }
+                },
+                onFileChange(e, refName, isMultiple = false) {
+                    this.updatePreviewNames(refName, e.target.files, isMultiple);
+                },
+                updatePreviewNames(refName, files, isMultiple) {
+                    if (isMultiple) {
+                        const names = Array.from(files).map(f => f.name);
+                        if (refName === 'newsFiles') this.newsFilesNames = names;
+                        if (refName === 'jobFiles') this.jobFilesNames = names;
+                    } else {
+                        const name = files[0] ? files[0].name : '';
+                        if (refName === 'heroFile') this.heroPreviewName = name;
+                        if (refName === 'firmGreeting') this.firmGreetingName = name;
+                        if (refName === 'popupFile') this.popupFileName = name;
+                        if (refName === 'partnerPhoto') this.partnerPhotoName = name;
+                    }
+                },
+
                 setTab(name) { 
                     this.tab = name; 
-                    this.initQuill(); 
-                    if(name === 'firm') this.fetchFirmData();
+                    this.initQuill();
                     if(name === 'inquiry') this.fetchInquiries();
                     if(name === 'users') this.fetchUsers();
                     if(name === 'hero') this.fetchHero();
+                    if(name === 'firm') this.fetchFirmData();
                     if(name === 'popup') this.fetchPopups();
                     if(name === 'news') this.fetchNews();
                     if(name === 'partner') this.fetchPartners();
+                    if(name === 'recruit') { this.fetchRecruitStatus(); this.fetchJobs(); }
                 },
                 initQuill() {
                     this.$nextTick(() => {
-                        // 1. Firm Greeting
-                        if (this.tab === 'firm' && !editors.firmGreeting) {
-                            editors.firmGreeting = new Quill('#firm-greeting-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
-                        }
-                        // 2. Popups
+                        if (this.tab === 'firm' && !editors.firmGreeting) editors.firmGreeting = new Quill('#firm-greeting-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                         if (this.tab === 'popup') {
                             if (!editors.popupTitle) editors.popupTitle = new Quill('#popup-title-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                             if (!editors.popupContent) editors.popupContent = new Quill('#popup-content-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                         }
-                        // 3. News
                         if (this.tab === 'news') {
                             if (!editors.newsTitle) editors.newsTitle = new Quill('#news-title-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                             if (!editors.newsContent) editors.newsContent = new Quill('#news-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
                         }
+                        if (this.tab === 'recruit' && !editors.job) {
+                            editors.job = new Quill('#job-editor', { theme: 'snow', modules: { toolbar: toolbarOptions } });
+                        }
                     });
                 },
-
-                // [Firm 관련 메소드]
-                async fetchFirmData() {
-                    const res = await fetch('/api/public/firm');
-                    const data = await res.json();
-                    if(data) {
-                        this.firmForm.values = data.values || [];
-                        this.firmForm.location = data.location || [];
-                        this.firmForm.public = data.public || [];
-                        if(editors.firmGreeting && data.greeting) editors.firmGreeting.root.innerHTML = data.greeting.content || '';
-                    }
-                },
-                addFirmValue() { this.firmForm.values.push({ title: '', content: '', image: '' }); },
-                addFirmLoc() { this.firmForm.location.push({ label: '', value: '' }); },
-                addFirmPublic() { this.firmForm.public.push({ title: '', content: '', image: '' }); },
-                async saveFirmAll() {
-                    const fd = new FormData();
-                    fd.append('greetingContent', editors.firmGreeting.root.innerHTML);
-                    if(this.firmForm.greetingImageFile) fd.append('greetingImage', this.firmForm.greetingImageFile);
-                    
-                    fd.append('valuesData', JSON.stringify(this.firmForm.values.map(v => ({title: v.title, content: v.content, image: v.image}))));
-                    this.firmForm.values.forEach((v, idx) => { if(v.file) fd.append(`valueImage_${idx}`, v.file); });
-                    
-                    fd.append('locationData', JSON.stringify(this.firmForm.location));
-                    
-                    fd.append('publicData', JSON.stringify(this.firmForm.public.map(p => ({title: p.title, content: p.content, image: p.image}))));
-                    this.firmForm.public.forEach((p, idx) => { if(p.file) fd.append(`publicImage_${idx}`, p.file); });
-
-                    const res = await fetch('/api/admin/firm', { method: 'POST', body: fd });
-                    if(res.ok) alert('성공적으로 저장되었습니다.');
-                    this.fetchFirmData();
-                },
-
-                // (나머지 기존 메소드들... 삭제되지 않음)
+                
                 async fetchInquiries() { const res = await fetch('/api/admin/inquiries'); this.inquiries = await res.json(); },
                 async fetchUsers() { const res = await fetch('/api/admin/users'); this.userList = await res.json(); },
                 async fetchHero() { const res = await fetch('/api/public/hero'); this.heroList = await res.json(); },
                 async fetchPopups() { const res = await fetch('/api/admin/popups'); this.popupList = await res.json(); },
                 async fetchNews() { const res = await fetch('/api/public/news'); this.newsList = await res.json(); },
                 async fetchPartners() { const res = await fetch('/api/public/partners'); this.partners = await res.json(); },
-                async uploadHero() {
-                    const fd = new FormData(); fd.append('heroFile', this.$refs.heroFile.files[0]);
-                    await fetch('/api/admin/hero', { method: 'POST', body: fd }); this.fetchHero();
+                async fetchRecruitStatus() { const res = await fetch('/api/public/recruit'); this.recruitStatus = await res.json(); },
+                async fetchJobs() { const res = await fetch('/api/public/jobs'); this.jobList = await res.json(); },
+                async fetchFirmData() { 
+                    const res = await fetch('/api/public/firm'); const data = await res.json();
+                    if(data.greeting && editors.firmGreeting) editors.firmGreeting.root.innerHTML = data.greeting.content;
                 },
+
+                async savePopup() {
+                    const fd = new FormData();
+                    if(this.popupForm.id) fd.append('id', this.popupForm.id);
+                    fd.append('title', editors.popupTitle.root.innerHTML);
+                    fd.append('content', editors.popupContent.root.innerHTML);
+                    fd.append('link', this.popupForm.link);
+                    fd.append('active', this.popupForm.active);
+                    if(this.$refs.popupFile.files[0]) fd.append('popupImage', this.$refs.popupFile.files[0]);
+                    await fetch('/api/admin/popups', { method: 'POST', body: fd });
+                    alert('저장됨'); this.popupFileName = ''; this.fetchPopups();
+                },
+                async saveNews() {
+                    const fd = new FormData();
+                    if(this.newsForm.id) fd.append('id', this.newsForm.id);
+                    fd.append('category', this.newsForm.category);
+                    fd.append('title', editors.newsTitle.root.innerHTML);
+                    fd.append('content', editors.newsContent.root.innerHTML);
+                    const files = this.$refs.newsFiles.files;
+                    for (let i = 0; i < files.length; i++) fd.append('attachments', files[i]);
+                    await fetch('/api/news', { method: 'POST', body: fd });
+                    alert('저장됨'); this.newsFilesNames = []; this.fetchNews();
+                },
+                async savePartner() {
+                    const fd = new FormData();
+                    if(this.partnerForm.id) fd.append('id', this.partnerForm.id);
+                    fd.append('name', this.partnerForm.name); fd.append('engName', this.partnerForm.engName);
+                    fd.append('title', this.partnerForm.title); fd.append('edu', this.partnerForm.edu); fd.append('exp', this.partnerForm.exp);
+                    if(this.$refs.partnerPhoto.files[0]) fd.append('photo', this.$refs.partnerPhoto.files[0]);
+                    await fetch('/api/admin/partners', { method: 'POST', body: fd });
+                    alert('저장됨'); this.partnerPhotoName = ''; this.fetchPartners();
+                },
+                async uploadHero() {
+                    if(!this.$refs.heroFile.files[0]) return alert("파일을 선택하거나 끌어다 놓으세요.");
+                    const fd = new FormData(); fd.append('heroFile', this.$refs.heroFile.files[0]);
+                    await fetch('/api/admin/hero', { method: 'POST', body: fd }); 
+                    this.heroPreviewName = ''; this.fetchHero();
+                },
+                async saveFirmAll() {
+                    const fd = new FormData();
+                    fd.append('greetingContent', editors.firmGreeting.root.innerHTML);
+                    if(this.$refs.firmGreeting.files[0]) fd.append('greetingImage', this.$refs.firmGreeting.files[0]);
+                    await fetch('/api/admin/firm', { method: 'POST', body: fd });
+                    alert('저장됨'); this.firmGreetingName = '';
+                },
+
+                async updateRecruitStatus(id, status) {
+                    await fetch('/api/recruit/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id, status}) });
+                },
+                async saveJob() {
+                    const fd = new FormData();
+                    if(this.jobForm.id) fd.append('id', this.jobForm.id);
+                    fd.append('category', this.jobForm.category); fd.append('title', this.jobForm.title);
+                    fd.append('deadline', this.jobForm.deadline); fd.append('content', editors.job.root.innerHTML);
+                    fd.append('existingAttachments', JSON.stringify(this.jobForm.attachments || []));
+                    const files = this.$refs.jobFiles.files;
+                    for (let i = 0; i < files.length; i++) fd.append('jobAttachments', files[i]);
+                    const res = await fetch('/api/admin/jobs', { method: 'POST', body: fd });
+                    if(res.ok) { alert('공고 저장됨'); this.jobFilesNames = []; this.resetJobForm(); this.fetchJobs(); }
+                },
+                editJob(job) { this.jobForm = {...job}; editors.job.root.innerHTML = job.content; window.scrollTo(0,0); },
+                async deleteJob(id) { if(confirm('삭제?')) { await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' }); this.fetchJobs(); } },
+                resetJobForm() { this.jobForm = { id: null, category: '변호사 채용', title: '', deadline: '', content: '', attachments: [] }; editors.job.root.innerHTML = ''; },
+
                 async deleteInquiry(id) { if(confirm('삭제?')) { await fetch(`/api/admin/inquiries/${id}`, { method: 'DELETE' }); this.fetchInquiries(); } },
                 async deleteNews(id) { if(confirm('삭제?')) { await fetch(`/api/news/${id}`, { method: 'DELETE' }); this.fetchNews(); } },
+                async deletePartner(id) { if(confirm('삭제?')) { await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' }); this.fetchPartners(); } },
+                async deleteHero(id) { if(confirm('삭제?')) { await fetch(`/api/admin/hero/${id}`, { method: 'DELETE' }); this.fetchHero(); } },
                 async updateUserStatus(userId, payload) { await fetch('/api/admin/users/status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId, ...payload }) }); this.fetchUsers(); },
-                viewInquiryDetail(item) { this.selectedInquiry = item; }
+                async deleteUser(id) { if(confirm('삭제?')) { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); this.fetchUsers(); } }
             },
             mounted() { this.fetchInquiries(); }
         }).mount('#app')
