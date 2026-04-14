@@ -177,3 +177,73 @@ footer { padding: 60px 20px; background-color: var(--white); border-top: 1px sol
     header { padding: 15px 20px; }
     .label { letter-spacing: 0.5em; font-size: 9px; }
 }
+
+/* 인사말 관리 업로드 영역 스타일 */
+.greeting-upload-zone {
+    width: 100%;
+    min-height: 150px;
+    border: 2px dashed #007bff;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.greeting-upload-zone.dragover {
+    background-color: #e1e7ff;
+    border-color: #0056b3;
+    transform: scale(1.01);
+}
+
+.greeting-upload-zone p {
+    margin: 10px 0;
+    color: #555;
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+
+/* 인사말 이미지 미리보기 */
+#greeting-preview {
+    max-width: 100%;
+    max-height: 250px;
+    margin-top: 10px;
+    border-radius: 5px;
+    display: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* --- [수정 및 강화] 채용 정보 및 에디터 내 삽입된 이미지 크기 조정 --- */
+/* 에디터 내부, 채용 상세 페이지, 뉴스 상세 페이지 등 모든 본문 내 이미지에 적용 */
+.job-management-content img, 
+.job-post-detail img,
+.detail-content img,
+.ql-editor img, /* Quill 에디터 내부 이미지 */
+#job-editor img,
+#news-editor img {
+    max-width: 100% !important; /* 부모 요소의 너비를 절대 넘지 않음 */
+    height: auto !important;    /* 가로 세로 비율 유지 */
+    display: block;
+    margin: 20px auto;          /* 중앙 정렬 및 상하 여백 */
+}
+
+/* 관리자 페이지 내 선택 버튼 통일감 부여 */
+.admin-file-label {
+    padding: 8px 16px;
+    background-color: #4e73df;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-block;
+}
+
+.admin-file-label:hover {
+    background-color: #2e59d9;
+}

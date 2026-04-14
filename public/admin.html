@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.6/quill.snow.css">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <link rel="stylesheet" href="/css/main.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -151,7 +151,7 @@
                 </div>
             </div>
 
-            <!-- [수정됨] The Firm 관리 섹션 -->
+            <!-- The Firm 관리 (수정됨) -->
             <div v-if="tab === 'firm'">
                 <h2 class="text-2xl font-normal mb-8" style="font-family:'Playfair Display';">The Firm Management</h2>
                 
@@ -159,10 +159,12 @@
                 <div class="admin-card mb-8">
                     <h3 class="text-xs font-bold text-gold-primary mb-4 uppercase">1. CEO Greeting</h3>
                     <div class="grid grid-cols-1 gap-6">
-                        <div class="drop-zone" @drop.prevent="onDrop($event, 'firmGreeting')">
-                            <p>인사말 이미지 (변경 시에만 드래그)</p>
+                        <!-- [수정] 드래그 앤 드롭 피드백 및 파일 선택 버튼 추가 -->
+                        <div class="drop-zone" @dragover.prevent="onDragOver" @dragleave="onDragLeave" @drop.prevent="onDrop($event, 'firmGreeting')">
+                            <p>인사말 이미지 (이곳에 이미지를 끌어다 놓으세요)</p>
                             <input type="file" ref="firmGreeting" class="hidden" @change="onFileChange($event, 'firmGreeting')">
                             <div class="file-preview" v-if="firmGreetingName">{{ firmGreetingName }}</div>
+                            <button @click="$refs.firmGreeting.click()" class="text-[10px] text-blue-500 underline mt-2">또는 직접 파일 선택</button>
                         </div>
                         <div id="firm-greeting-editor" class="editor-wrapper"></div>
                     </div>
@@ -239,6 +241,7 @@
                         <p>팝업 이미지를 끌어다 놓으세요.</p>
                         <input type="file" ref="popupFile" class="hidden" @change="onFileChange($event, 'popupFile')">
                         <div class="file-preview" v-if="popupFileName">{{ popupFileName }}</div>
+                        <button @click="$refs.popupFile.click()" class="text-[10px] text-blue-500 underline mt-2">또는 직접 파일 선택</button>
                     </div>
 
                     <div class="flex gap-4">
@@ -275,6 +278,7 @@
                         <div class="file-preview" v-if="newsFilesNames.length > 0">
                             <div v-for="name in newsFilesNames">📎 {{ name }}</div>
                         </div>
+                        <button @click="$refs.newsFiles.click()" class="text-[10px] text-blue-500 underline mt-2">또는 직접 파일 선택</button>
                     </div>
 
                     <div class="flex gap-4">
@@ -307,6 +311,7 @@
                         <p>구성원 사진을 끌어다 놓으세요.</p>
                         <input type="file" ref="partnerPhoto" class="hidden" @change="onFileChange($event, 'partnerPhoto')">
                         <div class="file-preview" v-if="partnerPhotoName">{{ partnerPhotoName }}</div>
+                        <button @click="$refs.partnerPhoto.click()" class="text-[10px] text-blue-500 underline mt-2">또는 직접 파일 선택</button>
                     </div>
 
                     <div class="flex gap-4">
@@ -353,6 +358,7 @@
                         </div>
                         <input type="text" v-model="jobForm.title" placeholder="공고 제목">
                         <label class="text-[10px] font-bold text-gold-primary uppercase">Job Description</label>
+                        <!-- [수정] main.css에 정의된 스타일로 인해 에디터 내 이미지는 자동 크기 조절됨 -->
                         <div id="job-editor" class="editor-wrapper"></div>
                         
                         <div class="drop-zone" @dragover.prevent="onDragOver" @dragleave="onDragLeave" @drop.prevent="onDrop($event, 'jobFiles', true)">
@@ -361,6 +367,7 @@
                             <div class="file-preview" v-if="jobFilesNames.length > 0">
                                 <div v-for="name in jobFilesNames">📎 {{ name }}</div>
                             </div>
+                            <button @click="$refs.jobFiles.click()" class="text-[10px] text-blue-500 underline mt-2">또는 직접 파일 선택</button>
                         </div>
 
                         <div class="flex gap-4">
